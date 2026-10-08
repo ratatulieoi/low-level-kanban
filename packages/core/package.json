@@ -1,0 +1,17 @@
+{
+  "name": "@dotpm/core",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Project and task types, dates, filtering, scheduling and YAML serialization",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "dependencies": {
+    "temporal-polyfill": "1.0.4"
+  }
+}

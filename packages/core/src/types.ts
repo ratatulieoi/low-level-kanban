@@ -1,0 +1,520 @@
+import { today } from './dates'
+import { t } from './i18n'
+import type { TaskIndex } from './store/TaskIndex'
+
+export type TaskStatus = string
+export type TaskPriority = string
+export type ViewMode = 'kanban'
+export type LineBorders = 'none' | 'horizontal' | 'vertical' | 'both'
+export type DateBucket = 'overdue' | 'today' | 'this-week' | 'this-month'
+export type SortDir = 'asc' | 'desc'
+export type DueUrgency = 'normal' | 'near' | 'overdue'
+export type TaskType = 'task' | 'milestone' | 'subtask'
+
+export interface Recurrence {
+  interval: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  every: number // e.g. every 2 weeks
+  endDate?: string // YYYY-MM-DD
+}
+
+export interface TimeLog {
+  date: string // YYYY-MM-DD
+  hours: number
+  note: string
+}
+
+export const CUSTOM_FIELD_TYPES = [
+  'text',
+  'number',
+  'date',
+  'select',
+  'multiselect',
+  'person',
+  'checkbox',
+  'url'
+] as const
+
+export const SORT_KEYS = ['title', 'status', 'priority', 'due', 'assignees', 'progress'] as const
+export type SortKey = (typeof SORT_KEYS)[number]
+
+/** One key of a sort; a view sorts by up to `MAX_SORT_RULES` of them, first rule first. */
+export interface SortRule {
+  key: SortKey
+  dir: SortDir
+}
+
+export const MAX_SORT_RULES = 3
+
+export interface CustomFieldDef {
+  id: string
+  name: string
+  type: (typeof CUSTOM_FIELD_TYPES)[number]
+  options?: string[] // for select / multiselect
+  icon?: string // emoji or lucide icon name
+  /** False keeps the field out of the filter picker. */
+  filterable?: boolean
+}
+
+export interface Task {
+  id: string
+  title: string
+  description: string
+  type: TaskType // a milestone has zero duration
+  status: TaskStatus
+  priority: TaskPriority
+  start: string // YYYY-MM-DD, empty string = unset
+  due: string // YYYY-MM-DD, empty string = unset
+  progress: number // 0-100
+  completed: string // YYYY-MM-DD, empty string = not completed; stamped when status becomes complete
+  assignees: string[]
+  tags: string[]
+  subtasks: Task[]
+  dependencies: string[] // task IDs
+  recurrence?: Recurrence
+  timeEstimate?: number // hours
+  timeLogs?: TimeLog[]
+  customFields: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
+  filePath?: string // vault path to this task's .md file
+  archived?: boolean // runtime only, derived from file location in Archive/ subfolder
+}
+
+export interface Project {
+  id: string
+  title: string
+  description: string
+  color: string // hex
+  icon: string // emoji
+  tasks: Task[]
+  customFields: CustomFieldDef[]
+  teamMembers: string[]
+  createdAt: string
+  updatedAt: string
+  filePath: string // resolved vault path
+  savedViews: SavedView[]
+  /** The project this one sits under, resolved from its `parent` link. */
+  parentPath?: string
+  /** Kept out of lists, pickers and sweeps. Sub-projects follow their parent. */
+  archived?: boolean
+  /** Per-project overrides for the global settings. Absent fields inherit. */
+  config?: ProjectConfig
+  /** Not serialized. Rebuilt on load, maintained by the store's mutators. */
+  taskIndex: TaskIndex
+}
+
+/** Tasks are excluded: they change through the task mutators, never a whole-project write. */
+export type ProjectPatch = Partial<
+  Pick<
+    Project,
+    | 'title'
+    | 'description'
+    | 'color'
+    | 'icon'
+    | 'customFields'
+    | 'teamMembers'
+    | 'savedViews'
+    | 'config'
+    | 'parentPath'
+    | 'archived'
+  >
+>
+
+export const FILTER_OPS = [
+  'any',
+  'none',
+  'all',
+  'empty',
+  'not-empty',
+  'contains',
+  'not-contains',
+  'eq',
+  'ne',
+  'gte',
+  'lte',
+  'between',
+  'bucket',
+  'checked',
+  'unchecked'
+] as const
+export type FilterOp = (typeof FILTER_OPS)[number]
+
+/**
+ * One applied filter. `field` is a built-in field id or `cf:<id>` for a custom field.
+ * `value` holds the ids an `any` / `none` / `all` compares against, the text of a
+ * `contains`, the numbers of a number comparison, the bucket of a `bucket`, or the two
+ * ends of a `between`: `YYYY-MM-DD` strings for a date, where an open end is empty, and
+ * numbers for a number, where an open end is null.
+ */
+export interface FilterCondition {
+  field: string
+  op: FilterOp
+  value?: string[] | string | (number | null)[]
+}
+
+/** Conditions combine with AND; the ids inside one condition with OR. */
+export interface FilterState {
+  conditions: FilterCondition[]
+  showArchived: boolean
+}
+
+/** What a view shows: the saved filter plus the search text, which is never saved. */
+export interface TaskQuery {
+  filter: FilterState
+  text: string
+}
+
+/** How one board column choice is arranged: the column ids in their order, and the ones hidden. */
+export interface GroupColumns {
+  order?: string[]
+  hidden?: string[]
+}
+
+/**
+ * What board columns stand for. `field` is a filter field id (`status`, `assignee`,
+ * `cf:<id>`...). Column order and hidden columns are kept per field, so hiding a status
+ * column leaves the priority columns alone.
+ */
+export interface GroupState {
+  field: string
+  hideEmpty?: boolean
+  columns?: Record<string, GroupColumns>
+}
+
+/** Which fields a board card shows, in order. */
+export interface FieldList {
+  visible: string[]
+}
+
+/** A board with no stored list shows its default fields. */
+export type ViewFields = Partial<Record<ViewMode, FieldList>>
+
+export const PROJECT_SORT_KEYS = ['title', 'progress', 'due'] as const
+export type ProjectSortKey = (typeof PROJECT_SORT_KEYS)[number]
+
+export interface ProjectSortRule {
+  key: ProjectSortKey
+  dir: SortDir
+}
+
+export const PROJECT_PROGRESS = ['not-started', 'in-progress', 'complete'] as const
+export type ProjectProgress = (typeof PROJECT_PROGRESS)[number]
+
+/** Values within one list match with OR; the lists combine with AND. An absent list matches every project. */
+export interface ProjectListFilter {
+  tags?: string[]
+  progress?: ProjectProgress[]
+}
+
+export type ProjectGroupBy = 'none' | 'folder' | 'tag'
+
+/** The project list's columns after the title, in their default order. */
+export const PROJECT_LIST_FIELDS = ['progress', 'tasks', 'members', 'due'] as const
+export type ProjectListField = (typeof PROJECT_LIST_FIELDS)[number]
+
+/** What the project list shows. Archived projects follow `PMSettings.showArchivedProjects`. */
+export interface ProjectListState {
+  filter: ProjectListFilter
+  /** Empty keeps the order of the project tree. */
+  sort: ProjectSortRule[]
+  group: ProjectGroupBy
+  /** The columns shown after the title, in order. Left out while every column shows in the default order. */
+  fields?: ProjectListField[]
+  activeViewId: string | null
+}
+
+export interface ProjectListView {
+  id: string
+  name: string
+  filter: ProjectListFilter
+  sort: ProjectSortRule[]
+  group: ProjectGroupBy
+  /** Left out by a view saved before columns could be chosen, which then keeps whatever shows. */
+  fields?: ProjectListField[]
+  showArchived: boolean
+  isDefault?: boolean
+}
+
+export interface SavedView {
+  id: string
+  name: string
+  filter: FilterState
+  /** Empty keeps the order the tasks are stored in. */
+  sort: SortRule[]
+  group?: GroupState
+  fields?: ViewFields
+  viewMode?: ViewMode
+  /** The view a scope opens with. At most one per scope. */
+  isDefault?: boolean
+}
+
+/**
+ * What a scope was last showing. While `activeSavedViewId` is set and these differ from
+ * that view, the view has unsaved changes.
+ */
+export interface PerProjectFilter {
+  filter: FilterState
+  activeSavedViewId: string | null
+  sort: SortRule[]
+  group: GroupState
+  fields: ViewFields
+  viewMode?: ViewMode
+}
+
+export interface StatusConfig {
+  id: string
+  label: string
+  color: string
+  icon: string
+  complete: boolean
+}
+
+/** Overrides a project may set in its own file. An absent field falls back to the global settings. */
+export interface ProjectConfig {
+  statuses?: StatusConfig[]
+  priorities?: PriorityConfig[]
+  priorityIcons?: PriorityIconSet
+  /** Inherited field ids this project leaves out. Its own fields are never listed. */
+  hiddenCustomFields?: string[]
+  defaultView?: ViewMode
+  autoSchedule?: boolean
+  pullForwardOnEarlyFinish?: boolean
+  autoArchiveDays?: number
+  showSubtreeConnections?: boolean
+  lineBorders?: LineBorders
+}
+
+/**
+ * A project's config with every fallback applied. Views and modals read this rather
+ * than the global settings, so another task source can supply its own catalogs.
+ */
+export interface ResolvedProjectConfig {
+  statuses: StatusConfig[]
+  priorities: PriorityConfig[]
+  priorityIcons: PriorityIconSet
+  customFields: CustomFieldDef[]
+  defaultView: ViewMode
+  autoSchedule: boolean
+  pullForwardOnEarlyFinish: boolean
+  autoArchiveDays: number
+  showSubtreeConnections: boolean
+  lineBorders: LineBorders
+}
+
+export interface PriorityConfig {
+  id: TaskPriority
+  label: string
+  color: string
+  icon: string
+}
+
+export type PriorityIconSet = 'chevrons' | 'signal' | 'arrows' | 'alerts' | 'none'
+
+/** One icon per rank, highest priority first. Ranks past the fifth carry no icon. */
+export const PRIORITY_ICON_SETS: Record<PriorityIconSet, string[]> = {
+  chevrons: ['chevrons-up', 'chevron-up', 'equal', 'chevron-down', 'chevrons-down'],
+  signal: ['signal', 'signal-high', 'signal-medium', 'signal-low', 'signal-zero'],
+  arrows: ['arrow-up', 'arrow-up-right', 'arrow-right', 'arrow-down-right', 'arrow-down'],
+  alerts: ['octagon-alert', 'triangle-alert', 'circle-alert', 'info', 'circle-small'],
+  none: []
+}
+
+export function priorityIconSetLabels(): Record<PriorityIconSet, string> {
+  return {
+    chevrons: t('priorityIcons.chevrons'),
+    signal: t('priorityIcons.signal'),
+    arrows: t('priorityIcons.arrows'),
+    alerts: t('priorityIcons.alerts'),
+    none: t('priorityIcons.none')
+  }
+}
+
+export interface PMSettings {
+  /** Where new projects are created. Projects are discovered vault-wide, wherever they live. */
+  projectsFolder: string
+  peopleFolder: string
+  /** Folders discovery skips, for templates and archives holding pm-project notes. */
+  excludedFolders: string[]
+  defaultView: ViewMode
+  statuses: StatusConfig[]
+  priorities: PriorityConfig[]
+  /** Icons for priorities that don't carry their own. */
+  priorityIcons: PriorityIconSet
+  /** Task properties every project starts with. A project adds to these, or overrides one by id. */
+  customFields: CustomFieldDef[]
+  globalTeamMembers: string[]
+  notificationsEnabled: boolean
+  notificationLeadDays: number
+  /** Days after completion before a task moves to its project's archive. 0 turns it off. */
+  autoArchiveDays: number
+  /** The day the archive sweep last ran, so it runs at most once a day. */
+  lastAutoArchiveDate: string
+  autoSchedule: boolean
+  pullForwardOnEarlyFinish: boolean
+  showSubtreeConnections: boolean
+  lineBorders: LineBorders
+  showTagColors: boolean
+  /** Moment-style tokens for every date label. Empty follows the interface language. */
+  dateFormat: string
+  saveTaskOnClose: boolean
+  taskEditorSurface: 'modal' | 'tab'
+  /** Key shortcut to create or save tasks and projects. */
+  editorSaveModifier: 'Shift' | 'Mod'
+  /** Where a project link lands: its overview page or its tasks in the default view. */
+  projectSurface: 'overview' | 'tasks'
+  /** Keyed by scope key, e.g. `project:Projects/Roadmap.md`. */
+  projectFilters: Record<string, PerProjectFilter>
+  /** The fields a scope shows before it has an entry in `projectFilters`. */
+  defaultFields: ViewFields
+  /** Saved views for a scope covering several projects, which has no file to keep them in. */
+  scopeViews: Record<string, SavedView[]>
+  /** Collapsed task ids per project path. Lives here so a toggle doesn't rewrite task files. */
+  collapsedTasks: Record<string, string[]>
+  /** Paths of projects whose sub-projects are collapsed in the project list. */
+  collapsedProjects: string[]
+  /** Whether the project list shows archived projects. */
+  showArchivedProjects: boolean
+  projectList: ProjectListState
+  projectListViews: ProjectListView[]
+}
+
+export const DEFAULT_STATUSES: StatusConfig[] = [
+  { id: 'todo', label: 'To Do', color: '#8a94a0', icon: '', complete: false },
+  { id: 'in-progress', label: 'In Progress', color: '#8b72be', icon: '', complete: false },
+  { id: 'blocked', label: 'Blocked', color: '#c47070', icon: '', complete: false },
+  { id: 'review', label: 'In Review', color: '#b8a06b', icon: '', complete: false },
+  { id: 'done', label: 'Done', color: '#79b58d', icon: '', complete: true },
+  { id: 'cancelled', label: 'Cancelled', color: '#767491', icon: '', complete: true }
+]
+
+export const DEFAULT_PRIORITIES: PriorityConfig[] = [
+  { id: 'critical', label: 'Critical', color: '#c47070', icon: '' },
+  { id: 'high', label: 'High', color: '#b8a06b', icon: '' },
+  { id: 'medium', label: 'Medium', color: '#8a94a0', icon: '' },
+  { id: 'low', label: 'Low', color: '#79b58d', icon: '' }
+]
+
+/** The default palettes with their labels in the active language, for a vault that has none yet. */
+export function defaultStatuses(): StatusConfig[] {
+  const labels: Record<string, string> = {
+    todo: t('status.todo'),
+    'in-progress': t('status.inProgress'),
+    blocked: t('status.blocked'),
+    review: t('status.review'),
+    done: t('status.done'),
+    cancelled: t('status.cancelled')
+  }
+  return DEFAULT_STATUSES.map((status) => ({ ...status, label: labels[status.id] ?? status.label }))
+}
+
+export function defaultPriorities(): PriorityConfig[] {
+  const labels: Record<string, string> = {
+    critical: t('priority.critical'),
+    high: t('priority.high'),
+    medium: t('priority.medium'),
+    low: t('priority.low')
+  }
+  return DEFAULT_PRIORITIES.map((priority) => ({ ...priority, label: labels[priority.id] ?? priority.label }))
+}
+
+export const DEFAULT_SETTINGS: PMSettings = {
+  projectsFolder: 'Projects',
+  peopleFolder: 'People',
+  excludedFolders: [],
+  defaultView: 'kanban',
+  statuses: DEFAULT_STATUSES,
+  priorities: DEFAULT_PRIORITIES,
+  priorityIcons: 'chevrons',
+  customFields: [],
+  globalTeamMembers: [],
+  showSubtreeConnections: true,
+  lineBorders: 'none',
+  showTagColors: true,
+  dateFormat: '',
+  notificationsEnabled: true,
+  notificationLeadDays: 2,
+  autoArchiveDays: 0,
+  lastAutoArchiveDate: '',
+  autoSchedule: true,
+  pullForwardOnEarlyFinish: false,
+  saveTaskOnClose: true,
+  taskEditorSurface: 'modal',
+  editorSaveModifier: 'Shift',
+  projectSurface: 'overview',
+  projectFilters: {},
+  defaultFields: {},
+  scopeViews: {},
+  collapsedTasks: {},
+  collapsedProjects: [],
+  showArchivedProjects: false,
+  projectList: makeDefaultProjectList(),
+  projectListViews: []
+}
+
+export function makeId(): string {
+  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
+}
+
+export function makeTask(overrides: Partial<Task> = {}): Task {
+  const now = new Date().toISOString()
+  return {
+    id: makeId(),
+    title: t('task.newTitle'),
+    description: '',
+    type: 'task',
+    status: 'todo',
+    priority: 'medium',
+    start: today().toString(),
+    due: '',
+    progress: 0,
+    completed: '',
+    assignees: [],
+    tags: [],
+    subtasks: [],
+    dependencies: [],
+    customFields: {},
+    createdAt: now,
+    updatedAt: now,
+    ...overrides
+  }
+}
+
+export const DEFAULT_PROJECT_COLOR = '#8b72be'
+export const DEFAULT_PALETTE_COLOR = '#8a94a0'
+export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
+export const DEFAULT_PROJECT_ICON = '📋'
+
+export function makeProject(title: string, filePath: string): Project {
+  const now = new Date().toISOString()
+  return {
+    id: makeId(),
+    title,
+    description: '',
+    color: DEFAULT_PROJECT_COLOR,
+    icon: DEFAULT_PROJECT_ICON,
+    tasks: [],
+    customFields: [],
+    teamMembers: [],
+    createdAt: now,
+    updatedAt: now,
+    filePath,
+    savedViews: [],
+    taskIndex: new Map()
+  }
+}
+
+export function makeDefaultProjectList(): ProjectListState {
+  return { filter: {}, sort: [], group: 'none', activeViewId: null }
+}
+
+export function makeDefaultGroup(): GroupState {
+  return { field: 'status' }
+}
+
+export function makeDefaultSort(): SortRule[] {
+  return [{ key: 'status', dir: 'asc' }]
+}
+
+export function makeDefaultFilter(): FilterState {
+  return { conditions: [], showArchived: false }
+}

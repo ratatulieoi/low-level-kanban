@@ -1,0 +1,149 @@
+import { getIcon } from 'obsidian'
+import {
+  type FilterState,
+  type Project,
+  type SortRule,
+  type GroupState,
+  type ViewFields,
+  type ViewMode,
+  flattenTasks,
+  hydrateFields,
+  locale,
+  PRIORITY_ICON_SETS,
+  stringifyCustomValue
+} from '@dotpm/core'
+import {
+  SNAPSHOT_FORMAT,
+  SNAPSHOT_VERSION,
+  taskResources,
+  toProjectResource,
+  type ProjectSummary,
+  type Snapshot,
+  type SnapshotProject
+} from '@dotpm/snapshot'
+import type PMPlugin from '#main'
+import { personColor, type ProjectScope } from '#store'
+
+export interface ExportViewState {
+  mode: ViewMode
+  sort: SortRule[]
+  group: GroupState
+  fields: ViewFields
+  filter: FilterState
+}
+
+/** Icons the page chrome and the composites ask for by name, whatever the data holds. */
+const CHROME_ICONS = [
+  'plus',
+  'x',
+  'check',
+  'chevron-down',
+  'chevron-right',
+  'right-triangle',
+  'more-horizontal',
+  'calendar',
+  'link-2',
+  'clock',
+  'repeat'
+]
+
+function summarize(plugin: PMPlugin, project: Project): ProjectSummary {
+  const complete = new Set(
+    plugin.store
+      .configFor(project)
+      .statuses.filter((status) => status.complete)
+      .map((status) => status.id)
+  )
+  const live = flattenTasks(project.tasks).filter((f) => !f.task.archived)
+  return {
+    id: project.id,
+    path: project.filePath,
+    title: project.title,
+    icon: project.icon,
+    color: project.color,
+    parentId: plugin.index.parentOf(project.filePath)?.id ?? null,
+    archived: plugin.index.isArchived(project.filePath),
+    taskCount: live.length,
+    doneCount: live.filter((f) => complete.has(f.task.status)).length
+  }
+}
+
+function iconMarkup(names: Iterable<string>): Record<string, string> {
+  const icons: Record<string, string> = {}
+  for (const name of names) {
+    if (!name || icons[name] !== undefined) continue
+    const svg = getIcon(name)
+    if (svg) icons[name] = svg.outerHTML
+  }
+  return icons
+}
+
+/** Keyed by the value as the task stores it, which is what the page's views look up. */
+function personColors(plugin: PMPlugin, projects: Project[]): Record<string, string> {
+  const colors: Record<string, string> = {}
+  for (const project of projects) {
+    const personFields = plugin.store.configFor(project).customFields.filter((field) => field.type === 'person')
+    for (const { task } of flattenTasks(project.tasks)) {
+      const fieldValues = personFields.flatMap((field) => {
+        const value = task.customFields[field.id]
+        return (Array.isArray(value) ? value : [value]).map(stringifyCustomValue).filter(Boolean)
+      })
+      for (const raw of [...task.assignees, ...fieldValues]) {
+        if (raw in colors) continue
+        const color = personColor(plugin.app, raw, task.filePath ?? project.filePath)
+        if (color) colors[raw] = color
+      }
+    }
+  }
+  return colors
+}
+
+export async function buildSnapshot(plugin: PMPlugin, scope: ProjectScope, view: ExportViewState): Promise<Snapshot> {
+  const primary = scope.primary
+  if (!primary) throw new Error('nothing to export: the scope holds no project')
+
+  const projects: SnapshotProject[] = []
+  const iconNames = new Set<string>(CHROME_ICONS)
+  for (const set of Object.values(PRIORITY_ICON_SETS)) for (const name of set) iconNames.add(name)
+
+  for (const project of scope.projects) {
+    await Promise.all(flattenTasks(project.tasks).map(({ task }) => plugin.store.loadTaskBody(task)))
+    const config = plugin.store.configFor(project)
+    for (const status of config.statuses) iconNames.add(status.icon)
+    for (const priority of config.priorities) iconNames.add(priority.icon)
+    for (const field of config.customFields) if (field.icon) iconNames.add(field.icon)
+    iconNames.add(project.icon)
+    projects.push({
+      ...toProjectResource(project, config, summarize(plugin, project)),
+      tasks: taskResources(project, project.id, true)
+    })
+  }
+
+  const config = scope.config
+  return {
+    format: SNAPSHOT_FORMAT,
+    version: SNAPSHOT_VERSION,
+    generator: { name: 'dotpm', version: plugin.manifest.version },
+    exportedAt: new Date().toISOString(),
+    locale: locale(),
+    title: scope.label(),
+    primaryProjectId: primary.id,
+    view: {
+      mode: 'kanban',
+      filter: { ...view.filter },
+      sort: view.sort,
+      group: view.group,
+      fields: hydrateFields(view.fields)
+    },
+    settings: {
+      priorityIcons: config.priorityIcons,
+      showTagColors: plugin.settings.showTagColors,
+      showSubtreeConnections: config.showSubtreeConnections,
+      lineBorders: config.lineBorders,
+      dateFormat: plugin.settings.dateFormat
+    },
+    projects,
+    icons: iconMarkup(iconNames),
+    personColors: personColors(plugin, scope.projects)
+  }
+}

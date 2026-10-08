@@ -1,0 +1,659 @@
+.pm-pop {
+  position: fixed;
+  top: var(--pop-top, 0);
+  left: var(--pop-left, 0);
+  z-index: var(--layer-menu);
+  min-width: var(--pop-width, 180px);
+  max-height: min(70vh, 460px, var(--pop-max-height, 100vh));
+  overflow-y: auto;
+  padding: 5px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  /* shadow-s matches Obsidian's native menus; shadow-l is oversized on a small popover. */
+  box-shadow: var(--shadow-s);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pm-pop {
+    animation: pm-pop-in 0.12s ease;
+  }
+}
+
+@keyframes pm-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pm-pop--sheet {
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  min-width: 0;
+  max-height: 70vh;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  border-bottom: none;
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pm-pop--sheet {
+    animation: pm-sheet-in 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+}
+
+@keyframes pm-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* Core's textarea:hover/:focus outrank a bare class, so these element-prefixed
+   selectors are what keep the title from revealing an input box. */
+textarea.pm-te-title:hover,
+textarea.pm-te-title:focus {
+  background: transparent;
+  box-shadow: none;
+}
+
+.pm-glyph-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--pm-glyph-color, var(--text-muted));
+  --icon-size: var(--pm-glyph-size, 14px);
+}
+.pm-glyph-text {
+  font-size: var(--pm-glyph-size, 12px);
+  line-height: 1;
+}
+.pm-glyph-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--pm-glyph-color, var(--text-muted));
+}
+
+/* The `button` prefix is required: core's `button:not(.clickable-icon)` outranks a bare
+   class, and without it these inherit the default grey fill and inset shadow. */
+button.pm-prop-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  margin: -1px -4px;
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  font-family: inherit;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+}
+.pm-prop-inline:hover {
+  background: var(--background-modifier-hover);
+}
+/* While the trigger's popover is up, the control reads as engaged. */
+.pm-prop-inline[aria-expanded='true'] {
+  background: var(--background-modifier-hover);
+  box-shadow: inset 0 0 0 1px var(--background-modifier-border-hover);
+}
+button.pm-prop-inline--empty {
+  color: var(--text-faint);
+}
+.pm-prop-inline-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pm-prop-chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--text-faint);
+  --icon-size: 13px;
+}
+
+.pm-due {
+  font-size: var(--font-ui-smaller);
+  font-weight: 500;
+}
+.pm-due--overdue {
+  color: var(--color-red);
+}
+.pm-due--today {
+  color: var(--color-orange);
+}
+.pm-due--soon,
+.pm-due--outcome {
+  color: var(--text-muted);
+}
+
+/* `button` prefix outranks core button chrome, as in pm-prop-inline. */
+button.pm-prop-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+}
+.pm-prop-add:hover {
+  color: var(--text-accent);
+  background: var(--background-modifier-hover);
+}
+.pm-prop-value .pm-prop-add {
+  margin: -1px 0;
+}
+
+.pm-prop-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.pm-prop-chips:empty {
+  display: none;
+}
+
+/* Two classes beat the element-prefixed .pm-prop-inline base for the gap. */
+.pm-prop-inline.pm-assignees-trigger {
+  gap: 8px;
+}
+.pm-assignees-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-normal);
+}
+
+/* Each row is a full-height control like every other value, so the label lines up with
+   the first one. An empty list reserves no space. */
+.pm-prop-deps {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.pm-prop-deps:empty {
+  display: none;
+}
+.pm-dep-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--input-height);
+  font-size: var(--font-ui-smaller);
+}
+.pm-dep-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--text-faint);
+  --icon-size: 13px;
+}
+.pm-dep-id {
+  flex-shrink: 0;
+  font-family: var(--font-monospace);
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+.pm-dep-title {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-accent);
+}
+
+.pm-pop-list {
+  display: flex;
+  flex-direction: column;
+}
+.pm-pop-heading {
+  padding: 6px 9px 2px;
+  font-size: var(--font-ui-smaller);
+  font-weight: 600;
+  color: var(--text-faint);
+}
+.pm-pop-section {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+.pm-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.pm-pop-head.pm-pop-section {
+  padding-top: 0;
+}
+.pm-pop-head--title {
+  justify-content: flex-start;
+  padding: 2px 4px 6px;
+  --icon-size: 14px;
+}
+.pm-pop-title {
+  font-size: var(--font-ui-small);
+  font-weight: 600;
+}
+button.pm-pop-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border: none;
+  border-radius: var(--radius-s);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+}
+.pm-pop-item:hover {
+  background: var(--background-modifier-hover);
+}
+.pm-pop-item--center {
+  flex: 1;
+  justify-content: center;
+}
+button.pm-pop-item--accent {
+  color: var(--text-accent);
+}
+button.pm-pop-item--danger {
+  color: var(--color-red);
+}
+.pm-pop-item-label {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pm-pop-check {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--interactive-accent);
+  --icon-size: 14px;
+}
+.pm-pop-check--hidden {
+  visibility: hidden;
+}
+.pm-pop-item-trail {
+  display: inline-flex;
+  color: var(--text-faint);
+  --icon-size: 12px;
+}
+.pm-pop-field {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  font-family: inherit;
+}
+/* A type attribute earns a focus ring from core that the text inputs never get. */
+input.pm-pop-field:focus {
+  box-shadow: none;
+  border-color: var(--background-modifier-border);
+}
+.pm-pop-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.pm-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+  gap: 2px;
+  max-height: 216px;
+  overflow-y: auto;
+}
+button.pm-icon-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-s);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  --icon-size: 17px;
+}
+button.pm-icon-cell--glyph {
+  font-size: 16px;
+  line-height: 1;
+}
+.pm-icon-cell:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+button.pm-icon-cell--selected {
+  background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
+  box-shadow: 0 0 0 1px var(--interactive-accent);
+  color: var(--text-normal);
+}
+.pm-icon-grid-hint:not(:empty) {
+  margin-top: 6px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+
+button.pm-icon-trigger {
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 5px 7px;
+  border-color: var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+.pm-settings-status-icon .pm-icon-trigger {
+  width: 100%;
+}
+.pm-icon-trigger {
+  --pm-glyph-size: 16px;
+}
+
+.pm-prop-label--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pm-prop-label-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--text-faint);
+  --icon-size: 15px;
+}
+
+.pm-subtasks-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+/* Outside .pm-modal-section-header the title keeps its default bottom margin; zero it
+   so the header's own margin sets the spacing. */
+.pm-subtasks-header .pm-modal-section-title {
+  margin: 0;
+}
+/* The count sits inside the heading (Subtasks 1/4), so it stays quiet next to the label. */
+.pm-subtasks-count {
+  margin-left: 2px;
+  color: var(--text-faint);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.pm-subtask-add-row {
+  margin-top: 4px;
+}
+/* Stands in for the checkbox so the add row lines up with the rows above. */
+.pm-subtask-checkbox-ghost {
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+  flex-shrink: 0;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: var(--checkbox-radius);
+}
+.pm-subtask-add-input {
+  flex: 1;
+  min-width: 0;
+  padding: 1px 3px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-normal);
+  font-size: 13px;
+  font-family: inherit;
+}
+.pm-subtask-add-input:focus {
+  background: var(--background-modifier-hover);
+  box-shadow: none;
+  outline: none;
+}
+
+/* Dropping .modal's 16px inset lets the header and footer bleed to both edges; the
+   overflow:hidden re-clips those bands to the modal's rounded corners. */
+.pm-modal--task,
+.pm-modal--create {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* The editor draws its own close button, so the native corner one would be a second X. */
+.pm-modal--task .modal-close-button,
+.pm-modal--task .modal-header-button,
+.pm-modal--create .modal-close-button,
+.pm-modal--create .modal-header-button {
+  display: none;
+}
+
+/* The empty native .modal-header still carries a margin-bottom, which pushes our own
+   header and its accent strip off the top edge. */
+.pm-modal--task .modal-header,
+.pm-modal--create .modal-header {
+  display: none;
+}
+
+.pm-te-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 12px 18px;
+  background: var(--background-primary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+/* Priority-tinted accent strip, pinned to the top of the header. */
+.pm-te-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--pm-accent-strip, transparent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.pm-te-header-spacer {
+  flex: 1;
+}
+.pm-te-header-btn {
+  color: var(--text-muted);
+}
+.pm-te-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+.pm-te-crumb-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  --pm-glyph-size: 14px;
+}
+.pm-te-crumb-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pm-te-crumb-sep {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--text-faint);
+  --icon-size: 13px;
+}
+.pm-te-crumb-id {
+  flex-shrink: 0;
+  font-family: var(--font-monospace);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.pm-te-copyable {
+  cursor: pointer;
+}
+.pm-te-copyable:hover {
+  color: var(--text-muted);
+}
+
+.pm-te-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px 8px;
+}
+/* .pm-modal-section's 24px horizontal padding would indent these past the title and
+   property grid. Their full-width top borders still divide the sections. */
+.pm-te-surface .pm-modal-section {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.pm-te-view {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+/* The header and footer span the tab; the body holds a reading-width column. */
+.pm-te-view .pm-te-body > * {
+  max-width: 760px;
+  margin-inline: auto;
+}
+.pm-te-title-wrap {
+  margin-bottom: 16px;
+}
+.pm-te-title {
+  width: 100%;
+  height: var(--te-title-height, auto);
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  overflow: hidden;
+  color: var(--text-normal);
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.pm-te-title::placeholder {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+/* Matches a section's own bottom padding, so the rule below the properties sits where the
+   rule below every other section does. A custom fields section brings its own padding. */
+.pm-te-props > .pm-prop-grid:last-child {
+  margin-bottom: 14px;
+}
+
+.pm-te-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: var(--background-secondary);
+  border-top: 1px solid var(--background-modifier-border);
+}
+.pm-te-footer-path {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-family: var(--font-monospace);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.pm-te-footer-path > span:last-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pm-te-footer-icon {
+  display: inline-flex;
+  --icon-size: 13px;
+}
+
+.pm-prop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 22px;
+  align-items: start;
+}
+.pm-prop-grid .pm-prop-row {
+  grid-template-columns: 104px 1fr;
+  min-height: 30px;
+  padding: 2px 0;
+  align-items: start;
+}
+.pm-prop-grid .pm-prop-label {
+  padding-top: 6px;
+  color: var(--text-muted);
+}
+/* Rows are top-aligned, so a control shorter than an inline trigger needs the cell to hold
+   the same height for it to center on the label. */
+.pm-prop-grid .pm-prop-value {
+  min-height: 28px;
+}
+.pm-prop-row--wide {
+  grid-column: 1 / -1;
+}
+.pm-prop-add-cell {
+  grid-column: 1 / -1;
+  padding-top: 2px;
+}
+/* The add-property button ends the grid, so the custom fields rule would sit against it. */
+.pm-te-props .pm-prop-grid + .pm-modal-section {
+  margin-top: 14px;
+}
+
+@media (max-width: 520px) {
+  .pm-prop-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pm-prop-inline:focus-visible,
+.pm-prop-add:focus-visible,
+.pm-pop-item:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -1px;
+}

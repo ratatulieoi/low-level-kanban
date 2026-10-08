@@ -1,0 +1,68 @@
+{
+  "name": "project-manager",
+  "version": "2.6.0",
+  "private": true,
+  "description": "Local Kanban boards inside Obsidian, backed by Markdown notes with offline HTML export.",
+  "type": "module",
+  "main": "main.js",
+  "imports": {
+    "#main": "./src/main.ts",
+    "#store": "./src/store/index.ts",
+    "#store/*": "./src/store/*.ts",
+    "#ui/*": "./src/ui/*.ts",
+    "#modals/*": "./src/modals/*.ts",
+    "#test/*": "./test/*.ts"
+  },
+  "scripts": {
+    "dev": "run-p dev:js dev:css",
+    "dev:js": "pnpm build:viewer && tsdown --watch",
+    "dev:css": "node scripts/build-styles.mjs --watch",
+    "build": "run-p build:js build:css",
+    "build:js": "pnpm build:viewer && PRODUCTION=1 tsdown",
+    "build:css": "PRODUCTION=1 node scripts/build-styles.mjs",
+    "check": "run-p check:**",
+    "check:code": "oxlint ./src ./packages ./test",
+    "check:format": "oxfmt --check ./src ./packages ./test",
+    "check:submission": "eslint --max-warnings 0 src/ packages/",
+    "check:types": "tsc -noEmit -skipLibCheck",
+    "fix": "run-p fix:**",
+    "fix:code": "oxlint --fix ./src ./packages ./test",
+    "fix:format": "oxfmt ./src ./packages ./test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "build:viewer": "node scripts/build-viewer.mjs",
+    "build:packages": "pnpm --filter @dotpm/core --filter @dotpm/snapshot --filter @dotpm/viewer build"
+  },
+  "devDependencies": {
+    "@2bad/axiom": "2.1.0",
+    "@2bad/tsconfig": "4.0.0",
+    "@dotpm/core": "workspace:*",
+    "@dotpm/snapshot": "workspace:*",
+    "@dotpm/ui": "workspace:*",
+    "@types/node": "26.4.1",
+    "@typescript-eslint/parser": "8.69.0",
+    "@vitest/coverage-v8": "5.0.0",
+    "eslint": "10.10.0",
+    "eslint-plugin-obsidianmd": "0.4.2",
+    "happy-dom": "20.14.0",
+    "lightningcss": "1.33.0",
+    "monkey-around": "3.0.0",
+    "npm-run-all2": "9.0.3",
+    "obsidian": "1.13.1",
+    "oxfmt": "0.66.0",
+    "oxlint": "1.81.0",
+    "tsdown": "0.23.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.0",
+    "yaml": "2.9.0"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "volta": {
+    "node": "24.15.0",
+    "pnpm": "11.5.3"
+  },
+  "packageManager": "pnpm@11.5.3"
+}

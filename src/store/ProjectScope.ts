@@ -1,0 +1,243 @@
+import {
+  type CustomFieldDef,
+  type FieldCatalog,
+  type FilterContext,
+  type FilterState,
+  type PriorityConfig,
+  type Project,
+  type ResolvedProjectConfig,
+  type StatusConfig,
+  type Task,
+  findTaskById,
+  flattenTasks,
+  t,
+  tn
+} from '@dotpm/core'
+import type { TaskSource } from './TaskSource'
+import type { VaultIndex } from './VaultIndex'
+
+/** What a project view renders. Carried in the view state, so a layout restores it. */
+export type ScopeSpec =
+  | { kind: 'project'; path: string }
+  | { kind: 'subtree'; path: string }
+  | { kind: 'folder'; path: string }
+  | { kind: 'picked'; paths: string[] }
+  | { kind: 'vault' }
+
+/** Note paths can't hold `|`, so it separates the paths of a picked scope. */
+export function scopeKey(spec: ScopeSpec): string {
+  switch (spec.kind) {
+    case 'vault':
+      return 'vault'
+    case 'picked':
+      return `picked:${[...spec.paths].sort().join('|')}`
+    default:
+      return `${spec.kind}:${spec.path}`
+  }
+}
+
+/** The project paths a spec covers, in the order the views should show them. */
+export function resolveScopePaths(spec: ScopeSpec, index: VaultIndex): string[] {
+  switch (spec.kind) {
+    case 'project':
+      return index.projectRef(spec.path) ? [spec.path] : []
+    case 'subtree': {
+      if (!index.projectRef(spec.path)) return []
+      const archived = index.isArchived(spec.path)
+      return [spec.path, ...index.descendantRefs(spec.path, archived).map((ref) => ref.path)]
+    }
+    case 'folder': {
+      const prefix = spec.path === '' ? '' : `${spec.path}/`
+      return index.projectPaths().filter((path) => path.startsWith(prefix))
+    }
+    case 'picked':
+      return spec.paths.filter((path) => index.projectRef(path))
+    case 'vault':
+      return index.projectPaths()
+  }
+}
+
+/**
+ * The spec a set of checked projects stands for: one alone is that project, and one with
+ * exactly its sub-projects is its subtree, so a sub-project added later joins the view.
+ */
+export function selectionSpec(paths: string[], descendantsOf: (path: string) => string[]): ScopeSpec {
+  if (paths.length === 1) return { kind: 'project', path: paths[0] }
+  const chosen = new Set(paths)
+  for (const path of paths) {
+    const descendants = descendantsOf(path)
+    if (descendants.length + 1 === chosen.size && descendants.every((child) => chosen.has(child))) {
+      return { kind: 'subtree', path }
+    }
+  }
+  return { kind: 'picked', paths }
+}
+
+function unionById<T extends { id: string }>(lists: T[][]): T[] {
+  const seen = new Set<string>()
+  const out: T[] = []
+  for (const list of lists) {
+    for (const entry of list) {
+      if (seen.has(entry.id)) continue
+      seen.add(entry.id)
+      out.push(entry)
+    }
+  }
+  return out
+}
+
+/**
+ * The set of projects one view renders. Reading goes through the scope; writing goes to
+ * the project that owns the task, which `projectOf` answers. The store still knows
+ * nothing about scopes: every mutation it takes is against a single project.
+ */
+export class ProjectScope {
+  /** Resolving a config walks the project's tasks, so a row-by-row render can't repeat it. */
+  private configs = new Map<string, ResolvedProjectConfig>()
+
+  constructor(
+    readonly spec: ScopeSpec,
+    readonly projects: Project[],
+    private store: TaskSource
+  ) {}
+
+  /** Drops the resolved configs, for when a palette changed under a live view. */
+  invalidate(): void {
+    this.configs.clear()
+  }
+
+  private configOfProject(project: Project): ResolvedProjectConfig {
+    let config = this.configs.get(project.filePath)
+    if (!config) {
+      config = this.store.configFor(project)
+      this.configs.set(project.filePath, config)
+    }
+    return config
+  }
+
+  get key(): string {
+    return scopeKey(this.spec)
+  }
+
+  /** Where a new task goes, and whose settings stand in for the group's. */
+  get primary(): Project | null {
+    return this.projects[0] ?? null
+  }
+
+  get isMulti(): boolean {
+    return this.projects.length > 1
+  }
+
+  label(): string {
+    switch (this.spec.kind) {
+      case 'project':
+        return this.primary?.title ?? t('common.project')
+      case 'subtree':
+        return this.primary ? t('scope.subtreeLabel', { title: this.primary.title }) : t('common.project')
+      case 'folder':
+        return this.spec.path.slice(this.spec.path.lastIndexOf('/') + 1) || t('scope.vault')
+      case 'picked':
+        return tn('scope.projectCount', this.projects.length)
+      case 'vault':
+        return t('scope.all')
+    }
+  }
+
+  /** Every project's top-level tasks, the projects kept in scope order. */
+  tasks(): Task[] {
+    if (!this.isMulti) return this.primary?.tasks ?? []
+    return this.projects.flatMap((project) => project.tasks)
+  }
+
+  projectOf(taskId: string): Project | null {
+    for (const project of this.projects) {
+      if (project.taskIndex.has(taskId)) return project
+    }
+    return null
+  }
+
+  taskById(taskId: string): Task | null {
+    const owner = this.projectOf(taskId)
+    return owner ? findTaskById(owner, taskId) : null
+  }
+
+  /** Groups task ids by owning project, so a bulk action becomes one call per project. */
+  groupByProject(taskIds: string[]): { project: Project; taskIds: string[] }[] {
+    const groups = new Map<Project, string[]>()
+    for (const id of taskIds) {
+      const owner = this.projectOf(id)
+      if (!owner) continue
+      const bucket = groups.get(owner)
+      if (bucket) bucket.push(id)
+      else groups.set(owner, [id])
+    }
+    return [...groups].map(([project, ids]) => ({ project, taskIds: ids }))
+  }
+
+  /**
+   * Display palettes only: statuses and priorities every project in scope contributes,
+   * the primary project's first. Terminal-status checks must use `configOf` instead,
+   * because an overridden status carries its own `complete` flag.
+   */
+  get config(): ResolvedProjectConfig {
+    const primary = this.primary
+    if (!primary) throw new Error('ProjectScope.config on an empty scope')
+    const base = this.configOfProject(primary)
+    if (!this.isMulti) return base
+    const configs = this.projects.map((project) => this.configOfProject(project))
+    return {
+      ...base,
+      statuses: unionById<StatusConfig>(configs.map((c) => c.statuses)),
+      priorities: unionById<PriorityConfig>(configs.map((c) => c.priorities))
+    }
+  }
+
+  /** The owning project's resolved config, for anything that decides a task's own state. */
+  configOf(taskId: string): ResolvedProjectConfig {
+    const owner = this.projectOf(taskId)
+    return owner ? this.configOfProject(owner) : this.config
+  }
+
+  /**
+   * Columns only, so every project in scope lines up on one header row. Editing a value
+   * asks `configOf` instead, because an overridden field carries its own type and options.
+   */
+  customFields(): CustomFieldDef[] {
+    if (!this.isMulti) return this.primary ? this.configOfProject(this.primary).customFields : []
+    return unionById(this.projects.map((project) => this.configOfProject(project).customFields))
+  }
+
+  /** What decides which fields a table, board card or timeline label can show. */
+  fieldCatalog(): FieldCatalog {
+    return { customFields: this.customFields(), multi: this.isMulti }
+  }
+
+  /** What a filter condition needs to match the tasks in scope. */
+  filterContext(keyOf: (raw: string) => string): FilterContext {
+    return {
+      statuses: this.config.statuses,
+      customFields: this.customFields(),
+      keyOf,
+      projectOf: (task) => this.projectOf(task.id)?.id
+    }
+  }
+
+  /** What the filter picker and the board's columns read: every task in scope and how to name its values. */
+  filterSetup(filter: FilterState, keyOf: (raw: string) => string) {
+    return {
+      filter,
+      tasks: flattenTasks(this.tasks()).map((flat) => flat.task),
+      ctx: this.filterContext(keyOf),
+      priorities: this.config.priorities,
+      priorityIcons: this.config.priorityIcons,
+      projects: this.isMulti
+        ? this.projects.map((project) => ({ id: project.id, title: project.title, color: project.color }))
+        : []
+    }
+  }
+
+  teamMembers(): string[] {
+    if (!this.isMulti) return this.primary?.teamMembers ?? []
+    return [...new Set(this.projects.flatMap((project) => project.teamMembers))]
+  }
+}

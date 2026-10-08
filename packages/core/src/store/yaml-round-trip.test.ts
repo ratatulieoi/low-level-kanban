@@ -1,0 +1,621 @@
+import { describe, expect, it } from 'vitest'
+import {
+  DEFAULT_PALETTE_COLOR,
+  DEFAULT_PROJECT_COLOR,
+  makeProject,
+  makeTask,
+  type FilterCondition,
+  type Project,
+  type SavedView,
+  type Task
+} from '../types'
+import { hydrateProjectFromFrontmatter, hydrateTaskFromFile } from './YamlHydrator'
+import { parseFrontmatter } from './YamlParser'
+import {
+  buildTaskFrontmatter,
+  foreignFrontmatter,
+  PROJECT_FRONTMATTER_KEYS,
+  serializeProject,
+  serializeTask,
+  TASK_FRONTMATTER_KEYS,
+  taskFilePath,
+  type RefWriter
+} from './YamlSerializer'
+
+/** Stands in for Obsidian: every fixture file name here is unique, so none needs its path. */
+const refs: RefWriter = {
+  link: (targetPath, title) => `[[${targetPath.replace(/^.*\//, '').replace(/\.md$/, '')}|${title}]]`,
+  task: (task) => (task.filePath ? refs.link(task.filePath, task.title) : null),
+  dependency: () => null
+}
+
+function roundTripTask(
+  t: Task,
+  project: Project = makeProject('Test', 'Projects/Test.md'),
+  parent: Task | null = null
+) {
+  const md = serializeTask(t, project, parent, [], refs)
+  const parsed = parseFrontmatter(md)
+  if (parsed.kind !== 'frontmatter') throw new Error('frontmatter missing')
+  return hydrateTaskFromFile(parsed.frontmatter, parsed.body, 'Projects/Test_tasks/task.md')
+}
+
+function roundTripProject(p: Project) {
+  const md = serializeProject(p, [], refs)
+  const parsed = parseFrontmatter(md)
+  if (parsed.kind !== 'frontmatter') throw new Error('frontmatter missing')
+  return {
+    project: hydrateProjectFromFrontmatter(parsed.frontmatter, parsed.body, p.filePath, 'Test'),
+    frontmatter: parsed.frontmatter
+  }
+}
+
+describe('task round-trip', () => {
+  it('preserves core scheduling and metadata fields', () => {
+    const original = makeTask({
+      id: 'task-1',
+      title: 'Design API',
+      description: 'Draft the endpoints.',
+      status: 'in-progress',
+      priority: 'high',
+      start: '2026-04-01',
+      due: '2026-04-10',
+      progress: 50,
+      assignees: ['Alice', 'Bob'],
+      tags: ['api', 'design'],
+      dependencies: ['dep-1']
+    })
+    const { task, subtaskIds, parentId } = roundTripTask(original)
+
+    expect(task.id).toBe(original.id)
+    expect(task.title).toBe(original.title)
+    expect(task.description).toBe(original.description)
+    expect(task.status).toBe(original.status)
+    expect(task.priority).toBe(original.priority)
+    expect(task.start).toBe(original.start)
+    expect(task.due).toBe(original.due)
+    expect(task.progress).toBe(original.progress)
+    expect(task.assignees).toEqual(original.assignees)
+    expect(task.tags).toEqual(original.tags)
+    expect(task.dependencies).toEqual(original.dependencies)
+    expect(subtaskIds).toEqual([])
+    expect(parentId).toBeNull()
+  })
+
+  it('records subtaskIds and parentId when present', () => {
+    const child = makeTask({ id: 'child-1' })
+    const parent = makeTask({ id: 'parent-1', subtasks: [child] })
+    const project = makeProject('Test', 'Projects/Test.md')
+
+    const top = roundTripTask(parent, project, null)
+    expect(top.subtaskIds).toEqual(['child-1'])
+    expect(top.parentId).toBeNull()
+
+    const nested = roundTripTask(child, project, parent)
+    expect(nested.subtaskIds).toEqual([])
+    expect(nested.parentId).toBe('parent-1')
+  })
+
+  it('preserves recurrence, timeEstimate, and timeLogs', () => {
+    const original = makeTask({
+      id: 'task-2',
+      recurrence: { interval: 'weekly', every: 2 },
+      timeEstimate: 8,
+      timeLogs: [
+        { date: '2026-04-01', hours: 2, note: 'setup' },
+        { date: '2026-04-02', hours: 3.5, note: 'review' }
+      ]
+    })
+    const { task } = roundTripTask(original)
+    expect(task.recurrence).toEqual(original.recurrence)
+    expect(task.timeEstimate).toBe(8)
+    expect(task.timeLogs).toEqual(original.timeLogs)
+  })
+
+  it('preserves a milestone type and empty start', () => {
+    const original = makeTask({ id: 'm-1', type: 'milestone', start: '', due: '2026-05-01' })
+    const { task } = roundTripTask(original)
+    expect(task.type).toBe('milestone')
+    expect(task.start).toBe('')
+    expect(task.due).toBe('2026-05-01')
+  })
+
+  it('preserves custom field values', () => {
+    const original = makeTask({
+      id: 'task-3',
+      customFields: { impact: 'high', score: 42 }
+    })
+    const { task } = roundTripTask(original)
+    expect(task.customFields).toEqual({ impact: 'high', score: 42 })
+  })
+
+  it('subtask wikilinks derive from sub.filePath, falling back to a bare slug', () => {
+    const project = makeProject('P', 'Projects/P.md')
+    const legacySub = makeTask({ id: 'sub-legacy', title: 'Legacy', filePath: 'Projects/P_tasks/legacy-12345678.md' })
+    const newSub = makeTask({ id: 'sub-new', title: 'Fresh One' }) // no filePath yet
+    const parent = makeTask({ id: 'parent', subtasks: [legacySub, newSub] })
+    const md = serializeTask(parent, project, null, [], refs)
+    expect(md).toContain('[[legacy-12345678|Legacy]]')
+    expect(md).toContain('[[fresh-one|Fresh One]]')
+  })
+
+  it('drops auto-generated Parent wiki-link and Subtasks section from the description', () => {
+    const child = makeTask({ id: 'child' })
+    const parent = makeTask({ id: 'parent-x', description: 'User-written note.', subtasks: [child] })
+    const { task } = roundTripTask(parent)
+    expect(task.description).toBe('User-written note.')
+  })
+
+  it('defaults missing fields to safe values', () => {
+    const frontmatter: Record<string, unknown> = { id: 't-x' }
+    const { task } = hydrateTaskFromFile(frontmatter, '', 'path.md')
+    expect(task.title).toBe('Untitled')
+    expect(task.status).toBe('todo')
+    expect(task.priority).toBe('medium')
+    expect(task.progress).toBe(0)
+    expect(task.assignees).toEqual([])
+    expect(task.dependencies).toEqual([])
+    expect(task.customFields).toEqual({})
+  })
+
+  it('keeps only the usable names in assignees, tags, and dependencies', () => {
+    const frontmatter: Record<string, unknown> = {
+      id: 't-x',
+      assignees: [{ id: 'm1', name: 'John Doe' }, '[[Jane Doe]]', ''],
+      tags: ['api', 2026, { name: 'design' }],
+      dependencies: ['dep-1', null]
+    }
+    const { task } = hydrateTaskFromFile(frontmatter, '', 'path.md')
+    expect(task.assignees).toEqual(['[[Jane Doe]]'])
+    expect(task.tags).toEqual(['api', '2026'])
+    expect(task.dependencies).toEqual(['dep-1'])
+  })
+})
+
+describe('project round-trip', () => {
+  it('preserves core project fields', () => {
+    const p = makeProject('My Project', 'Projects/MyProject.md')
+    p.description = 'A great project.'
+    p.color = '#ff0000'
+    p.icon = '\u{1F680}'
+    p.teamMembers = ['Alice', 'Bob']
+
+    const { project } = roundTripProject(p)
+    expect(project.title).toBe('My Project')
+    expect(project.description).toBe('A great project.')
+    expect(project.color).toBe('#ff0000')
+    expect(project.icon).toBe('\u{1F680}')
+    expect(project.teamMembers).toEqual(['Alice', 'Bob'])
+  })
+
+  it('keeps the description out of the properties and reads it back from the note', () => {
+    const p = makeProject('P', 'Projects/P.md')
+    p.description = 'Line one.\n\nLine two.'
+    p.tasks = [makeTask({ id: 't1', title: 'T', filePath: 'Projects/P/_tasks/t.md' })]
+
+    const { project, frontmatter } = roundTripProject(p)
+    expect(frontmatter.description).toBeUndefined()
+    expect(project.description).toBe('Line one.\n\nLine two.')
+  })
+
+  it('falls back to the default color when a project note holds an invalid one', () => {
+    for (const color of [123, 'blue', ['#fff']]) {
+      const project = hydrateProjectFromFrontmatter({ color }, '# P', 'Projects/P.md', 'P')
+      expect(project.color).toBe(DEFAULT_PROJECT_COLOR)
+    }
+  })
+
+  it('falls back to the default color for a status or priority override with an invalid one', () => {
+    const config = {
+      statuses: [{ id: 'todo', label: 'To do', color: 'red' }],
+      priorities: [{ id: 'high', label: 'High', color: '#f80' }]
+    }
+    const project = hydrateProjectFromFrontmatter({ config }, '# P', 'Projects/P.md', 'P')
+    expect(project.config?.statuses?.[0].color).toBe(DEFAULT_PALETTE_COLOR)
+    expect(project.config?.priorities?.[0].color).toBe('#ff8800')
+  })
+
+  it('reads the description from a note that carries it only as a property', () => {
+    const project = hydrateProjectFromFrontmatter({ description: 'From properties' }, '# P', 'Projects/P.md', 'P')
+    expect(project.description).toBe('From properties')
+  })
+
+  it('prefers the note over a description property an older version left behind', () => {
+    const body = '# P\n\nFrom the note\n\n## Tasks\n- [ ] [[t|T]]'
+    const project = hydrateProjectFromFrontmatter({ description: 'From properties' }, body, 'Projects/P.md', 'P')
+    expect(project.description).toBe('From the note')
+  })
+
+  it('preserves saved views with their filter, sort, board fields and star', () => {
+    const p = makeProject('P', 'Projects/P.md')
+    const view: SavedView = {
+      id: 'v1',
+      name: 'High priority',
+      filter: {
+        conditions: [
+          { field: 'status', op: 'any', value: ['in-progress'] },
+          { field: 'cf:estimate', op: 'between', value: [2, 8] },
+          { field: 'due', op: 'bucket', value: 'overdue' },
+          { field: 'title', op: 'contains', value: 'api' },
+          { field: 'tag', op: 'empty' }
+        ],
+        showArchived: true
+      },
+      sort: [
+        { key: 'due', dir: 'desc' },
+        { key: 'title', dir: 'asc' }
+      ],
+      isDefault: true,
+      viewMode: 'kanban',
+      fields: { kanban: { visible: ['due', 'description'] } }
+    }
+    p.savedViews = [view]
+
+    const { project } = roundTripProject(p)
+    expect(project.savedViews).toEqual([view])
+  })
+
+  it('keeps the open end of a between in place', () => {
+    const p = makeProject('P', 'Projects/P.md')
+    const conditions: FilterCondition[] = [
+      { field: 'due', op: 'between', value: ['', '2026-01-31'] },
+      { field: 'start', op: 'between', value: ['2026-01-01', ''] },
+      { field: 'cf:estimate', op: 'between', value: [null, 5] }
+    ]
+    p.savedViews = [{ id: 'v1', name: 'Open ends', filter: { conditions, showArchived: false }, sort: [] }]
+
+    const { project } = roundTripProject(p)
+    expect(project.savedViews[0].filter.conditions).toEqual(conditions)
+  })
+
+  it('falls back to the default sort when a saved view holds an unknown one', () => {
+    const fm = { savedViews: [{ id: 'v1', name: 'Odd', sortKey: 'estimate', sortDir: 'sideways' }] }
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+    expect(project.savedViews[0].sort).toEqual([{ key: 'status', dir: 'asc' }])
+  })
+
+  it('reads a single sort key from before sorts had several', () => {
+    const fm = { savedViews: [{ id: 'v1', name: 'Old', sortKey: 'due', sortDir: 'desc' }] }
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+    expect(project.savedViews[0].sort).toEqual([{ key: 'due', dir: 'desc' }])
+  })
+
+  it('keeps up to three distinct known sort keys, and an empty sort as empty', () => {
+    const sort = [
+      { key: 'due', dir: 'desc' },
+      { key: 'due', dir: 'asc' },
+      { key: 'estimate', dir: 'asc' },
+      { key: 'title', dir: 'sideways' },
+      { key: 'status' },
+      { key: 'progress', dir: 'desc' }
+    ]
+    const fm = {
+      savedViews: [
+        { id: 'v1', name: 'Many', sort },
+        { id: 'v2', name: 'None', sort: [] }
+      ]
+    }
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+    expect(project.savedViews[0].sort).toEqual([
+      { key: 'due', dir: 'desc' },
+      { key: 'title', dir: 'asc' },
+      { key: 'status', dir: 'asc' }
+    ])
+    expect(project.savedViews[1].sort).toEqual([])
+  })
+
+  it('reads a saved view from before conditions as the conditions it meant', () => {
+    const fm = {
+      savedViews: [
+        {
+          id: 'v1',
+          name: 'Old',
+          filter: {
+            text: ' api ',
+            statuses: ['todo'],
+            priorities: [],
+            assignees: ['Alice'],
+            tags: [],
+            dueDateFilter: 'no-date',
+            showArchived: true
+          }
+        }
+      ]
+    }
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+    expect(project.savedViews[0].filter).toEqual({
+      conditions: [
+        { field: 'status', op: 'any', value: ['todo'] },
+        { field: 'assignee', op: 'any', value: ['Alice'] },
+        { field: 'due', op: 'empty' },
+        { field: 'title', op: 'contains', value: 'api' }
+      ],
+      showArchived: true
+    })
+  })
+
+  it('drops conditions it cannot read', () => {
+    const fm = {
+      savedViews: [
+        {
+          id: 'v1',
+          name: 'Odd',
+          filter: {
+            conditions: [{ field: 'status', op: 'sometimes' }, { op: 'any' }, 'x', { field: 'tag', op: 'empty' }]
+          }
+        }
+      ]
+    }
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+    expect(project.savedViews[0].filter.conditions).toEqual([{ field: 'tag', op: 'empty' }])
+  })
+
+  it('reads a saved grouping and drops what it cannot use', () => {
+    const group = {
+      field: 'priority',
+      hideEmpty: true,
+      columns: { priority: { order: ['low', 7, 'high'], hidden: ['low'] }, status: 'x', tag: {} }
+    }
+    const fm = {
+      savedViews: [
+        { id: 'v1', name: 'G', group },
+        { id: 'v2', name: 'None' }
+      ]
+    }
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+    expect(project.savedViews[0].group).toEqual({
+      field: 'priority',
+      hideEmpty: true,
+      columns: { priority: { order: ['low', 'high'], hidden: ['low'] } }
+    })
+    expect(project.savedViews[1].group).toBeUndefined()
+  })
+
+  it('reads saved fields and drops what it cannot use', () => {
+    const fields = {
+      table: { visible: ['title', 3, 'due'], widths: { due: 88.4, status: -5, time: 'wide' } },
+      kanban: { visible: ['tags', 3, 'due'], widths: { due: 80 } },
+      calendar: { visible: ['due'] }
+    }
+    const fm = {
+      savedViews: [
+        { id: 'v1', name: 'F', fields },
+        { id: 'v2', name: 'None' }
+      ]
+    }
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+    expect(project.savedViews[0].fields).toEqual({ kanban: { visible: ['tags', 'due'] } })
+    expect(project.savedViews[1].fields).toBeUndefined()
+  })
+
+  it.each(['table', 'gantt', 'kanban', 'unknown', undefined])(
+    'normalizes persisted mode %s without losing board intent',
+    (viewMode) => {
+      const view = {
+        id: 'v1',
+        name: 'Saved',
+        isDefault: true,
+        viewMode,
+        ganttGranularity: 'month',
+        nonWorkingDays: { weekends: true },
+        filter: { conditions: [{ field: 'status', op: 'any', value: ['todo'] }], showArchived: true },
+        sort: [{ key: 'due', dir: 'desc' }],
+        group: { field: 'priority', columns: { priority: { hidden: ['low'], order: ['high', 'low'] } } },
+        fields: {
+          kanban: { visible: ['cf:client', 'description', 'due'] },
+          table: { visible: ['title'] },
+          gantt: { visible: ['dates'] }
+        }
+      }
+      const fm = { config: { defaultView: viewMode, autoSchedule: false }, savedViews: [view], foreign: { keep: true } }
+      const before = structuredClone(fm)
+      const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+      expect(project.savedViews[0]).toEqual({
+        id: 'v1',
+        name: 'Saved',
+        isDefault: true,
+        viewMode: 'kanban',
+        filter: view.filter,
+        sort: view.sort,
+        group: view.group,
+        fields: { kanban: view.fields.kanban }
+      })
+      expect(project.config?.defaultView).toBe(
+        ['table', 'gantt', 'kanban'].includes(viewMode ?? '') ? 'kanban' : undefined
+      )
+      expect(project.config?.autoSchedule).toBe(false)
+      const serialized = serializeProject(project, [], refs, foreignFrontmatter(fm, PROJECT_FRONTMATTER_KEYS))
+      const parsed = parseFrontmatter(serialized)
+      if (parsed.kind !== 'frontmatter') throw new Error('frontmatter missing')
+      expect(parsed.frontmatter.foreign).toEqual({ keep: true })
+      expect(parsed.frontmatter.savedViews).toEqual(project.savedViews)
+      expect(fm).toEqual(before)
+      expect(roundTripProject(project).project.savedViews).toEqual(project.savedViews)
+    }
+  )
+
+  it('normalizes old presentation state on serialization even without hydration', () => {
+    const project = makeProject('P', 'Projects/P.md')
+    Object.assign(project, { config: { defaultView: 'table' } })
+    const old = {
+      id: 'v1',
+      name: 'Old',
+      viewMode: 'gantt',
+      ganttGranularity: 'week',
+      nonWorkingDays: { holidays: true },
+      fields: { table: { visible: ['title'], widths: { title: 300 } }, kanban: { visible: ['due'] } },
+      filter: { conditions: [], showArchived: false },
+      sort: [],
+      isDefault: true
+    }
+    project.savedViews = [old as unknown as SavedView]
+    const { frontmatter } = roundTripProject(project)
+    expect(frontmatter.config).toEqual({ defaultView: 'kanban' })
+    expect(frontmatter.savedViews).toEqual([
+      {
+        id: 'v1',
+        name: 'Old',
+        viewMode: 'kanban',
+        fields: { kanban: { visible: ['due'] } },
+        filter: old.filter,
+        sort: [],
+        isDefault: true
+      }
+    ])
+    expect(old.viewMode).toBe('gantt')
+  })
+
+  it('records taskIds in the frontmatter', () => {
+    const p = makeProject('P', 'Projects/P.md')
+    p.tasks = [makeTask({ id: 't-1' }), makeTask({ id: 't-2' })]
+    const { frontmatter } = roundTripProject(p)
+    expect(frontmatter.taskIds).toEqual(['t-1', 't-2'])
+  })
+
+  it('dedups taskIds and body links when project.tasks has the same task twice', () => {
+    const p = makeProject('P', 'Projects/P.md')
+    const task = makeTask({ id: 't-dup', title: 'Dup', filePath: 'Projects/P_tasks/dup-tdup.md' })
+    p.tasks = [task, task]
+    const md = serializeProject(p, [], refs)
+    const parsed = parseFrontmatter(md)
+    if (parsed.kind !== 'frontmatter') throw new Error('frontmatter missing')
+    expect(parsed.frontmatter.taskIds).toEqual(['[[dup-tdup|Dup]]'])
+    const bulletCount = md.split('\n').filter((l) => l.startsWith('- [ ] [[dup-tdup|')).length
+    expect(bulletCount).toBe(1)
+  })
+
+  it('taskFilePath returns a bare-slug path without an id suffix', () => {
+    expect(taskFilePath('Bug Fix', 'Projects/P_tasks')).toBe('Projects/P_tasks/bug-fix.md')
+    expect(taskFilePath('A/B:C', 'Projects/P_tasks')).toBe('Projects/P_tasks/a-b-c.md')
+  })
+
+  it('falls back to the file basename when title is missing', () => {
+    const project = hydrateProjectFromFrontmatter({}, '', 'Projects/Fallback.md', 'Fallback')
+    expect(project.title).toBe('Fallback')
+    expect(project.id).toBe('Fallback')
+  })
+})
+
+// The store passes Obsidian's live frontmatter object straight into these hydrators, so
+// sharing a container reference with the input would let an edit corrupt the cache.
+describe('hydration does not alias the source frontmatter', () => {
+  it('copies task array and object containers', () => {
+    const fm: Record<string, unknown> = {
+      id: 't1',
+      title: 'Task',
+      assignees: ['Alice'],
+      tags: ['api'],
+      dependencies: ['dep-1'],
+      customFields: { sprint: 'S1' },
+      recurrence: { interval: 'weekly', every: 1 },
+      timeLogs: [{ date: '2026-04-01', hours: 2, note: 'init' }]
+    }
+
+    const { task } = hydrateTaskFromFile(fm, '', 'Projects/P_tasks/task.md')
+    const logs = task.timeLogs
+    if (!logs) throw new Error('timeLogs missing')
+    const srcLogs = fm.timeLogs as { hours: number }[]
+
+    expect(task.assignees).not.toBe(fm.assignees)
+    expect(task.tags).not.toBe(fm.tags)
+    expect(task.dependencies).not.toBe(fm.dependencies)
+    expect(task.customFields).not.toBe(fm.customFields)
+    expect(task.recurrence).not.toBe(fm.recurrence)
+    expect(logs).not.toBe(fm.timeLogs)
+    expect(logs[0]).not.toBe(srcLogs[0])
+
+    task.assignees.push('Bob')
+    task.tags.push('design')
+    task.dependencies.push('dep-2')
+    task.customFields.priority = 'high'
+    logs[0].hours = 99
+
+    expect(fm.assignees).toEqual(['Alice'])
+    expect(fm.tags).toEqual(['api'])
+    expect(fm.dependencies).toEqual(['dep-1'])
+    expect(fm.customFields).toEqual({ sprint: 'S1' })
+    expect(srcLogs[0].hours).toBe(2)
+  })
+
+  it('drops team members written as mappings instead of names', () => {
+    const fm: Record<string, unknown> = {
+      id: 'p1',
+      title: 'Project',
+      teamMembers: [{ id: 'm1', name: 'John Doe' }, 'Alice', null]
+    }
+
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+
+    expect(project.teamMembers).toEqual(['Alice'])
+  })
+
+  it('copies project array containers', () => {
+    const fm: Record<string, unknown> = {
+      id: 'p1',
+      title: 'Project',
+      customFields: [{ id: 'cf1', name: 'Sprint', type: 'text' }],
+      teamMembers: ['Alice']
+    }
+
+    const project = hydrateProjectFromFrontmatter(fm, '', 'Projects/P.md', 'P')
+
+    expect(project.customFields).not.toBe(fm.customFields)
+    expect(project.teamMembers).not.toBe(fm.teamMembers)
+
+    project.customFields.push({ id: 'cf2', name: 'Points', type: 'number' })
+    project.teamMembers.push('Bob')
+
+    expect((fm.customFields as unknown[]).length).toBe(1)
+    expect(fm.teamMembers).toEqual(['Alice'])
+  })
+})
+
+describe('foreign frontmatter', () => {
+  it('owns every key the serializers write', () => {
+    const project = makeProject('P', 'Projects/P.md')
+    project.parentPath = 'Projects/Parent.md'
+    project.config = { defaultView: 'kanban' }
+    const task = makeTask({
+      id: 't-full',
+      title: 'Full',
+      completed: '2026-04-01',
+      recurrence: { interval: 'weekly', every: 1 },
+      timeEstimate: 4,
+      timeLogs: [{ date: '2026-04-01', hours: 2, note: 'init' }],
+      customFields: { sprint: 'S1' }
+    })
+
+    const taskKeys = Object.keys(buildTaskFrontmatter(task, project, null, refs))
+    expect(taskKeys.filter((key) => !TASK_FRONTMATTER_KEYS.has(key))).toEqual([])
+
+    const parsedProject = parseFrontmatter(serializeProject(project, [], refs))
+    const projectKeys = parsedProject.kind === 'frontmatter' ? Object.keys(parsedProject.frontmatter) : []
+    expect(projectKeys.filter((key) => !PROJECT_FRONTMATTER_KEYS.has(key))).toEqual([])
+  })
+
+  it('writes foreign keys after its own and reads them back unchanged', () => {
+    const project = makeProject('P', 'Projects/P.md')
+    const task = makeTask({ id: 't-1', title: 'Task', status: 'todo' })
+    const foreign = {
+      uuid: 'ext-42',
+      timeEntries: [{ startTime: '2026-09-02T07:00:00', endTime: '2026-09-02T07:25:00' }]
+    }
+
+    const md = serializeTask(task, project, null, [], refs, foreign)
+    const parsed = parseFrontmatter(md)
+    if (parsed.kind !== 'frontmatter') throw new Error('frontmatter missing')
+    const frontmatter = parsed.frontmatter
+
+    expect(foreignFrontmatter(frontmatter, TASK_FRONTMATTER_KEYS)).toEqual(foreign)
+    expect(Object.keys(frontmatter).indexOf('uuid')).toBeGreaterThan(Object.keys(frontmatter).indexOf('updatedAt'))
+    expect(hydrateTaskFromFile(frontmatter, '', 'Projects/P_tasks/task.md').task.status).toBe('todo')
+  })
+
+  it('keeps only the keys the plugin does not own', () => {
+    expect(foreignFrontmatter(null, TASK_FRONTMATTER_KEYS)).toEqual({})
+    expect(foreignFrontmatter({ status: 'done', uuid: 'x', tasks: [] }, PROJECT_FRONTMATTER_KEYS)).toEqual({
+      status: 'done',
+      uuid: 'x'
+    })
+  })
+})

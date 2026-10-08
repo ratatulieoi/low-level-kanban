@@ -1,0 +1,337 @@
+import type { App } from 'obsidian'
+import { TFile } from 'obsidian'
+import { describe, expect, it, vi } from 'vitest'
+import { makeFakeApp } from '#test/fakeVault'
+import { migrateBoardCardConfig, migrateProjectLayout, migrateTaskRefs } from './migration'
+import type PMPlugin from './main'
+import { ProjectStore, VaultIndex } from './store'
+import { DEFAULT_SETTINGS, makeDefaultFilter, makeDefaultGroup, makeDefaultSort, type PMSettings } from '@dotpm/core'
+
+const expectDefined = <T>(value: T | null | undefined): T => {
+  if (value == null) throw new Error('expected value to be defined')
+  return value
+}
+
+const projectNote = (id: string, title: string): string =>
+  ['---', 'pm-project: true', `id: ${id}`, `title: ${title}`, 'taskIds:', '  - t1', '---', ''].join('\n')
+
+const taskNote = (id: string, title: string, projectId: string): string =>
+  ['---', 'pm-task: true', `id: ${id}`, `projectId: ${projectId}`, `title: ${title}`, 'status: todo', '---', ''].join(
+    '\n'
+  )
+
+interface FakeLeaf {
+  state: Record<string, unknown>
+  getViewState: () => { type: string; state: Record<string, unknown> }
+  setViewState: (viewState: { type: string; state: Record<string, unknown> }) => void
+}
+
+function fakeLeaf(state: Record<string, unknown>): FakeLeaf {
+  const leaf: FakeLeaf = {
+    state,
+    getViewState: () => ({ type: 'pm-project', state: leaf.state }),
+    setViewState: (viewState) => {
+      leaf.state = viewState.state
+    }
+  }
+  return leaf
+}
+
+async function legacyVault(leaves: FakeLeaf[]): Promise<{ plugin: PMPlugin; app: App; settings: PMSettings }> {
+  const { app, vault } = makeFakeApp({ liveMetadataCache: true })
+  const typed = app as unknown as App
+  await vault.create('Projects/Roadmap.md', projectNote('p1', 'Roadmap'))
+  await vault.create('Projects/Roadmap_tasks/design.md', taskNote('t1', 'Design', 'p1'))
+  await vault.create('Projects/Roadmap_tasks/Archive/old.md', taskNote('t2', 'Old', 'p1'))
+
+  const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+  const index = new VaultIndex(typed, () => settings)
+  index.build()
+  const store = new ProjectStore(typed, () => settings, index)
+
+  const plugin = {
+    app: {
+      ...app,
+      workspace: {
+        iterateAllLeaves: (visit: (leaf: FakeLeaf) => void) => {
+          for (const leaf of leaves) visit(leaf)
+        }
+      }
+    },
+    index,
+    store,
+    settings,
+    saveSettings: async () => {}
+  } as unknown as PMPlugin
+
+  return { plugin, app: typed, settings }
+}
+
+describe('migrateProjectLayout', () => {
+  it('moves a project and its tasks into a folder of its own', async () => {
+    const { plugin, app } = await legacyVault([])
+
+    await migrateProjectLayout(plugin)
+
+    expect(app.vault.getAbstractFileByPath('Projects/Roadmap/Roadmap.md')).toBeInstanceOf(TFile)
+    expect(app.vault.getAbstractFileByPath('Projects/Roadmap/_tasks/design.md')).toBeInstanceOf(TFile)
+    expect(app.vault.getAbstractFileByPath('Projects/Roadmap/_tasks/Archive/old.md')).toBeInstanceOf(TFile)
+    expect(app.vault.getAbstractFileByPath('Projects/Roadmap_tasks')).toBeNull()
+  })
+
+  it('carries the filters, saved views and collapsed state over to the new path', async () => {
+    const { plugin, settings } = await legacyVault([])
+    settings.projectFilters['project:Projects/Roadmap.md'] = {
+      filter: makeDefaultFilter(),
+      activeSavedViewId: null,
+      sort: makeDefaultSort(),
+      group: makeDefaultGroup(),
+      fields: {},
+      viewMode: 'kanban'
+    }
+    settings.scopeViews['subtree:Projects/Roadmap.md'] = []
+    settings.collapsedTasks['Projects/Roadmap.md'] = ['t1']
+    settings.collapsedProjects.push('Projects/Roadmap.md')
+
+    await migrateProjectLayout(plugin)
+
+    expect(settings.projectFilters['project:Projects/Roadmap/Roadmap.md']).toBeDefined()
+    expect(settings.projectFilters['project:Projects/Roadmap.md']).toBeUndefined()
+    expect(settings.scopeViews['subtree:Projects/Roadmap/Roadmap.md']).toBeDefined()
+    expect(settings.collapsedTasks['Projects/Roadmap/Roadmap.md']).toEqual(['t1'])
+    expect(settings.collapsedProjects).toEqual(['Projects/Roadmap/Roadmap.md'])
+  })
+
+  it('retargets the tabs the workspace restored before it ran', async () => {
+    const scoped = fakeLeaf({ scope: { kind: 'subtree', path: 'Projects/Roadmap.md' } })
+    const overview = fakeLeaf({ filePath: 'Projects/Roadmap.md' })
+    const task = fakeLeaf({ filePath: 'Projects/Roadmap_tasks/design.md', projectPath: 'Projects/Roadmap.md' })
+    const unrelated = fakeLeaf({ filePath: 'Notes/idea.md' })
+    const { plugin } = await legacyVault([scoped, overview, task, unrelated])
+
+    await migrateProjectLayout(plugin)
+
+    expect(scoped.state.scope).toEqual({ kind: 'subtree', path: 'Projects/Roadmap/Roadmap.md' })
+    expect(overview.state.filePath).toBe('Projects/Roadmap/Roadmap.md')
+    expect(task.state.filePath).toBe('Projects/Roadmap/_tasks/design.md')
+    expect(task.state.projectPath).toBe('Projects/Roadmap/Roadmap.md')
+    expect(unrelated.state.filePath).toBe('Notes/idea.md')
+  })
+
+  it('repoints a sub-project at its parent new path', async () => {
+    const { plugin, app } = await legacyVault([])
+    await app.vault.create(
+      'Projects/Q3.md',
+      [
+        '---',
+        'pm-project: true',
+        'id: p2',
+        'title: Q3',
+        'parent: "[[Projects/Roadmap]]"',
+        'taskIds: []',
+        '---',
+        ''
+      ].join('\n')
+    )
+    plugin.index.build()
+
+    await migrateProjectLayout(plugin)
+
+    const child = expectDefined(await plugin.store.loadProjectByPath('Projects/Q3/Q3.md'))
+    expect(child.parentPath).toBe('Projects/Roadmap/Roadmap.md')
+  })
+
+  it('does nothing on a second run', async () => {
+    const { plugin, app } = await legacyVault([])
+    await migrateProjectLayout(plugin)
+    const before = app.vault.getAbstractFileByPath('Projects/Roadmap/Roadmap.md')
+
+    await migrateProjectLayout(plugin)
+
+    expect(app.vault.getAbstractFileByPath('Projects/Roadmap/Roadmap.md')).toBe(before)
+    expect(app.vault.getAbstractFileByPath('Projects/Roadmap/Roadmap')).toBeNull()
+  })
+})
+
+const idRefProject = (): string =>
+  ['---', 'pm-project: true', 'id: p1', 'title: Roadmap', 'taskIds:', '  - t1', '---', ''].join('\n')
+
+const idRefTask = (id: string, title: string, extra: string[]): string =>
+  ['---', 'pm-task: true', `id: ${id}`, 'projectId: p1', `title: ${title}`, 'status: todo', ...extra, '---', ''].join(
+    '\n'
+  )
+
+async function idRefVault(): Promise<{ plugin: PMPlugin; app: App }> {
+  const { app, vault } = makeFakeApp({ liveMetadataCache: true })
+  const typed = app as unknown as App
+  await vault.create('Projects/Roadmap/Roadmap.md', idRefProject())
+  await vault.create('Projects/Roadmap/_tasks/parent.md', idRefTask('t1', 'Parent', ['subtaskIds:', '  - t2']))
+  await vault.create('Projects/Roadmap/_tasks/child.md', idRefTask('t2', 'Child', ['parentId: t1']))
+
+  const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+  const index = new VaultIndex(typed, () => settings)
+  index.build()
+  const store = new ProjectStore(typed, () => settings, index)
+  const plugin = { app, index, store, settings, saveSettings: async () => {} } as unknown as PMPlugin
+  return { plugin, app: typed }
+}
+
+const contentAt = async (app: App, path: string): Promise<string> => {
+  const file = app.vault.getAbstractFileByPath(path)
+  if (!(file instanceof TFile)) throw new Error(`no file at ${path}`)
+  return app.vault.cachedRead(file)
+}
+
+describe('migrateTaskRefs', () => {
+  it('names a parent and its subtasks by link in notes that still hold ids', async () => {
+    const { plugin, app } = await idRefVault()
+
+    await migrateTaskRefs(plugin)
+
+    expect(await contentAt(app, 'Projects/Roadmap/_tasks/parent.md')).toContain('subtaskIds: ["[[child|Child]]"]')
+    expect(await contentAt(app, 'Projects/Roadmap/_tasks/child.md')).toContain('parentId: "[[parent|Parent]]"')
+    expect(await contentAt(app, 'Projects/Roadmap/Roadmap.md')).toContain('taskIds: ["[[parent|Parent]]"]')
+  })
+
+  it('keeps the tree it rewrote', async () => {
+    const { plugin, app } = await idRefVault()
+
+    await migrateTaskRefs(plugin)
+
+    const store = new ProjectStore(app, () => structuredClone(DEFAULT_SETTINGS))
+    const reloaded = expectDefined(await store.loadProjectByPath('Projects/Roadmap/Roadmap.md'))
+    expect(reloaded.tasks.map((t) => t.id)).toEqual(['t1'])
+    expect(reloaded.tasks[0].subtasks.map((t) => t.id)).toEqual(['t2'])
+  })
+
+  it('rewrites nothing on a second run', async () => {
+    const { plugin } = await idRefVault()
+    await migrateTaskRefs(plugin)
+    const rewrite = vi.spyOn(plugin.store, 'normalizeTaskRefs')
+
+    await migrateTaskRefs(plugin)
+
+    expect(rewrite).not.toHaveBeenCalled()
+  })
+})
+
+describe('migrateTaskRefs leaves the note itself alone', () => {
+  it('keeps the name and the body of a note the user renamed and wrote in', async () => {
+    const { app, vault } = makeFakeApp({ liveMetadataCache: true })
+    const typed = app as unknown as App
+    await vault.create('Projects/Roadmap/Roadmap.md', idRefProject())
+    const body = ['', 'My research notes.', '', '## Subtasks', '', 'Notes I wrote under my own heading.'].join('\n')
+    await vault.create(
+      'Projects/Roadmap/_tasks/my-own-name.md',
+      idRefTask('t1', 'Design the thing', ['subtaskIds:', '  - t2']) + body
+    )
+    await vault.create('Projects/Roadmap/_tasks/child.md', idRefTask('t2', 'Child', ['parentId: t1']))
+
+    const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+    const index = new VaultIndex(typed, () => settings)
+    index.build()
+    const store = new ProjectStore(typed, () => settings, index)
+    const plugin = { app, index, store, settings, saveSettings: async () => {} } as unknown as PMPlugin
+
+    await migrateTaskRefs(plugin)
+
+    const content = await contentAt(typed, 'Projects/Roadmap/_tasks/my-own-name.md')
+    expect(content).toContain('subtaskIds: ["[[child|Child]]"]')
+    expect(content).toContain('Notes I wrote under my own heading.')
+    expect(typed.vault.getMarkdownFiles().map((f) => f.path)).not.toContain(
+      'Projects/Roadmap/_tasks/design-the-thing.md'
+    )
+  })
+})
+
+describe('migrateBoardCardConfig', () => {
+  async function vaultWith(config: string[]): Promise<{ plugin: PMPlugin; app: App; settings: PMSettings }> {
+    const { app, vault } = makeFakeApp({ liveMetadataCache: true })
+    const typed = app as unknown as App
+    const note = ['---', 'pm-project: true', 'id: p1', 'title: Roadmap', 'config:', ...config, '---', ''].join('\n')
+    await vault.create('Projects/Roadmap/Roadmap.md', note)
+    const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+    const index = new VaultIndex(typed, () => settings)
+    index.build()
+    const plugin = { app: typed, index, settings, saveSettings: async () => {} } as unknown as PMPlugin
+    return { plugin, app: typed, settings }
+  }
+
+  const frontmatter = (app: App): Record<string, unknown> | undefined => {
+    const file = app.vault.getAbstractFileByPath('Projects/Roadmap/Roadmap.md')
+    return file instanceof TFile ? app.metadataCache.getFileCache(file)?.frontmatter : undefined
+  }
+
+  it('moves the project overrides into its view and out of the note', async () => {
+    const { plugin, app, settings } = await vaultWith([
+      '  kanbanShowSubtasks: true',
+      '  kanbanShowDescriptionPreview: false',
+      '  autoSchedule: false'
+    ])
+    await migrateBoardCardConfig(plugin)
+    const visible = settings.projectFilters['project:Projects/Roadmap/Roadmap.md'].fields.kanban?.visible
+    expect(visible).toContain('subtasks')
+    expect(visible).not.toContain('description')
+    expect(frontmatter(app)?.config).toEqual({ autoSchedule: false })
+  })
+
+  it('keeps what the global setting gave a view for a key the note leaves out', async () => {
+    const { plugin, app, settings } = await vaultWith(['  kanbanShowSubtasks: false'])
+    settings.projectFilters['project:Projects/Roadmap/Roadmap.md'] = {
+      filter: makeDefaultFilter(),
+      activeSavedViewId: null,
+      sort: makeDefaultSort(),
+      group: makeDefaultGroup(),
+      fields: { kanban: { visible: ['priority', 'description', 'subtasks'] } },
+      viewMode: 'kanban'
+    }
+    await migrateBoardCardConfig(plugin)
+    const visible = settings.projectFilters['project:Projects/Roadmap/Roadmap.md'].fields.kanban?.visible
+    expect(visible).toEqual(['priority', 'description'])
+    expect(settings.projectFilters['project:Projects/Roadmap/Roadmap.md'].viewMode).toBe('kanban')
+    expect(frontmatter(app)?.config).toBeUndefined()
+  })
+
+  it('starts a project never opened from the global setting for a key the note leaves out', async () => {
+    const { plugin, settings } = await vaultWith(['  kanbanShowSubtasks: false'])
+    settings.defaultFields = { kanban: { visible: ['priority', 'description', 'subtasks'] } }
+    await migrateBoardCardConfig(plugin)
+    const visible = settings.projectFilters['project:Projects/Roadmap/Roadmap.md'].fields.kanban?.visible
+    expect(visible).toContain('description')
+    expect(visible).not.toContain('subtasks')
+  })
+
+  it('keeps custom fields and scope intent when migrating legacy board overrides', async () => {
+    const { plugin, settings } = await vaultWith(['  kanbanShowSubtasks: true'])
+    const key = 'project:Projects/Roadmap/Roadmap.md'
+    const legacy = {
+      filter: makeDefaultFilter(),
+      activeSavedViewId: 'saved-1',
+      sort: makeDefaultSort(),
+      group: { field: 'priority', columns: { priority: { hidden: ['low'] } } },
+      fields: { kanban: { visible: ['cf:client', 'description', 'due'] }, table: { visible: ['title'] } },
+      viewMode: 'gantt',
+      ganttGranularity: 'month',
+      nonWorkingDays: { weekends: true }
+    }
+    settings.projectFilters[key] = legacy as unknown as PMSettings['projectFilters'][string]
+    await migrateBoardCardConfig(plugin)
+    expect(settings.projectFilters[key]).toEqual({
+      filter: legacy.filter,
+      activeSavedViewId: 'saved-1',
+      sort: legacy.sort,
+      group: legacy.group,
+      fields: { kanban: { visible: ['cf:client', 'description', 'due', 'subtasks'] } },
+      viewMode: 'kanban'
+    })
+    const before = structuredClone(settings)
+    await migrateBoardCardConfig(plugin)
+    expect(settings).toEqual(before)
+  })
+
+  it('leaves a note without the old keys alone', async () => {
+    const { plugin, settings } = await vaultWith(['  autoSchedule: true'])
+    await migrateBoardCardConfig(plugin)
+    expect(settings.projectFilters).toEqual({})
+  })
+})

@@ -1,0 +1,14 @@
+/* The two plugin tokens with no Obsidian equivalent. Both are theme-dependent and
+   overridden for dark mode in widgets.css; everything else uses theme variables directly. */
+.pm-root {
+  --pm-ghost-border: rgba(0, 0, 0, 0.06);
+  --pm-shadow-ambient: rgba(0, 0, 0, 0.06);
+
+  font-family: var(--font-interface);
+  color: var(--text-normal);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
