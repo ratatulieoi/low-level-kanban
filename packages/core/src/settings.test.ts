@@ -82,7 +82,7 @@ describe('omitObsoleteSettings', () => {
       unknownViewSetting: { keep: true }
     }
     const fields = {
-      kanban: { visible: ['cf:client', 'due', 'subtasks'] },
+      kanban: { visible: ['cf:client', 'due'] },
       table: { visible: ['title'], widths: { due: 90 } },
       gantt: { visible: ['dates'] }
     }
@@ -183,19 +183,11 @@ describe('omitObsoleteSettings', () => {
     expect(omitObsoleteSettings(saved)).toEqual({
       defaultFields: { kanban: { visible: ['cf:client', 'due', 'description'] } }
     })
-    expect(omitObsoleteSettings({ kanbanShowSubtasks: true })).toMatchObject({
-      defaultFields: { kanban: { visible: expect.arrayContaining(['subtasks']) } }
-    })
   })
 
-  it.each([
-    [false, false],
-    [false, true],
-    [true, false],
-    [true, true]
-  ])('keeps the original card order for legacy switches %s/%s', (subtasks, description) => {
-    expect(omitObsoleteSettings({ kanbanShowSubtasks: subtasks, kanbanShowDescriptionPreview: description })).toEqual({
-      defaultFields: legacyBoardFields(subtasks, description)
+  it.each([false, true])('keeps the original card order for legacy switch %s', (description) => {
+    expect(omitObsoleteSettings({ kanbanShowDescriptionPreview: description })).toEqual({
+      defaultFields: legacyBoardFields(false, description)
     })
   })
 

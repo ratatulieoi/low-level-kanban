@@ -30,6 +30,10 @@
   background: var(--background-secondary);
   border-radius: var(--radius-m);
   overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+.llk-kanban-col.llk-kanban-drop-target {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--interactive-accent) 40%, transparent);
 }
 
 .llk-kanban-col-header {
@@ -78,54 +82,75 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: background 0.15s;
+  transition: background 0.15s ease;
 }
-.llk-kanban-drop-target {
-  background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+.llk-kanban-col.llk-kanban-drop-target .llk-kanban-cards,
+.llk-kanban-cards.llk-kanban-drop-target {
+  background: color-mix(in srgb, var(--interactive-accent) 4%, transparent);
 }
 
 .llk-kanban-card {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  min-height: 112px;
+  min-height: auto;
   background: var(--background-primary);
   border: 1px solid var(--llk-ghost-border);
   border-radius: var(--radius-m);
   overflow: hidden;
-  cursor: pointer;
-  transition: all 0.15s;
+  cursor: grab;
+  user-select: none;
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
   position: relative;
 }
 .llk-kanban-card:hover {
   box-shadow: 0 2px 12px var(--llk-shadow-ambient);
   border-color: var(--background-modifier-border);
 }
+.llk-kanban-card:active {
+  cursor: grabbing;
+}
 .llk-kanban-card--dragging {
   box-shadow: 0 4px 16px var(--llk-shadow-ambient);
-  border-color: var(--interactive-accent);
+  border: 1px dashed var(--interactive-accent);
   z-index: 100;
+}
+.llk-kanban-card--dragging.llk-dragging {
+  opacity: 0.35;
+}
+
+.llk-kanban-drop-placeholder {
+  flex-shrink: 0;
+  min-height: 48px;
+  border: 2px dashed var(--interactive-accent);
+  border-radius: var(--radius-m);
+  background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-secondary));
+  box-sizing: border-box;
+  pointer-events: none;
+  transition: height 0.1s ease;
 }
 
 .llk-kanban-card-priority-bar {
   height: 3px;
   flex-shrink: 0;
-  opacity: 0.5;
 }
 .llk-kanban-card-body {
   flex: 1;
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 .llk-kanban-card-body > .llk-chip {
   align-self: flex-start;
 }
 .llk-kanban-card-title {
   margin: 0;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 15.5px;
+  font-weight: 600;
   line-height: 1.45;
 }
 .llk-kanban-card-description {
@@ -143,6 +168,34 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+.llk-kanban-card-due,
+.llk-kanban-card-project {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.llk-kanban-card-assignees {
+  display: flex;
+  align-items: center;
+}
+.llk-kanban-card-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.llk-kanban-card-progress .llk-progress {
+  flex: 1;
+  min-width: 0;
+}
+.llk-kanban-card-progress-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .llk-kanban-card-field {
   display: flex;
@@ -164,18 +217,22 @@
 .llk-kanban-card-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
   margin-top: auto;
   padding-top: 2px;
 }
-
-.llk-kanban-card-parent {
-  font-size: 10px;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.llk-kanban-card-footer .llk-kanban-card-project {
+  margin-right: auto;
+}
+.llk-kanban-card-footer .llk-kanban-card-due {
+  display: inline-flex;
+  align-items: center;
+}
+.llk-kanban-card-due .llk-chip:not(.llk-chip--strong) {
+  background: transparent;
+  border-color: transparent;
 }
 
 button.llk-kanban-hidden-rail {

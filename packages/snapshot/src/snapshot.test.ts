@@ -10,7 +10,7 @@ describe('tasksFromResources', () => {
     const child = makeTask({ id: 'c', title: 'Child', subtasks: [grandchild], due: '2030-05-05' })
     project.tasks = [
       makeTask({ id: 'a', title: 'A', subtasks: [child], tags: ['x'], recurrence: { interval: 'weekly', every: 1 } }),
-      makeTask({ id: 'b', title: 'B', archived: true, timeLogs: [{ date: '2030-01-01', hours: 2, note: '' }] })
+      makeTask({ id: 'b', title: 'B', archived: true })
     ]
     const flat = taskResources(project, 'pid', true)
     const rebuilt = tasksFromResources([...flat].reverse())
@@ -20,7 +20,6 @@ describe('tasksFromResources', () => {
     expect(rebuilt[0].recurrence).toEqual({ interval: 'weekly', every: 1 })
     expect(rebuilt[0].subtasks[0].due).toBe('2030-05-05')
     expect(rebuilt[1].archived).toBe(true)
-    expect(rebuilt[1].timeLogs).toEqual([{ date: '2030-01-01', hours: 2, note: '' }])
     expect(taskResources({ ...project, tasks: rebuilt }, 'pid', true)).toEqual(flat)
   })
 })
@@ -75,7 +74,7 @@ describe('normalizeSnapshot', () => {
     })
     expect(page.view.sort).toEqual([{ key: 'due', dir: 'desc' }])
     expect(page.view.group).toEqual(original.view.group)
-    expect(page.view.fields?.kanban?.visible).toContain('subtasks')
+    expect(page.view.fields).toEqual({})
     expect(Object.keys(page.view)).toEqual(['mode', 'filter', 'sort', 'group', 'fields'])
     expect(page.view.fields).not.toHaveProperty('table')
     expect(Object.keys(page.settings)).toEqual([
@@ -90,7 +89,7 @@ describe('normalizeSnapshot', () => {
     expect(original.view.mode).toBe(mode)
   })
 
-  it('keeps explicit board fields and current filters instead of applying the legacy subtask setting', () => {
+  it('keeps explicit board fields and current filters', () => {
     const page = legacySnapshot('gantt')
     page.version = 2
     page.view.fields = { kanban: { visible: ['due', 'cf:client'] } }

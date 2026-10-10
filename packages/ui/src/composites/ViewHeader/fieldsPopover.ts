@@ -4,15 +4,12 @@ import {
   type FieldCatalog,
   type FieldList,
   type ViewFields,
-  availableFields,
-  hiddenFields,
+  orderedFields,
   shownFields,
   t,
   tidyFields,
-  viewFieldLabel,
-  withFieldShown
+  viewFieldLabel
 } from '@low-level-kanban/core'
-import { renderPopHead } from '../popoverParts'
 import { renderVisibilityList } from '../visibilityList'
 
 export interface FieldsPopoverProps {
@@ -38,42 +35,32 @@ export function renderFieldsPanel(parent: HTMLElement, props: FieldsPopoverProps
   }
 
   const label = (id: string): string => viewFieldLabel(id, catalog.customFields)
-  const toggle = (id: string): void => {
-    const shown = shownFields(fields, mode, catalog)
-    list().visible = shown.includes(id)
-      ? shown.filter((field) => field !== id)
-      : withFieldShown(shown, id, availableFields(mode, catalog))
-    changed()
-  }
 
   const render = (): void => {
     body.empty()
+    const all = orderedFields(fields, mode, catalog)
     const shown = shownFields(fields, mode, catalog)
-    const hidden = hiddenFields(fields, mode, catalog)
+
     renderVisibilityList(body, {
-      rows: shown.map((id) => ({
+      rows: all.map((id) => ({
         id,
         label: label(id),
-        hidden: false
+        hidden: !shown.includes(id)
       })),
       showLabel: t('header.showField'),
       hideLabel: t('header.hideField'),
-      onToggle: toggle,
+      onToggle: (id) => {
+        const isShown = shown.includes(id)
+        const nextShown = isShown ? shown.filter((f) => f !== id) : [...shown, id]
+        list().visible = all.filter((f) => nextShown.includes(f))
+        changed()
+      },
       onReorder: (ids) => {
-        list().visible = ids
+        list().order = ids
+        list().visible = ids.filter((id) => shown.includes(id))
         changed()
       }
     })
-
-    if (hidden.length) {
-      renderPopHead(body, { title: t('header.hiddenFields'), section: true })
-      renderVisibilityList(body, {
-        rows: hidden.map((id) => ({ id, label: label(id), hidden: true })),
-        showLabel: t('header.showField'),
-        hideLabel: t('header.hideField'),
-        onToggle: toggle
-      })
-    }
 
     const foot = body.createDiv('llk-fields-foot llk-pop-section')
     new ChipButton(foot)

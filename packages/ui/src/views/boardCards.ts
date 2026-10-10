@@ -1,21 +1,22 @@
 import {
   type CustomFieldDef,
   type Task,
-  flattenTasks,
   formatDateLong,
   stringifyCustomValue,
+  stripChecklist,
   t
 } from '@low-level-kanban/core'
 import type { CardFieldValue } from '../composites/KanbanCard'
 
-/** The tasks a board deals cards for: the top-level ones, or every task once subtasks get cards of their own. */
-export function boardCandidates(tasks: Task[], fields: string[]): Task[] {
-  return fields.includes('subtasks') ? flattenTasks(tasks).map((flat) => flat.task) : tasks
+/** The tasks a board deals cards for: top-level tasks only. */
+export function boardCandidates(tasks: Task[], _fields: string[] = []): Task[] {
+  return tasks
 }
 
-/** A description as one line of plain text, cut to what a card has room for. */
+/** A description as one line of plain text, cut to what a card has room for. Subtasks are excluded. */
 export function descriptionPreview(markdown: string): string | undefined {
-  const text = markdown
+  const prose = stripChecklist(markdown)
+  const text = prose
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/`([^`]*)`/g, '$1')
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')

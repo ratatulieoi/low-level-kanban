@@ -1,8 +1,8 @@
 import { Menu, Notice } from 'obsidian'
 import type LowLevelKanbanPlugin from '#main'
-import { type Task, type Project, t } from '@low-level-kanban/core'
+import { type Task, type Project, appendBodyChecklist, checklistProgress, t } from '@low-level-kanban/core'
 import { safeAsync } from '@low-level-kanban/ui'
-import { openTaskModal, confirmDialog, confirmDuplicateSubtasks, openProjectPicker } from './ModalFactory'
+import { openTaskModal, confirmDialog, confirmDuplicateSubtasks, openProjectPicker, promptText } from './ModalFactory'
 
 export interface TaskMenuContext {
   plugin: LowLevelKanbanPlugin
@@ -28,14 +28,19 @@ export function buildTaskContextMenu(menu: Menu, task: Task, ctx: TaskMenuContex
     item
       .setTitle(t('taskMenu.addSubtask'))
       .setIcon('plus')
-      .onClick(() => {
-        openTaskModal(ctx.plugin, ctx.project, {
-          parentId: task.id,
-          onSave: async () => {
-            await ctx.onRefresh()
-          }
+      .onClick(
+        safeAsync(async () => {
+          const title = await promptText(ctx.plugin.app, t('taskMenu.addSubtask'), t('subtasks.addPlaceholder'))
+          if (!title) return
+          const updatedDescription = appendBodyChecklist(task.description, title)
+          const progress = checklistProgress(updatedDescription)
+          await ctx.plugin.store.updateTask(ctx.project, task.id, {
+            description: updatedDescription,
+            progress
+          })
+          await ctx.onRefresh()
         })
-      })
+      )
   )
   menu.addItem((item) =>
     item

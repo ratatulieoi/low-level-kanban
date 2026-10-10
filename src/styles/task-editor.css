@@ -117,6 +117,15 @@ button.llk-prop-inline {
 button.llk-prop-inline--empty {
   color: var(--text-faint);
 }
+.llk-date-hidden-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  pointer-events: none;
+}
 .llk-prop-inline-label {
   overflow: hidden;
   white-space: nowrap;

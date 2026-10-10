@@ -1,21 +1,22 @@
 import {
-  type StatusConfig,
   type Task,
-  makeTask,
-  isTerminalStatus,
-  getCompleteStatusId,
-  getDefaultStatusId,
-  t
+  appendBodyChecklist,
+  deleteBodyChecklist,
+  groupBodyChecklist,
+  parseBodyChecklist,
+  t,
+  toggleBodyChecklist
 } from '@low-level-kanban/core'
-import { renderNoteLink, Checkbox, IconButton } from '@low-level-kanban/ui'
+import { Checkbox, IconButton } from '@low-level-kanban/ui'
 
-/** The header count is how many subtasks sit in a terminal status. */
-export function renderSubtasksPanel(
-  container: HTMLElement,
-  task: Task,
-  statuses: StatusConfig[],
-  openSubtask: (filePath: string) => void
-): void {
+/** The header count is how many of the description's checklist lines are checked. */
+export function renderSubtasksPanel(container: HTMLElement, task: Task, onChanged?: () => void): void {
+  const grouped = groupBodyChecklist(task.description)
+  if (grouped !== task.description) {
+    task.description = grouped
+    onChanged?.()
+  }
+
   const subSection = container.createDiv('llk-modal-section')
 
   const subHeader = subSection.createDiv('llk-subtasks-header')
@@ -25,52 +26,55 @@ export function renderSubtasksPanel(
   const subList = subSection.createDiv('llk-modal-subtask-list')
 
   const renderCount = () => {
-    const total = task.subtasks.length
-    if (total === 0) {
+    const items = parseBodyChecklist(task.description)
+    if (items.length === 0) {
       countEl.setText('')
       return
     }
-    const done = task.subtasks.filter((s) => isTerminalStatus(s.status, statuses)).length
-    countEl.setText(`${done}/${total}`)
+    const done = items.filter((item) => item.done).length
+    countEl.setText(`${done}/${items.length}`)
   }
 
   const renderSubtasks = () => {
     subList.empty()
-    for (const sub of task.subtasks) {
+    parseBodyChecklist(task.description).forEach((item, index) => {
       const row = subList.createDiv('llk-modal-subtask-row')
 
-      const done = isTerminalStatus(sub.status, statuses)
+      const toggle = () => {
+        task.description = toggleBodyChecklist(task.description, index)
+        onChanged?.()
+        renderSubtasks()
+        renderCount()
+      }
 
       new Checkbox(row)
-        .setChecked(done)
-        .setAriaLabel(t('subtasks.done', { title: sub.title }))
-        .onChange((checked) => {
-          sub.status = checked ? getCompleteStatusId(statuses) : getDefaultStatusId(statuses)
-          sub.progress = checked ? 100 : 0
-          renderSubtasks()
-          renderCount()
-        })
+        .setChecked(item.done)
+        .setAriaLabel(t('subtasks.done', { title: item.text }))
+        .onChange(toggle)
 
-      // A subtask typed into the add field below has no note yet, so there is nothing to
-      // open until the editor saves.
-      const cls = done ? 'llk-subtask-title llk-subtask-title--done' : 'llk-subtask-title'
-      const filePath = sub.filePath
-      if (filePath) {
-        renderNoteLink(row, { label: sub.title, path: filePath, open: () => openSubtask(filePath), cls })
-      } else {
-        row.createSpan({ text: sub.title, cls })
-      }
+      // A checklist line is plain text in the note body, so there is no note to open.
+      const cls = item.done ? 'llk-subtask-title llk-subtask-title--done' : 'llk-subtask-title'
+      row.createSpan({ text: item.text, cls })
 
       new IconButton(row)
         .setIcon('x')
         .setTooltip(t('subtasks.remove'))
         .setRevealOnHover(true)
         .onClick(() => {
-          task.subtasks = task.subtasks.filter((s) => s.id !== sub.id)
+          task.description = deleteBodyChecklist(task.description, index)
+          onChanged?.()
           renderSubtasks()
           renderCount()
         })
-    }
+
+      row.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement
+        if (target.closest('.llk-icon-btn') || target.closest('input[type="checkbox"]')) {
+          return
+        }
+        toggle()
+      })
+    })
   }
 
   renderSubtasks()
@@ -86,8 +90,9 @@ export function renderSubtasksPanel(
     if (e.key !== 'Enter') return
     const title = addInput.value.trim()
     if (!title) return
-    task.subtasks.push(makeTask({ title, type: 'subtask' }))
+    task.description = appendBodyChecklist(task.description, title)
     addInput.value = ''
+    onChanged?.()
     renderSubtasks()
     renderCount()
   })

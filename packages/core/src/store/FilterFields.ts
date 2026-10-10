@@ -21,6 +21,7 @@ export const BUILTIN_FILTER_FIELDS = [
   'tag',
   'due',
   'start',
+  'created',
   'type',
   'project',
   'title'
@@ -34,6 +35,7 @@ const BUILTIN_KINDS: Record<BuiltinField, FilterKind> = {
   tag: 'multi',
   due: 'date',
   start: 'date',
+  created: 'date',
   type: 'list',
   project: 'list',
   title: 'text'
@@ -97,6 +99,8 @@ export function filterFieldLabel(field: string, customFields: CustomFieldDef[]):
       return t('filter.tag')
     case 'due':
       return t('filter.dueDate')
+    case 'created':
+      return t('filter.createdDate')
     case 'start':
       return t('filter.startDate')
     case 'type':
@@ -126,6 +130,7 @@ const BUILTIN_ICONS: Record<BuiltinField, string> = {
   tag: 'tag',
   due: 'calendar',
   start: 'calendar-arrow-up',
+  created: 'calendar-plus',
   type: 'shapes',
   project: 'folder-kanban',
   title: 'type'
@@ -158,6 +163,8 @@ export function filterValue(
       return task.tags
     case 'due':
       return task.due
+    case 'created':
+      return task.createdAt.slice(0, 10)
     case 'start':
       return task.start
     case 'type':

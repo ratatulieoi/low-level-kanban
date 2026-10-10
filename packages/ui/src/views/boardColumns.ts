@@ -91,3 +91,17 @@ export function boardColumns(setup: FilterSetup, group: GroupState, tasks: Task[
   }
   return ordered
 }
+
+/** Manually dragged cards keep their dropped position; the rest keep their sorted order. */
+export function applyManualOrder(setup: FilterSetup, group: GroupState, columns: BoardColumn[]): void {
+  const field = boardField(setup, group)
+  for (const column of columns) {
+    const key = `${field}:${column.id}`
+    column.tasks
+      .map((task, index) => ({ task, rank: task.manualOrder?.[key] ?? index }))
+      .sort((a, b) => a.rank - b.rank)
+      .forEach(({ task }, index) => {
+        column.tasks[index] = task
+      })
+  }
+}

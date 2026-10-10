@@ -5,6 +5,7 @@ import {
   defaultFields,
   hiddenFields,
   legacyBoardFields,
+  orderedFields,
   shownFields,
   tidyFields,
   viewFieldLabel,
@@ -22,24 +23,15 @@ describe('view fields', () => {
     expect(availableFields('kanban', one).at(-1)).toBe('cf:client')
   })
 
-  it('leaves custom fields, description and subtasks hidden by default', () => {
+  it('leaves custom fields and description hidden by default', () => {
     expect(defaultFields('kanban', one)).not.toContain('cf:client')
     expect(defaultFields('kanban', one)).not.toContain('description')
-    expect(defaultFields('kanban', one)).not.toContain('subtasks')
   })
 
   it('keeps card field order and drops fields that no longer exist', () => {
     const fields: ViewFields = { kanban: { visible: ['due', 'cf:gone', 'priority'] } }
     expect(shownFields(fields, 'kanban', one)).toEqual(['due', 'priority'])
-    expect(hiddenFields(fields, 'kanban', one)).toEqual([
-      'description',
-      'time',
-      'tags',
-      'progress',
-      'assignees',
-      'subtasks',
-      'cf:client'
-    ])
+    expect(hiddenFields(fields, 'kanban', one)).toEqual(['description', 'tags', 'progress', 'assignees', 'cf:client'])
   })
 
   it('lets every card field be hidden', () => {
@@ -75,15 +67,24 @@ describe('view fields', () => {
 
   it('turns the old board settings into card fields', () => {
     expect(legacyBoardFields(false, false)).toEqual({})
-    const shown = shownFields(legacyBoardFields(true, true), 'kanban', one)
-    expect(shown).toContain('subtasks')
+    const shown = shownFields(legacyBoardFields(false, true), 'kanban', one)
     expect(shown).toContain('description')
-    expect(shownFields(legacyBoardFields(false, true), 'kanban', one)).not.toContain('subtasks')
   })
 
   it('names custom fields by their name', () => {
     expect(viewFieldLabel('cf:client', [client])).toBe('Client')
     expect(viewFieldLabel('due', [])).toBe('Due')
+  })
+})
+
+describe('orderedFields', () => {
+  it('returns all available fields in stored order or defaults', () => {
+    expect(orderedFields({}, 'kanban', one)).toEqual(availableFields('kanban', one))
+    const fields: ViewFields = { kanban: { visible: ['due', 'priority'], order: ['due', 'tags', 'priority'] } }
+    const ordered = orderedFields(fields, 'kanban', one)
+    expect(ordered.slice(0, 3)).toEqual(['due', 'tags', 'priority'])
+    expect(ordered).toContain('description')
+    expect(ordered).toContain('cf:client')
   })
 })
 

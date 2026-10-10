@@ -37,22 +37,17 @@ export function omitObsoleteSettings<T extends object>(settings: T): Omit<T, (ty
   if ('defaultFields' in cleaned) cleaned.defaultFields = hydrateFields(cleaned.defaultFields)
 
   const saved = settings as Record<string, unknown>
-  if ('kanbanShowSubtasks' in saved || 'kanbanShowDescriptionPreview' in saved) {
+  if ('kanbanShowDescriptionPreview' in saved) {
     const fields = hydrateFields(cleaned.defaultFields)
     if (fields.kanban) {
       const visible = fields.kanban.visible
-      for (const [key, field] of [
-        ['kanbanShowSubtasks', 'subtasks'],
-        ['kanbanShowDescriptionPreview', 'description']
-      ]) {
-        if (!(key in saved)) continue
-        const at = visible.indexOf(field)
-        if (saved[key] && at === -1) visible.push(field)
-        if (!saved[key] && at !== -1) visible.splice(at, 1)
-      }
+      const field = 'description'
+      const at = visible.indexOf(field)
+      if (saved.kanbanShowDescriptionPreview && at === -1) visible.push(field)
+      if (!saved.kanbanShowDescriptionPreview && at !== -1) visible.splice(at, 1)
       cleaned.defaultFields = fields
     } else {
-      cleaned.defaultFields = legacyBoardFields(!!saved.kanbanShowSubtasks, !!saved.kanbanShowDescriptionPreview)
+      cleaned.defaultFields = legacyBoardFields(false, !!saved.kanbanShowDescriptionPreview)
     }
   }
 

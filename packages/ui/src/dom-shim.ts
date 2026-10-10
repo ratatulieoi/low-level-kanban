@@ -61,7 +61,7 @@ function setText(el: Node, value: string | DocumentFragment): void {
     return
   }
   empty(el)
-  el.appendChild(value)
+  if (value) el.appendChild(value)
 }
 
 function empty(node: Node): void {

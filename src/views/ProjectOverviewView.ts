@@ -7,7 +7,6 @@ import {
   type Task,
   collectAllTags,
   flattenTasks,
-  totalLoggedHours,
   Temporal,
   formatDateLong,
   parsePlainDate,
@@ -32,7 +31,6 @@ import {
   renderMetricStrip,
   type MetricStat,
   renderTagChip,
-  renderTimeChip,
   renderGlyph
 } from '@low-level-kanban/ui'
 import { openTaskModal } from '#ui/ModalFactory'
@@ -51,8 +49,6 @@ interface Rollup {
   total: number
   done: number
   overdue: number
-  logged: number
-  estimate: number
   latestDue: string
 }
 
@@ -278,14 +274,6 @@ export class ProjectOverviewView extends ItemView {
         value: String(rollup.overdue),
         sub: t('overview.pastDue'),
         alert: rollup.overdue > 0
-      },
-      {
-        label: t('overview.time'),
-        value: rollup.logged || rollup.estimate ? '' : '—',
-        sub: t('overview.loggedEstimate'),
-        extra: (el) => {
-          renderTimeChip(el, rollup.logged, rollup.estimate)
-        }
       }
     ]
     renderMetricStrip(parent, stats)
@@ -405,10 +393,6 @@ export class ProjectOverviewView extends ItemView {
       renderDueChip(value, formatDateLong(rollup.latestDue), dateUrgency(rollup.latestDue, rollup.overdue > 0))
     })
 
-    prop(t('overview.time'), !rollup.logged && !rollup.estimate, t('overview.noEstimate'), (value) => {
-      renderTimeChip(value, rollup.logged, rollup.estimate)
-    })
-
     const parentRef = this.plugin.index.parentOf(project.filePath)
     prop(t('project.parent'), !parentRef, t('common.noParent'), (value) => {
       if (!parentRef) return
@@ -440,11 +424,9 @@ export class ProjectOverviewView extends ItemView {
 
 function summarize(tasks: Task[], config: ResolvedProjectConfig): Rollup {
   const now = today()
-  const rollup: Rollup = { total: 0, done: 0, overdue: 0, logged: 0, estimate: 0, latestDue: '' }
+  const rollup: Rollup = { total: 0, done: 0, overdue: 0, latestDue: '' }
   for (const task of tasks) {
     rollup.total++
-    rollup.logged += totalLoggedHours(task)
-    rollup.estimate += task.timeEstimate ?? 0
     const complete = isTerminalStatus(task.status, config.statuses)
     if (complete) rollup.done++
     const due = parsePlainDate(task.due)
@@ -452,7 +434,5 @@ function summarize(tasks: Task[], config: ResolvedProjectConfig): Rollup {
     if (task.due > rollup.latestDue) rollup.latestDue = task.due
     if (!complete && Temporal.PlainDate.compare(due, now) < 0) rollup.overdue++
   }
-  rollup.logged = Math.round(rollup.logged * 10) / 10
-  rollup.estimate = Math.round(rollup.estimate * 10) / 10
   return rollup
 }

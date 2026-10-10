@@ -176,6 +176,7 @@ describe('FilterBar', () => {
       'Tag',
       'Due date',
       'Start date',
+      'Created',
       'Type',
       'Title',
       'Estimate',
@@ -559,14 +560,14 @@ describe('fields popover', () => {
     openFieldsPopover(document.body.createEl('button'), { fields, catalog, onChange })
     return onChange
   }
-  const labels = (): (string | undefined)[] =>
+  const labels = (): string[] =>
     document.body
       .findAll('.llk-fields-body > .llk-vis-list:first-child .llk-vis-label')
       .map((el) => el.textContent ?? '')
 
-  it('lists board card fields without mode tabs or column widths', () => {
+  it('lists board card fields in a unified list without mode tabs or column widths', () => {
     open({})
-    expect(labels()).toEqual(['Priority', 'Time', 'Tags', 'Progress', 'Assignees', 'Due'])
+    expect(labels()).toEqual(['Priority', 'Description preview', 'Tags', 'Progress', 'Assignees', 'Due', 'Client'])
     expect(document.body.find('.llk-fields-tabs')).toBeNull()
     expect(document.body.find('.llk-vis-detail')).toBeNull()
     expect(document.body.find('.llk-vis-lock')).toBeNull()
@@ -576,20 +577,19 @@ describe('fields popover', () => {
   it('hides a field by its eye and shows it again in its place', () => {
     const fields: ViewFields = {}
     const onChange = open(fields)
-    document.body.find('.llk-vis-row[data-id="time"]')?.querySelector<HTMLButtonElement>('.llk-vis-eye')?.click()
-    expect(fields.kanban?.visible).not.toContain('time')
-    expect(document.body.find('.llk-fields-pop .llk-pop-head.llk-pop-section')).not.toBeNull()
-    document.body
-      .find('.llk-vis-row.is-hidden[data-id="time"]')
-      ?.querySelector<HTMLButtonElement>('.llk-vis-eye')
-      ?.click()
+    const tagsRow = document.body.find('.llk-vis-row[data-id="tags"]')
+    expect(tagsRow?.hasClass('is-hidden')).toBe(false)
+    tagsRow?.querySelector<HTMLButtonElement>('.llk-vis-eye')?.click()
+    expect(fields.kanban?.visible).not.toContain('tags')
+    const hiddenRow = document.body.find('.llk-vis-row[data-id="tags"]')
+    expect(hiddenRow?.hasClass('is-hidden')).toBe(true)
+    hiddenRow?.querySelector<HTMLButtonElement>('.llk-vis-eye')?.click()
     expect(fields.kanban).toBeUndefined()
-    expect(labels()).toEqual(['Priority', 'Time', 'Tags', 'Progress', 'Assignees', 'Due'])
     expect(onChange).toHaveBeenCalledTimes(2)
   })
 
   it('forgets a list put back to the defaults', () => {
-    const fields: ViewFields = { kanban: { visible: ['priority', 'time', 'tags', 'progress', 'assignees'] } }
+    const fields: ViewFields = { kanban: { visible: ['priority', 'tags', 'progress', 'assignees'] } }
     open(fields)
     const due = document.body.findAll('.llk-vis-row.is-hidden').find((row) => row.dataset.id === 'due')
     due?.querySelector<HTMLButtonElement>('.llk-vis-eye')?.click()
@@ -597,29 +597,31 @@ describe('fields popover', () => {
   })
 
   it('reorders board fields by dragging and hides every optional field', () => {
-    const fields: ViewFields = { kanban: { visible: ['priority', 'time', 'due'] } }
+    const fields: ViewFields = {
+      kanban: {
+        visible: ['priority', 'tags', 'due'],
+        order: ['priority', 'tags', 'due', 'description', 'progress', 'assignees', 'cf:client']
+      }
+    }
     open(fields)
     const rows = document.body.findAll('.llk-vis-row')
     rows[2].dispatchEvent(new Event('dragstart'))
     rows[0].dispatchEvent(new Event('drop'))
-    expect(fields.kanban?.visible).toEqual(['due', 'priority', 'time'])
+    expect(fields.kanban?.visible).toEqual(['due', 'priority', 'tags'])
     document.body.querySelector<HTMLButtonElement>('.llk-fields-foot button')?.click()
     expect(fields.kanban?.visible).toEqual([])
-    expect(labels()).toEqual([])
     expect(document.body.querySelector<HTMLButtonElement>('.llk-fields-foot button')?.disabled).toBe(true)
   })
 
-  it('offers descriptions, subtasks and custom fields as hidden board fields', () => {
+  it('offers descriptions and custom fields as hidden board fields', () => {
     const fields: ViewFields = {}
     const onChange = open(fields)
     expect(document.body.findAll('.llk-vis-row.is-hidden').map((row) => row.dataset.id)).toEqual([
       'description',
-      'subtasks',
       'cf:client'
     ])
     document.body.find('.llk-vis-row[data-id="cf:client"]')?.querySelector<HTMLButtonElement>('.llk-vis-eye')?.click()
     expect(fields.kanban?.visible.at(-1)).toBe('cf:client')
-    expect(labels().at(-1)).toBe('Client')
     expect(onChange).toHaveBeenCalledOnce()
   })
 })

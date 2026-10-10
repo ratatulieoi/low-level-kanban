@@ -1,6 +1,5 @@
 import { setIcon } from '#platform'
-import { Popover } from '#primitives/Popover'
-import { formatDate, today, type DueTone, t } from '@low-level-kanban/core'
+import { formatDate, type DueTone, t } from '@low-level-kanban/core'
 
 export interface DateControlOpts {
   container: HTMLElement
@@ -23,50 +22,24 @@ export function renderDateControl(opts: DateControlOpts): void {
   })
   if (opts.hint) trigger.createSpan({ cls: `llk-due llk-due--${opts.hint.tone}`, text: opts.hint.text })
 
-  let pop: Popover | null = null
-  trigger.addEventListener('click', () => {
-    if (pop?.isOpen) {
-      pop.close()
-      return
+  // Hidden date input lives on the trigger so showPicker() can open the native calendar
+  // without a popover or text field being visible.
+  const field = trigger.createEl('input', {
+    type: 'date',
+    cls: 'llk-date-hidden-input'
+  })
+  field.value = opts.value
+
+  field.addEventListener('change', () => {
+    if (field.value !== opts.value) opts.onChange(field.value)
+  })
+
+  trigger.addEventListener('click', (e) => {
+    e.preventDefault()
+    try {
+      field.showPicker()
+    } catch {
+      /* showPicker() throws in non-interactive contexts (tests, older browsers) */
     }
-    // A native date input fires `change` as soon as its value is valid again, which for
-    // an already-set date is after the first edited segment; committing there would
-    // re-render the modal and yank focus mid-edit. So the value is held until close.
-    let next: string | null = null
-    pop = new Popover({
-      anchor: trigger,
-      width: 160,
-      onClose: () => {
-        pop = null
-        const value = next ?? field.value
-        if (value !== opts.value) opts.onChange(value)
-      }
-    })
-    const field = pop.contentEl.createEl('input', { type: 'date', cls: 'llk-pop-field' })
-    field.value = opts.value
-    field.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault()
-        pop?.close()
-      }
-    })
-    const actions = pop.contentEl.createDiv('llk-pop-actions')
-    const todayBtn = actions.createEl('button', { cls: 'llk-pop-item llk-pop-item--center', text: t('dates.today') })
-    todayBtn.addEventListener('click', () => {
-      next = today().toString()
-      pop?.close()
-    })
-    if (has) {
-      const clearBtn = actions.createEl('button', {
-        cls: 'llk-pop-item llk-pop-item--center llk-pop-item--danger',
-        text: t('common.clear')
-      })
-      clearBtn.addEventListener('click', () => {
-        next = ''
-        pop?.close()
-      })
-    }
-    pop.open()
-    field.focus()
   })
 }

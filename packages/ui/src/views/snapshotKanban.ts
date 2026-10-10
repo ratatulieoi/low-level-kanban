@@ -1,17 +1,9 @@
-import {
-  type Task,
-  dueUrgency,
-  flattenTasks,
-  getPriorityConfig,
-  shownFields,
-  totalLoggedHours
-} from '@low-level-kanban/core'
+import { type Task, dueUrgency, getPriorityConfig, shownFields } from '@low-level-kanban/core'
 import { KanbanColumn, type KanbanCardData } from '../composites/KanbanColumn'
-import { boardColumns } from './boardColumns'
+import { applyManualOrder, boardColumns } from './boardColumns'
 import { cardCustomValues, descriptionPreview } from './boardCards'
 import { renderProjectChip } from '../composites/projectChip'
 import {
-  allTasks,
   boardTasks,
   configOf,
   customFieldColumns,
@@ -26,13 +18,6 @@ import {
 const noop = (): void => {}
 const noDrop = async (): Promise<void> => {}
 
-function parentTitle(model: ViewModel, taskId: string): string | undefined {
-  for (const { task } of flattenTasks(allTasks(model))) {
-    if (task.subtasks.some((sub) => sub.id === taskId)) return task.title
-  }
-  return undefined
-}
-
 function cardData(model: ViewModel, task: Task, fields: string[]): KanbanCardData {
   const config = configOf(model, task.id)
   const priorityConfig = getPriorityConfig(config.priorities, task.priority)
@@ -40,16 +25,14 @@ function cardData(model: ViewModel, task: Task, fields: string[]): KanbanCardDat
   return {
     task,
     people: task.assignees.map((raw) => personOf(model, raw)),
-    priorityColor:
-      priorityConfig && task.priority !== 'medium' && task.priority !== 'low' ? priorityConfig.color : undefined,
-    parentTitle: fields.includes('subtasks') && task.type === 'subtask' ? parentTitle(model, task.id) : undefined,
+    priorityColor: priorityConfig?.color,
     descriptionPreview: fields.includes('description') ? descriptionPreview(task.description) : undefined,
     customValues: cardCustomValues(task, customFieldColumns(model), fields),
     renderSource: owner
       ? (el) => renderProjectChip(el, { title: owner.title, color: owner.color, onClick: noop })
       : undefined,
-    loggedHours: totalLoggedHours(task),
     overdue: dueUrgency(task, config.statuses) === 'overdue',
+    tagColors: model.settings.tagColors,
     showTagColors: model.settings.showTagColors
   }
 }
@@ -61,7 +44,10 @@ export function renderSnapshotKanban(container: HTMLElement, model: ViewModel): 
   if (!model.projects.length) return board
   const fields = shownFields(model.fields, 'kanban', fieldCatalogOf(model))
   const tasks = boardTasks(model)
-  for (const column of boardColumns(filterSetupOf(model), model.group, tasks).filter((c) => !c.hidden)) {
+  const setup = filterSetupOf(model)
+  const columns = boardColumns(setup, model.group, tasks)
+  applyManualOrder(setup, model.group, columns)
+  for (const column of columns.filter((c) => !c.hidden)) {
     new KanbanColumn(board, {
       column,
       fields,

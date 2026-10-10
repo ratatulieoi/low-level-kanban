@@ -52,12 +52,30 @@ export function makeReorderable<T extends string>(
     el.addEventListener('dragstart', (e) => {
       dragged = id
       e.dataTransfer?.setData('text/plain', id)
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
       el.addClass('is-dragging')
     })
-    el.addEventListener('dragend', () => el.removeClass('is-dragging'))
-    el.addEventListener('dragover', (e) => e.preventDefault())
+    el.addEventListener('dragend', () => {
+      el.removeClass('is-dragging')
+      for (const r of rows) r.el.removeClass('is-drag-over')
+    })
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault()
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+      if (dragged && dragged !== id) {
+        for (const r of rows) {
+          if (r.id !== id) r.el.removeClass('is-drag-over')
+        }
+        el.addClass('is-drag-over')
+      }
+    })
+    el.addEventListener('dragleave', (e) => {
+      if (e.relatedTarget && el.contains(e.relatedTarget as Node)) return
+      el.removeClass('is-drag-over')
+    })
     el.addEventListener('drop', (e) => {
       e.preventDefault()
+      for (const r of rows) r.el.removeClass('is-drag-over')
       const from = dragged
       dragged = null
       if (from === null || from === id || !ids.includes(from)) return

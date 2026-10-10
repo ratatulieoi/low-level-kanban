@@ -32,7 +32,6 @@ export interface TaskNotesTaskInfo {
   priority: string
   due?: string
   scheduled?: string
-  timeEstimate?: number
   tags?: string[]
   projects?: string[]
   blockedBy?: Array<TaskNotesDependency | string>

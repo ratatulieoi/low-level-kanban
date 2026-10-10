@@ -860,7 +860,7 @@ export class ProjectView extends ItemView {
     const setup = this.groupSetup()
     const scope = this.projectScope
     if (!setup || !scope) return []
-    const candidates = boardCandidates(scope.tasks(), shownFields(this.fields, 'kanban', scope.fieldCatalog()))
+    const candidates = boardCandidates(scope.tasks())
     const shown = candidates.filter((task) => matchesQuery(task, this.query, setup.ctx))
     return boardColumns(setup, this.group, shown)
   }

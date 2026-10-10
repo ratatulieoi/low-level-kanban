@@ -274,52 +274,49 @@ describe('migrateBoardCardConfig', () => {
 
   it('moves the project overrides into its view and out of the note', async () => {
     const { plugin, app, settings } = await vaultWith([
-      '  kanbanShowSubtasks: true',
       '  kanbanShowDescriptionPreview: false',
       '  autoSchedule: false'
     ])
     await migrateBoardCardConfig(plugin)
     const visible = settings.projectFilters['project:Projects/Roadmap/Roadmap.md'].fields.kanban?.visible
-    expect(visible).toContain('subtasks')
     expect(visible).not.toContain('description')
     expect(frontmatter(app)?.config).toEqual({ autoSchedule: false })
   })
 
   it('keeps what the global setting gave a view for a key the note leaves out', async () => {
-    const { plugin, app, settings } = await vaultWith(['  kanbanShowSubtasks: false'])
+    const { plugin, app, settings } = await vaultWith(['  autoSchedule: false'])
     settings.projectFilters['project:Projects/Roadmap/Roadmap.md'] = {
       filter: makeDefaultFilter(),
       activeSavedViewId: null,
       sort: makeDefaultSort(),
       group: makeDefaultGroup(),
-      fields: { kanban: { visible: ['priority', 'description', 'subtasks'] } },
+      fields: { kanban: { visible: ['priority', 'description'] } },
       viewMode: 'kanban'
     }
     await migrateBoardCardConfig(plugin)
     const visible = settings.projectFilters['project:Projects/Roadmap/Roadmap.md'].fields.kanban?.visible
     expect(visible).toEqual(['priority', 'description'])
     expect(settings.projectFilters['project:Projects/Roadmap/Roadmap.md'].viewMode).toBe('kanban')
-    expect(frontmatter(app)?.config).toBeUndefined()
+    expect(frontmatter(app)?.config).toEqual({ autoSchedule: false })
   })
 
   it('starts a project never opened from the global setting for a key the note leaves out', async () => {
-    const { plugin, settings } = await vaultWith(['  kanbanShowSubtasks: false'])
-    settings.defaultFields = { kanban: { visible: ['priority', 'description', 'subtasks'] } }
+    const { plugin, settings } = await vaultWith(['  kanbanShowDescriptionPreview: true'])
+    settings.defaultFields = { kanban: { visible: ['priority'] } }
     await migrateBoardCardConfig(plugin)
     const visible = settings.projectFilters['project:Projects/Roadmap/Roadmap.md'].fields.kanban?.visible
     expect(visible).toContain('description')
-    expect(visible).not.toContain('subtasks')
   })
 
   it('keeps custom fields and scope intent when migrating legacy board overrides', async () => {
-    const { plugin, settings } = await vaultWith(['  kanbanShowSubtasks: true'])
+    const { plugin, settings } = await vaultWith(['  kanbanShowDescriptionPreview: true'])
     const key = 'project:Projects/Roadmap/Roadmap.md'
     const legacy = {
       filter: makeDefaultFilter(),
       activeSavedViewId: 'saved-1',
       sort: makeDefaultSort(),
       group: { field: 'priority', columns: { priority: { hidden: ['low'] } } },
-      fields: { kanban: { visible: ['cf:client', 'description', 'due'] }, table: { visible: ['title'] } },
+      fields: { kanban: { visible: ['cf:client', 'due'] }, table: { visible: ['title'] } },
       viewMode: 'gantt',
       ganttGranularity: 'month',
       nonWorkingDays: { weekends: true }
@@ -331,7 +328,7 @@ describe('migrateBoardCardConfig', () => {
       activeSavedViewId: 'saved-1',
       sort: legacy.sort,
       group: legacy.group,
-      fields: { kanban: { visible: ['cf:client', 'description', 'due', 'subtasks'] } },
+      fields: { kanban: { visible: ['cf:client', 'due', 'description'] } },
       viewMode: 'kanban'
     })
     const before = structuredClone(settings)

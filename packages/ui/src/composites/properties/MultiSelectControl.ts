@@ -38,6 +38,8 @@ export interface MultiSelectOpts {
   /** A second create row, e.g. creating the note a person links to. Awaited before repaint. */
   createAlt?: { label: (name: string) => string; icon: string; run: (name: string) => Promise<void> }
   tag?: boolean
+  /** Called when a selected item chip is clicked (e.g. to open tag color picker). */
+  onItemClick?: (id: string, anchorEl: HTMLElement, refresh: () => void) => void
   /** One trigger holding an overlapping avatar stack. Backs Assignees. */
   avatarStack?: boolean
   /** A vertical list of id + title-link rows. Backs Depends on. */
@@ -101,6 +103,10 @@ export function renderMultiSelect(opts: MultiSelectOpts): void {
       else chip.setShape('pill')
       const color = opts.colorFor?.(id)
       if (color) chip.setDot(true).setColor(color)
+      if (opts.onItemClick) {
+        chip.onClick(() => opts.onItemClick!(id, chip.el, renderValues))
+        chip.setTooltip(t('settings.tagColors.name'))
+      }
     }
   }
 

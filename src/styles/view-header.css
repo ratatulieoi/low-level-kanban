@@ -609,7 +609,12 @@ button.llk-filter-chip-remove {
 .llk-saved-view-row.is-dragging,
 .llk-sort-row.is-dragging,
 .llk-vis-row.is-dragging {
-  opacity: 0.5;
+  opacity: 0.4;
+}
+.llk-sort-row.is-drag-over,
+.llk-vis-row.is-drag-over {
+  background: var(--background-modifier-hover);
+  box-shadow: inset 0 -2px 0 0 var(--interactive-accent);
 }
 .llk-sort-grip,
 .llk-vis-grip {
@@ -673,6 +678,10 @@ select.llk-sort-dir {
 }
 .llk-vis-row.is-quiet .llk-vis-detail {
   font-style: italic;
+}
+.llk-vis-row .llk-vis-eye {
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .llk-vis-grip {
   width: 14px;

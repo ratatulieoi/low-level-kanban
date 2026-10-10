@@ -38,7 +38,7 @@ const savedView = (): SavedView => ({
   },
   sort: [{ key: 'due', dir: 'desc' }],
   group: { field: 'priority', columns: { priority: { hidden: ['low'], order: ['high', 'medium', 'low'] } } },
-  fields: { kanban: { visible: ['description', 'due', 'cf:client', 'subtasks'] } }
+  fields: { kanban: { visible: ['description', 'due', 'cf:client'] } }
 })
 
 describe('ProjectView board state', () => {

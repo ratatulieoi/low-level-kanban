@@ -63,11 +63,12 @@ export const TASK_FRONTMATTER_KEYS: ReadonlySet<string> = new Set([
   'updatedAt',
   'completed',
   'recurrence',
-  'timeEstimate',
-  'timeLogs',
+  'manualOrder',
   'customFields',
   // Written by older versions; owned so a save drops it.
-  'collapsed'
+  'collapsed',
+  'timeEstimate',
+  'timeLogs'
 ])
 
 export function foreignFrontmatter(
@@ -188,8 +189,7 @@ export function buildTaskFrontmatter(
   }
   if (task.completed) fm.completed = task.completed
   if (task.recurrence) fm.recurrence = task.recurrence
-  if (task.timeEstimate !== undefined) fm.timeEstimate = task.timeEstimate
-  if (task.timeLogs?.length) fm.timeLogs = task.timeLogs
+  if (task.manualOrder && Object.keys(task.manualOrder).length) fm.manualOrder = task.manualOrder
   if (Object.keys(task.customFields).length) fm.customFields = task.customFields
   return fm
 }

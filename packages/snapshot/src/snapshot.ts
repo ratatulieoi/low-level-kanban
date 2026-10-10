@@ -45,6 +45,7 @@ export interface SnapshotSettings {
   lineBorders: LineBorders
   /** Only on a version 1 page, where the board's subtask cards were a setting rather than a field. */
   kanbanShowSubtasks?: boolean
+  tagColors?: Record<string, string>
   dateFormat: string
 }
 

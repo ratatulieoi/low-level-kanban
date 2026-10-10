@@ -27,8 +27,6 @@ function fixtureTask(): Task {
     assignees: ['Alice', '[[People/Bob|Bob]]'],
     tags: ['api', 'design'],
     dependencies: ['dep-1'],
-    timeEstimate: 8,
-    timeLogs: [{ date: '2026-04-02', hours: 2, note: 'spike' }],
     customFields: { sprint: 'S12', reviewed: true },
     createdAt: '2026-03-30T10:00:00.000Z',
     updatedAt: '2026-04-02T12:00:00.000Z',

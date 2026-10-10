@@ -51,9 +51,6 @@ function mapItemToTask(item: TaskNotesImportItem, opts: TaskNotesImportOptions):
     tags: (info.tags ?? []).filter((t) => t !== opts.taskTag && t !== opts.archiveTag),
     recurrence: mapRecurrence(info.recurrence)
   })
-  if (info.timeEstimate && info.timeEstimate > 0) {
-    task.timeEstimate = Math.round((info.timeEstimate / 60) * 100) / 100
-  }
   if (info.dateCreated) task.createdAt = info.dateCreated
   if (info.dateModified) task.updatedAt = info.dateModified
   if (info.archived) task.archived = true

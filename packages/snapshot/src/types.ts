@@ -1,11 +1,4 @@
-import type {
-  CustomFieldDef,
-  PriorityConfig,
-  Recurrence,
-  StatusConfig,
-  TaskType,
-  TimeLog
-} from '@low-level-kanban/core'
+import type { CustomFieldDef, PriorityConfig, Recurrence, StatusConfig, TaskType } from '@low-level-kanban/core'
 
 /** Project metadata and counts captured in an exported view. */
 export interface ProjectSummary {
@@ -51,8 +44,7 @@ export interface TaskResource {
   tags: string[]
   dependencies: string[]
   recurrence: Recurrence | null
-  timeEstimate: number | null
-  timeLogs: TimeLog[]
+  manualOrder?: Record<string, number>
   customFields: Record<string, unknown>
   archived: boolean
   createdAt: string

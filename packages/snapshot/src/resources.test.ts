@@ -42,7 +42,6 @@ describe('taskResources', () => {
     const task = makeTask({ id: 'a', title: 'A', tags: ['tag'], customFields: { sprint: 3 } })
     const resource = toTaskResource(task, 'pid', null, 0)
     expect(resource.recurrence).toBeNull()
-    expect(resource.timeEstimate).toBeNull()
     expect(resource.path).toBe('')
     expect(resource.tags).toEqual(task.tags)
     expect(resource.tags).not.toBe(task.tags)

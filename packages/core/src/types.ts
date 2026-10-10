@@ -1,4 +1,3 @@
-import { today } from './dates'
 import { t } from './i18n'
 import type { TaskIndex } from './store/TaskIndex'
 
@@ -15,12 +14,6 @@ export interface Recurrence {
   interval: 'daily' | 'weekly' | 'monthly' | 'yearly'
   every: number // e.g. every 2 weeks
   endDate?: string // YYYY-MM-DD
-}
-
-export interface TimeLog {
-  date: string // YYYY-MM-DD
-  hours: number
-  note: string
 }
 
 export const CUSTOM_FIELD_TYPES = [
@@ -71,8 +64,7 @@ export interface Task {
   subtasks: Task[]
   dependencies: string[] // task IDs
   recurrence?: Recurrence
-  timeEstimate?: number // hours
-  timeLogs?: TimeLog[]
+  manualOrder?: Record<string, number>
   customFields: Record<string, unknown>
   createdAt: string
   updatedAt: string
@@ -184,6 +176,7 @@ export interface GroupState {
 /** Which fields a board card shows, in order. */
 export interface FieldList {
   visible: string[]
+  order?: string[]
 }
 
 /** A board with no stored list shows its default fields. */
@@ -354,6 +347,7 @@ export interface LowLevelKanbanSettings {
   showSubtreeConnections: boolean
   lineBorders: LineBorders
   showTagColors: boolean
+  tagColors?: Record<string, string>
   /** Moment-style tokens for every date label. Empty follows the interface language. */
   dateFormat: string
   saveTaskOnClose: boolean
@@ -430,6 +424,7 @@ export const DEFAULT_SETTINGS: LowLevelKanbanSettings = {
   showSubtreeConnections: true,
   lineBorders: 'none',
   showTagColors: true,
+  tagColors: {},
   dateFormat: '',
   notificationsEnabled: true,
   notificationLeadDays: 2,
@@ -464,7 +459,7 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
     type: 'task',
     status: 'todo',
     priority: 'medium',
-    start: today().toString(),
+    start: '',
     due: '',
     progress: 0,
     completed: '',

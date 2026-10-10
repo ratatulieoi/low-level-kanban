@@ -16,7 +16,6 @@ import {
 import {
   renderDueChip,
   renderTagChip,
-  renderTimeChip,
   renderMetricStrip,
   renderNoteLink,
   renderProjectChip,
@@ -445,11 +444,7 @@ export class StyleguideView extends ItemView {
   }
 
   private renderDerivedChips(): void {
-    const sec = this.section('Time and due chips', 'time-due')
-    const timeRow = this.row(sec, 'renderTimeChip: logged only / within estimate / over estimate')
-    renderTimeChip(timeRow, 3, 0)
-    renderTimeChip(timeRow, 5, 10)
-    renderTimeChip(timeRow, 6, 4)
+    const sec = this.section('Due chips', 'due-chips')
     const dueRow = this.row(sec, 'renderDueChip: normal / near / overdue')
     renderDueChip(dueRow, 'Jul 20, 2026', 'normal')
     renderDueChip(dueRow, 'Jul 6, 2026', 'near')
@@ -568,7 +563,6 @@ export class StyleguideView extends ItemView {
       fields: ['priority', 'time', 'tags', 'progress', 'assignees', 'due'],
       task: makeTask({ title: 'Write the launch announcement' }),
       people: [],
-      loggedHours: 0,
       overdue: false,
       showTagColors: true,
       onClick: noop,
@@ -589,10 +583,8 @@ export class StyleguideView extends ItemView {
       people: SAMPLE_PEOPLE,
       priorityColor: '#c47070',
       descriptionPreview: 'Everything that must land before the announcement goes out.',
-      parentTitle: 'Website relaunch',
       customValues: { 'cf:client': { name: 'Client', text: 'Acme' } },
       renderSource: (el) => renderProjectChip(el, { title: 'Platform', color: '#7a9ec4', onClick: noop }),
-      loggedHours: 11,
       overdue: true,
       showTagColors: true,
       onClick: noop,
@@ -604,7 +596,7 @@ export class StyleguideView extends ItemView {
 
   private renderMetricStrip(): void {
     const sec = this.section('MetricStrip', 'metric-strip')
-    const row = this.row(sec, 'four stats, one with a progress bar, one flagged')
+    const row = this.row(sec, 'three stats, one with a progress bar, one flagged')
     renderMetricStrip(row, [
       {
         label: 'Progress',
@@ -615,15 +607,7 @@ export class StyleguideView extends ItemView {
         }
       },
       { label: 'Tasks', value: '30 of 48', sub: 'done' },
-      { label: 'Overdue', value: '4', sub: 'tasks past due', alert: true },
-      {
-        label: 'Time',
-        value: '',
-        sub: 'logged / estimate',
-        extra: (el) => {
-          renderTimeChip(el, 96, 140)
-        }
-      }
+      { label: 'Overdue', value: '4', sub: 'tasks past due', alert: true }
     ])
   }
 

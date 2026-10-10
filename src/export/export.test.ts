@@ -72,7 +72,7 @@ describe('buildSnapshot', () => {
       filter: { ...makeDefaultFilter(), conditions: [{ field: 'status', op: 'any', value: ['todo'] }] },
       sort: [{ key: 'due', dir: 'desc' }],
       group: { field: 'priority', columns: { priority: { hidden: ['low'] } } },
-      fields: { kanban: { visible: ['due', 'cf:client', 'subtasks'] } }
+      fields: { kanban: { visible: ['due', 'cf:client'] } }
     })
     expect(isSnapshot(snapshot)).toBe(true)
     expect(snapshot.title).toBe('Roadmap <b>')
@@ -82,7 +82,7 @@ describe('buildSnapshot', () => {
       mode: 'kanban',
       sort: [{ key: 'due', dir: 'desc' }],
       group: { field: 'priority', columns: { priority: { hidden: ['low'] } } },
-      fields: { kanban: { visible: ['due', 'cf:client', 'subtasks'] } }
+      fields: { kanban: { visible: ['due', 'cf:client'] } }
     })
     expect(snapshot.view.filter.conditions).toEqual([{ field: 'status', op: 'any', value: ['todo'] }])
     expect(snapshot.projects.length).toBe(1)

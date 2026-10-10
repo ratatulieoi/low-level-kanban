@@ -36,6 +36,7 @@ export interface ViewProject {
 export interface ViewSettings {
   priorityIcons: PriorityIconSet
   showTagColors: boolean
+  tagColors?: Record<string, string>
 }
 
 /**
@@ -65,19 +66,19 @@ export function allTasks(model: ViewModel): Task[] {
   return model.projects.flatMap((project) => project.tasks)
 }
 
-/** Filtered board candidates, sorted before multi-value grouping can duplicate their cards. */
+/** Filtered top-level board tasks, sorted before multi-value grouping can duplicate their cards. */
 export function boardTasks(model: ViewModel): Task[] {
   if (!model.projects.length) return []
   const config = mergedConfig(model)
-  const fields = shownFields(model.fields, 'kanban', fieldCatalogOf(model))
   const query = queryOf(model)
   const ctx = filterContextOf(model)
+  const fields = shownFields(model.fields, 'kanban', fieldCatalogOf(model))
   return boardCandidates(allTasks(model), fields)
     .filter((task) => matchesQuery(task, query, ctx))
     .sort((a, b) => compareTasks(a, b, model.sort, config.statuses, config.priorities))
 }
 
-/** Unique filtered tasks in visible board columns, respecting the card's subtask setting. */
+/** Unique filtered top-level tasks in visible board columns. */
 export function boardTaskCount(model: ViewModel): number {
   const tasks = boardTasks(model)
   if (!tasks.length) return 0

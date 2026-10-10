@@ -10,7 +10,8 @@ export function today(): Temporal.PlainDate {
 export function parsePlainDate(s: string): Temporal.PlainDate | null {
   if (!s) return null
   try {
-    return Temporal.PlainDate.from(s)
+    const datePart = s.includes('T') ? s.split('T')[0] : s
+    return Temporal.PlainDate.from(datePart)
   } catch {
     return null
   }
@@ -85,6 +86,19 @@ export function relativeDue(iso: string, from: Temporal.PlainDate = today()): { 
   if (days === 1) return { text: t('dates.tomorrow'), tone: 'today' }
   if (days <= 6) return { text: tn('dates.inDays', days), tone: 'soon' }
   return null
+}
+
+/** Text describing remaining days or overdue duration, e.g. "3 days left", "1 day left", "Due today", "2 days overdue". */
+export function daysLeft(iso: string | null | undefined, from: Temporal.PlainDate = today()): string {
+  if (!iso) return ''
+  const due = parsePlainDate(iso)
+  if (!due) return ''
+  const days = from.until(due, { largestUnit: 'day' }).days
+  if (days < -1) return tn('dates.daysOverdue', -days)
+  if (days === -1) return tn('dates.daysOverdue', 1)
+  if (days === 0) return t('dates.dueToday')
+  if (days === 1) return tn('dates.daysLeft', 1)
+  return tn('dates.daysLeft', days)
 }
 
 /** Whether a finished task landed on its due date; null unless both dates are set. */

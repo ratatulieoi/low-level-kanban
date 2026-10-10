@@ -2,8 +2,8 @@ import type { CustomFieldDef, ViewFields, ViewMode } from '../types'
 import { t } from '../i18n'
 
 /** Board card fields in their default order. Custom fields follow as `cf:<id>`. */
-const BUILT_IN = ['priority', 'description', 'time', 'tags', 'progress', 'project', 'assignees', 'due', 'subtasks']
-const HIDDEN_BY_DEFAULT = new Set(['description', 'subtasks'])
+const BUILT_IN = ['priority', 'description', 'tags', 'progress', 'project', 'assignees', 'due']
+const HIDDEN_BY_DEFAULT = new Set(['description'])
 
 /** What decides which fields exist: the custom fields in scope, and whether it spans projects. */
 export interface FieldCatalog {
@@ -20,10 +20,26 @@ export function defaultFields(mode: ViewMode, catalog: FieldCatalog): string[] {
   return availableFields(mode, catalog).filter((id) => !id.startsWith('cf:') && !HIDDEN_BY_DEFAULT.has(id))
 }
 
+/** All available fields in user-customized order, falling back to default order. */
+export function orderedFields(fields: ViewFields, mode: ViewMode, catalog: FieldCatalog): string[] {
+  const available = availableFields(mode, catalog)
+  const storedOrder = fields.kanban?.order
+  if (!storedOrder) return available
+  const result = storedOrder.filter((id) => available.includes(id))
+  for (const id of available) {
+    if (!result.includes(id)) result.push(id)
+  }
+  return result
+}
+
 /** What the board shows, in order, without fields that no longer exist. */
 export function shownFields(fields: ViewFields, mode: ViewMode, catalog: FieldCatalog): string[] {
   const available = availableFields(mode, catalog)
   const stored = fields.kanban?.visible
+  if (fields.kanban?.order) {
+    const visibleSet = new Set(stored ?? defaultFields(mode, catalog))
+    return fields.kanban.order.filter((id) => available.includes(id) && visibleSet.has(id))
+  }
   return stored ? stored.filter((id) => available.includes(id)) : defaultFields(mode, catalog)
 }
 
@@ -53,16 +69,21 @@ export function tidyFields(fields: ViewFields, catalog: FieldCatalog): void {
   }
   const shown = shownFields(fields, 'kanban', catalog)
   const defaults = defaultFields('kanban', catalog)
-  if (shown.length === defaults.length && shown.every((id, i) => id === defaults[i])) delete fields.kanban
+  const defaultOrder = availableFields('kanban', catalog)
+  const isDefaultOrder =
+    !list.order || (list.order.length === defaultOrder.length && list.order.every((id, i) => id === defaultOrder[i]))
+  if (list.order && isDefaultOrder) {
+    delete list.order
+  }
+  if (shown.length === defaults.length && shown.every((id, i) => id === defaults[i]) && isDefaultOrder) {
+    delete fields.kanban
+  }
 }
 
-/** Board fields from before the subtask and description switches joined the field picker. */
+/** Board fields from before the description switch joined the field picker. */
 export function legacyBoardFields(showSubtasks: boolean, showDescription: boolean): ViewFields {
-  if (!showSubtasks && !showDescription) return {}
-  const visible = BUILT_IN.filter(
-    (id) =>
-      !HIDDEN_BY_DEFAULT.has(id) || (id === 'subtasks' && showSubtasks) || (id === 'description' && showDescription)
-  )
+  if (!showDescription) return {}
+  const visible = BUILT_IN.filter((id) => !HIDDEN_BY_DEFAULT.has(id) || (id === 'description' && showDescription))
   return { kanban: { visible } }
 }
 
@@ -80,14 +101,10 @@ export function viewFieldLabel(id: string, customFields: CustomFieldDef[]): stri
       return t('columns.due')
     case 'progress':
       return t('columns.progress')
-    case 'time':
-      return t('columns.time')
     case 'tags':
       return t('taskForm.tags')
     case 'description':
       return t('fields.description')
-    case 'subtasks':
-      return t('fields.subtasks')
     default:
       return id
   }

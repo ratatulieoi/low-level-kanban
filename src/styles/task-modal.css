@@ -148,6 +148,12 @@ textarea.llk-modal-description:focus {
   padding: 5px 8px;
   border-radius: var(--radius-s);
   transition: background 0.1s;
+  cursor: pointer;
+  user-select: none;
+}
+.llk-modal-subtask-row.llk-subtask-add-row {
+  cursor: default;
+  user-select: auto;
 }
 .llk-modal-subtask-row .llk-icon-btn {
   width: 24px;

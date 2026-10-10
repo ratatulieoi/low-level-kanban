@@ -136,25 +136,13 @@ describe('snapshot kanban', () => {
     expect(boardTasks(view)[0]).toBe(view.projects[0].tasks[0])
   })
 
-  it('deals subtasks their own cards and keeps parent titles and custom fields', () => {
+  it('does not deal subtasks their own cards and keeps custom fields on parent cards', () => {
     const host = document.body.createDiv()
-    const view = model({ fields: { kanban: { visible: ['subtasks', 'cf:sprint'] } } })
+    const view = model({ fields: { kanban: { visible: ['cf:sprint'] } } })
     renderSnapshotKanban(host, view)
-    expect(host.querySelector('[data-task-id="c"] .llk-kanban-card-parent')?.textContent).toBe('Parent')
+    expect(host.querySelector('[data-task-id="c"]')).toBeNull()
     expect(host.querySelector('[data-task-id="a"] .llk-kanban-card-field')?.textContent).toBe('SprintS1')
-    expect(host.querySelector('.llk-kanban-card-footer')).toBeNull()
-    expect(boardTaskCount(view)).toBe(4)
-  })
-
-  it('shows a matching subtask even when its parent does not match', () => {
-    const view = model({
-      fields: { kanban: { visible: ['subtasks'] } },
-      filter: { showArchived: false, conditions: [{ field: 'status', op: 'any', value: ['in-progress'] }] }
-    })
-    const host = document.body.createDiv()
-    renderSnapshotKanban(host, view)
-    expect(cardIds(host)).toEqual(['c'])
-    expect(boardTaskCount(view)).toBe(1)
+    expect(boardTaskCount(view)).toBe(3)
   })
 
   it('formats custom dates and descriptions in the chosen card field order', () => {
@@ -187,7 +175,7 @@ describe('snapshot kanban', () => {
   it('follows column order and hides the columns the view leaves out', () => {
     const host = document.body.createDiv()
     const view = model({
-      fields: { kanban: { visible: ['subtasks'] } },
+      fields: {},
       group: { field: 'type', columns: { type: { order: ['milestone', 'task'], hidden: ['subtask'] } } }
     })
     renderSnapshotKanban(host, view)

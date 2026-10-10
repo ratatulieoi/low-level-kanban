@@ -126,14 +126,10 @@ describe('viewer', () => {
     expect(viewModelFromSnapshot(old).sort).toEqual([{ key: 'due', dir: 'desc' }])
   })
 
-  it('reads the fields a page carries, and the subtask cards setting of a version 1 page', () => {
+  it('reads the fields a page carries', () => {
     const page = snapshot()
     page.view.fields = { kanban: { visible: ['due', 'assignees'] } }
     expect(viewModelFromSnapshot(page).fields).toEqual({ kanban: { visible: ['due', 'assignees'] } })
-    const old = snapshot()
-    old.version = 1
-    old.settings.kanbanShowSubtasks = true
-    expect(viewModelFromSnapshot(old).fields.kanban?.visible).toContain('subtasks')
   })
 
   it('reads the filter of a version 1 page, which held fixed facets', () => {
@@ -203,12 +199,9 @@ describe('viewer', () => {
     expect(boardTaskCount(viewModelFromSnapshot(page))).toBe(1)
   })
 
-  it('counts subtask cards only when the board shows them, including version 1 settings', () => {
+  it('counts top-level tasks on the board', () => {
     const page = snapshot()
     expect(boardTaskCount(viewModelFromSnapshot(page))).toBe(2)
-    page.version = 1
-    page.settings.kanbanShowSubtasks = true
-    expect(boardTaskCount(viewModelFromSnapshot(page))).toBe(3)
   })
 
   it('writes dates in the format the snapshot carries', () => {
@@ -274,11 +267,9 @@ describe('loadSnapshot', () => {
     const page = snapshot()
     page.version = 1
     Object.assign(page.view, { mode: 'gantt', ganttGranularity: 'month' })
-    page.settings.kanbanShowSubtasks = true
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify(page)))
     const loaded = await loadSnapshot(document)
     expect(loaded?.view.mode).toBe('kanban')
-    expect(loaded?.view.fields?.kanban?.visible).toContain('subtasks')
     expect(loaded?.view).not.toHaveProperty('ganttGranularity')
   })
 

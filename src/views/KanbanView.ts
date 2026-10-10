@@ -12,8 +12,6 @@ import {
   customFieldOf,
   shownFields,
   valueKey,
-  flattenTasks,
-  totalLoggedHours,
   matchesQuery,
   dueUrgency,
   getPriorityConfig,
@@ -32,6 +30,7 @@ import {
   compareTasks,
   groupValues,
   KanbanColumn,
+  type BoardColumn,
   type FilterSetup,
   type KanbanCardData,
   renderProjectChip
@@ -91,7 +90,11 @@ export class KanbanView implements SubView {
     this.container.addClass('llk-kanban-view')
 
     const board = this.container.createDiv('llk-kanban-board')
+    board.addEventListener('dragover', (e) => {
+      e.preventDefault()
+    })
     const columns = boardColumns(this.setup, this.group, this.visibleTasks())
+    this.applyManualOrder(columns)
     for (const column of columns.filter((c) => !c.hidden)) {
       new KanbanColumn(board, {
         column,
@@ -106,8 +109,9 @@ export class KanbanView implements SubView {
         onCardDragEnd: () => {
           this.dragTask = null
           this.dragFrom = null
+          this.clearDropState()
         },
-        onDrop: (taskId, to) => this.handleDrop(taskId, to)
+        onDrop: (taskId, to, afterTaskId) => this.handleDrop(taskId, to, afterTaskId)
       })
     }
 
@@ -139,16 +143,23 @@ export class KanbanView implements SubView {
       .sort((a, b) => compareTasks(a, b, this.sort, this.config.statuses, this.config.priorities))
   }
 
+  /** Manually dragged cards keep their dropped position; the rest keep their sorted order. */
+  private applyManualOrder(columns: BoardColumn[]): void {
+    const field = boardField(this.setup, this.group)
+    for (const column of columns) {
+      const key = `${field}:${column.id}`
+      column.tasks
+        .map((task, index) => ({ task, rank: task.manualOrder?.[key] ?? index }))
+        .sort((a, b) => a.rank - b.rank)
+        .forEach(({ task }, index) => {
+          column.tasks[index] = task
+        })
+    }
+  }
+
   private buildCardData(task: Task): KanbanCardData {
     const priorityConfig = getPriorityConfig(this.config.priorities, task.priority)
-    const priorityColor =
-      priorityConfig && task.priority !== 'medium' && task.priority !== 'low' ? priorityConfig.color : undefined
-
-    let parentTitle: string | undefined
-    if (this.cardFields.includes('subtasks') && task.type === 'subtask') {
-      const parent = this.findParentTask(task.id)
-      if (parent) parentTitle = parent.title
-    }
+    const priorityColor = priorityConfig?.color
 
     const owner = this.scope.isMulti ? this.scope.projectOf(task.id) : null
 
@@ -157,7 +168,6 @@ export class KanbanView implements SubView {
       people: linkedRefs(this.plugin.app, task.assignees, task.filePath ?? ''),
       priorityColor,
       descriptionPreview: this.cardFields.includes('description') ? descriptionPreview(task.description) : undefined,
-      parentTitle,
       customValues: cardCustomValues(task, this.scope.customFields(), this.cardFields),
       renderSource: owner
         ? (el) =>
@@ -167,18 +177,10 @@ export class KanbanView implements SubView {
               onClick: safeAsync(() => this.plugin.router.openProjectLink(owner.filePath))
             })
         : undefined,
-      loggedHours: totalLoggedHours(task),
       overdue: dueUrgency(task, this.config.statuses) === 'overdue',
+      tagColors: this.plugin.settings.tagColors,
       showTagColors: this.plugin.settings.showTagColors
     }
-  }
-
-  private findParentTask(taskId: string): Task | null {
-    for (const ft of flattenTasks(this.scope.tasks())) {
-      const parent = ft.task
-      if (parent.subtasks.some((s) => s.id === taskId)) return parent
-    }
-    return null
   }
 
   private openTask(task: Task): void {
@@ -200,15 +202,69 @@ export class KanbanView implements SubView {
     menu.showAtMouseEvent(e)
   }
 
-  private async handleDrop(taskId: string, to: string): Promise<void> {
-    const task = this.dragTask
-    const from = this.dragFrom
-    if (!task || task.id !== taskId || from === null || from === to) return
+  private clearDropState(): void {
+    this.container.querySelectorAll('.llk-kanban-drop-placeholder').forEach((el) => el.remove())
+    this.container.querySelectorAll('.llk-kanban-drop-target').forEach((el) => {
+      el.classList.remove('llk-kanban-drop-target')
+    })
+  }
+
+  private async handleDrop(taskId: string, to: string, afterTaskId?: string | null): Promise<void> {
+    const task =
+      this.dragTask && this.dragTask.id === taskId ? this.dragTask : this.scope.tasks().find((t) => t.id === taskId)
+    const from = this.dragFrom ?? to
+    if (!task) return
     const owner = this.scope.projectOf(taskId)
-    const patch = this.dropPatch(task, from, to)
-    if (!owner || !patch) return
-    await this.plugin.store.updateTask(owner, task.id, patch)
+    if (!owner) return
+    const fieldPatch = from === to ? null : this.dropPatch(task, from, to)
+    const orderPatch = this.manualOrderPatch(task, to, afterTaskId)
+    if (!fieldPatch && !orderPatch) return
+    await this.plugin.store.updateTask(owner, task.id, { ...fieldPatch, ...orderPatch })
     await this.onRefresh()
+  }
+
+  /**
+   * The card's rank in its target column, keyed by board field so the
+   * same column id under a different grouping does not collide.
+   */
+  private manualOrderPatch(task: Task, columnId: string, afterTaskId?: string | null): Partial<Task> | null {
+    const field = boardField(this.setup, this.group)
+    const key = `${field}:${columnId}`
+    const rank = this.dropRank(task.id, columnId, key, afterTaskId)
+    if (rank === null) return null
+    if (task.manualOrder?.[key] !== undefined && task.manualOrder[key] === rank) return null
+    return { manualOrder: { ...task.manualOrder, [key]: rank } }
+  }
+
+  /** The dropped card's rank between its target column neighbours' ranks. */
+  private dropRank(taskId: string, columnId: string, key: string, afterTaskId?: string | null): number | null {
+    const columns = boardColumns(this.setup, this.group, this.visibleTasks())
+    this.applyManualOrder(columns)
+    const targetCol = columns.find((c) => c.id === columnId)
+    if (!targetCol) return null
+
+    const ranks = new Map<string, number>()
+    targetCol.tasks.forEach((t, i) => ranks.set(t.id, t.manualOrder?.[key] ?? i))
+
+    const neighbours = targetCol.tasks.filter((t) => t.id !== taskId)
+    if (neighbours.length === 0) return 0
+
+    const at =
+      afterTaskId === null || afterTaskId === undefined
+        ? neighbours.length
+        : neighbours.findIndex((t) => t.id === afterTaskId)
+    const validAt = at >= 0 ? at : neighbours.length
+
+    const prevId = validAt > 0 ? neighbours[validAt - 1].id : null
+    const nextId = validAt < neighbours.length ? neighbours[validAt].id : null
+
+    const prevRank = prevId !== null ? ranks.get(prevId) : undefined
+    const nextRank = nextId !== null ? ranks.get(nextId) : undefined
+
+    if (prevRank === undefined) return nextRank === undefined ? 0 : nextRank - 1
+    if (nextRank === undefined) return prevRank + 1
+    if (prevRank === nextRank) return prevRank + 0.5
+    return (prevRank + nextRank) / 2
   }
 
   /** What moving a card from one column to another changes on its task. Null where a move means nothing. */

@@ -96,20 +96,13 @@ describe('task round-trip', () => {
     expect(nested.parentId).toBe('parent-1')
   })
 
-  it('preserves recurrence, timeEstimate, and timeLogs', () => {
+  it('preserves recurrence', () => {
     const original = makeTask({
       id: 'task-2',
-      recurrence: { interval: 'weekly', every: 2 },
-      timeEstimate: 8,
-      timeLogs: [
-        { date: '2026-04-01', hours: 2, note: 'setup' },
-        { date: '2026-04-02', hours: 3.5, note: 'review' }
-      ]
+      recurrence: { interval: 'weekly', every: 2 }
     })
     const { task } = roundTripTask(original)
     expect(task.recurrence).toEqual(original.recurrence)
-    expect(task.timeEstimate).toBe(8)
-    expect(task.timeLogs).toEqual(original.timeLogs)
   })
 
   it('preserves a milestone type and empty start', () => {
@@ -507,34 +500,26 @@ describe('hydration does not alias the source frontmatter', () => {
       tags: ['api'],
       dependencies: ['dep-1'],
       customFields: { sprint: 'S1' },
-      recurrence: { interval: 'weekly', every: 1 },
-      timeLogs: [{ date: '2026-04-01', hours: 2, note: 'init' }]
+      recurrence: { interval: 'weekly', every: 1 }
     }
 
     const { task } = hydrateTaskFromFile(fm, '', 'Projects/P_tasks/task.md')
-    const logs = task.timeLogs
-    if (!logs) throw new Error('timeLogs missing')
-    const srcLogs = fm.timeLogs as { hours: number }[]
 
     expect(task.assignees).not.toBe(fm.assignees)
     expect(task.tags).not.toBe(fm.tags)
     expect(task.dependencies).not.toBe(fm.dependencies)
     expect(task.customFields).not.toBe(fm.customFields)
     expect(task.recurrence).not.toBe(fm.recurrence)
-    expect(logs).not.toBe(fm.timeLogs)
-    expect(logs[0]).not.toBe(srcLogs[0])
 
     task.assignees.push('Bob')
     task.tags.push('design')
     task.dependencies.push('dep-2')
     task.customFields.priority = 'high'
-    logs[0].hours = 99
 
     expect(fm.assignees).toEqual(['Alice'])
     expect(fm.tags).toEqual(['api'])
     expect(fm.dependencies).toEqual(['dep-1'])
     expect(fm.customFields).toEqual({ sprint: 'S1' })
-    expect(srcLogs[0].hours).toBe(2)
   })
 
   it('drops team members written as mappings instead of names', () => {
@@ -580,8 +565,6 @@ describe('foreign frontmatter', () => {
       title: 'Full',
       completed: '2026-04-01',
       recurrence: { interval: 'weekly', every: 1 },
-      timeEstimate: 4,
-      timeLogs: [{ date: '2026-04-01', hours: 2, note: 'init' }],
       customFields: { sprint: 'S1' }
     })
 

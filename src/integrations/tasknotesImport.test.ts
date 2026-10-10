@@ -35,7 +35,6 @@ describe('buildImportForest', () => {
       priority: 'high',
       scheduled: '2026-07-06T09:00',
       due: '2026-07-10',
-      timeEstimate: 90,
       tags: ['task', 'docs', 'archived'],
       completedDate: '2026-07-09',
       dateCreated: '2026-06-01T10:00:00.000+02:00',
@@ -50,7 +49,6 @@ describe('buildImportForest', () => {
     expect(task.priority).toBe('high')
     expect(task.start).toBe('2026-07-06')
     expect(task.due).toBe('2026-07-10')
-    expect(task.timeEstimate).toBe(1.5)
     expect(task.tags).toEqual(['docs'])
     expect(task.completed).toBe('2026-07-09')
     expect(task.createdAt).toBe('2026-06-01T10:00:00.000+02:00')

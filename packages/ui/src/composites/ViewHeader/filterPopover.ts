@@ -83,7 +83,6 @@ export function valueOptions(setup: FilterSetup, field: string): ValueOption[] {
     case 'type':
       return [
         { id: 'task', label: t('taskForm.typeTask') },
-        { id: 'subtask', label: t('taskForm.typeSubtask') },
         { id: 'milestone', label: t('taskForm.typeMilestone') }
       ]
     case 'project':

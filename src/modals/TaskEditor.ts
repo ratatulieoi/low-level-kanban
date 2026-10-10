@@ -16,6 +16,9 @@ import type LowLevelKanbanPlugin from '#main'
 import {
   type Project,
   type Task,
+  checklistProgress,
+  setBodyProse,
+  stripChecklist,
   makeTask,
   flattenTasks,
   getDefaultStatusId,
@@ -28,7 +31,6 @@ import { safeAsync, renderGlyph } from '@low-level-kanban/ui'
 import { saveShortcutLabel } from '../utils'
 import { confirmDialog, openTaskByPath } from '#ui/ModalFactory'
 import { renderTaskFormFields } from './TaskFormFields'
-import { renderTimeTrackingPanel } from './TimeTrackingPanel'
 import { renderSubtasksPanel } from './SubtasksPanel'
 import { NoteLinkSuggest } from './NoteLinkSuggest'
 
@@ -404,7 +406,7 @@ export class TaskEditor {
     const descPreview = descSection.createDiv('llk-modal-desc-preview')
     const descArea = descSection.createEl('textarea', { cls: 'llk-modal-description' })
     descArea.placeholder = t('taskEditor.descriptionPlaceholder')
-    descArea.value = this.task.description
+    descArea.value = stripChecklist(this.task.description)
 
     const autoResize = () => {
       const saved: [HTMLElement, number][] = []
@@ -428,24 +430,11 @@ export class TaskEditor {
     })
     this.descResizeObserver.observe(descArea)
 
-    const hasContent = () => this.task.description.trim().length > 0
+    const hasContent = () => stripChecklist(this.task.description).trim().length > 0
     const sourcePath = this.task.filePath || this.project.filePath || ''
 
     let descComp = new Component()
     descComp.load()
-
-    const toggleCheckbox = (index: number) => {
-      let count = 0
-      this.task.description = this.task.description.replace(
-        /^([ \t]*[-*+] \[)([ x])(\])/gm,
-        (match, pre, state, post) => {
-          if (count++ === index) return pre + (state === ' ' ? 'x' : ' ') + post
-          return match
-        }
-      )
-      descArea.value = this.task.description
-      void renderPreview()
-    }
 
     const attachCheckboxListeners = () => {
       descPreview.querySelectorAll('input[type="checkbox"]').forEach((el, i) => {
@@ -453,7 +442,6 @@ export class TaskEditor {
         cb.removeAttribute('disabled')
         cb.addEventListener('click', (e) => {
           e.preventDefault()
-          toggleCheckbox(i)
         })
       })
     }
@@ -474,7 +462,7 @@ export class TaskEditor {
       descComp = new Component()
       descComp.load()
       descPreview.empty()
-      await MarkdownRenderer.render(this.app, this.task.description, descPreview, sourcePath, descComp)
+      await MarkdownRenderer.render(this.app, stripChecklist(this.task.description), descPreview, sourcePath, descComp)
       attachCheckboxListeners()
       attachFileLinkHandlers()
     }
@@ -482,7 +470,7 @@ export class TaskEditor {
     const showEdit = (caret?: number) => {
       descPreview.classList.add('llk-hidden')
       descArea.classList.remove('llk-hidden')
-      descArea.value = this.task.description
+      descArea.value = stripChecklist(this.task.description)
       window.setTimeout(() => {
         autoResize()
         descArea.focus()
@@ -498,7 +486,7 @@ export class TaskEditor {
     }
 
     descArea.addEventListener('input', () => {
-      this.task.description = descArea.value
+      this.task.description = setBodyProse(this.task.description, descArea.value)
       autoResize()
     })
     descArea.addEventListener('blur', () => showPreview())
@@ -610,11 +598,9 @@ export class TaskEditor {
       window.setTimeout(autoResize, 0)
     }
 
-    renderSubtasksPanel(body, this.task, this.plugin.store.configFor(this.project).statuses, (path) =>
-      this.openLinkedTask(path)
-    )
-
-    renderTimeTrackingPanel(body, this.task)
+    renderSubtasksPanel(body, this.task, () => {
+      this.task.progress = checklistProgress(this.task.description)
+    })
 
     const footer = contentEl.createDiv('llk-te-footer')
 

@@ -10,7 +10,6 @@ import {
   reaches,
   isTerminalStatus,
   priorityIcon,
-  stringToColor,
   completionOutcome,
   relativeDue,
   t
@@ -23,11 +22,13 @@ import {
   renderMultiSelect,
   renderAddProperty,
   renderDepRow,
+  openTagColorPopover,
   type SelectItem,
   type HiddenProperty
 } from '@low-level-kanban/ui'
 import { renderCustomFieldInput } from './CustomFieldInputs'
 import { renderPersonPicker } from '#ui/PersonPicker'
+import { getTagColor } from '../settings'
 
 export interface TaskFormFieldsContext {
   task: Task
@@ -43,7 +44,6 @@ export interface TaskFormFieldsContext {
 
 const typeOptions = (): SelectItem[] => [
   { id: 'task', label: t('taskForm.typeTask'), icon: 'square-check-big' },
-  { id: 'subtask', label: t('taskForm.typeSubtask'), icon: 'git-branch' },
   { id: 'milestone', label: t('taskForm.typeMilestone'), icon: 'diamond' }
 ]
 
@@ -322,7 +322,7 @@ export function renderTaskFormFields(container: HTMLElement, ctx: TaskFormFields
         addLabel: t('taskForm.addTags'),
         placeholder: t('taskForm.findOrCreate'),
         tag: true,
-        colorFor: plugin.settings.showTagColors ? (tag) => stringToColor(tag) : undefined,
+        colorFor: plugin.settings.showTagColors ? (tag) => getTagColor(plugin.settings, tag) : undefined,
         selected: () => task.tags,
         options: () => projectTags.map((tag) => ({ id: tag, label: tag })),
         add: (id) => {
@@ -333,6 +333,27 @@ export function renderTaskFormFields(container: HTMLElement, ctx: TaskFormFields
         },
         create: (label) => {
           if (!task.tags.includes(label)) task.tags.push(label)
+        },
+        onItemClick: (tag, anchorEl, refresh) => {
+          const currentColor = getTagColor(plugin.settings, tag)
+          const hasCustomColor = Boolean(plugin.settings.tagColors && tag in plugin.settings.tagColors)
+          openTagColorPopover({
+            anchorEl,
+            tag,
+            currentColor,
+            hasCustomColor,
+            onColorChange: (newColor) => {
+              const tagColors = plugin.settings.tagColors ?? (plugin.settings.tagColors = {})
+              if (newColor === null) {
+                Reflect.deleteProperty(tagColors, tag)
+              } else {
+                tagColors[tag] = newColor
+              }
+              void plugin.saveSettings()
+              plugin.refreshViews()
+              refresh()
+            }
+          })
         }
       })
       return cell

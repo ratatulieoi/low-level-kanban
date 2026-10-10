@@ -104,7 +104,6 @@ function cloneNode(source: Task, includeSubtasks: boolean, idMap: Map<string, st
     assignees: [...source.assignees],
     tags: [...source.tags],
     customFields: { ...source.customFields },
-    timeLogs: source.timeLogs ? source.timeLogs.map((l) => ({ ...l })) : undefined,
     recurrence: source.recurrence ? { ...source.recurrence } : undefined
   }
 }
@@ -158,9 +157,4 @@ export function collectAllTags(tasks: Task[]): string[] {
   }
   walk(tasks)
   return [...set].filter(Boolean).sort()
-}
-
-export function totalLoggedHours(task: Task): number {
-  if (!task.timeLogs?.length) return 0
-  return task.timeLogs.reduce((sum, log) => sum + log.hours, 0)
 }

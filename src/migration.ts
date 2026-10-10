@@ -71,16 +71,14 @@ export async function migrateBoardCardConfig(plugin: LowLevelKanbanPlugin): Prom
       }
     )
     plugin.settings.projectFilters[key] = entry
-    // Change only the two legacy fields, keeping the card's order and custom fields.
-    const visible = [...(entry.fields.kanban?.visible ?? defaultFields('kanban', { customFields: [], multi: true }))]
-    for (const [legacy, field] of [
-      ['kanbanShowSubtasks', 'subtasks'],
-      ['kanbanShowDescriptionPreview', 'description']
-    ]) {
-      if (typeof config[legacy] !== 'boolean') continue
-      const at = visible.indexOf(field)
-      if (config[legacy] && at === -1) visible.push(field)
-      if (!config[legacy] && at !== -1) visible.splice(at, 1)
+    // Change only the legacy description field, keeping the card's order and custom fields.
+    const visible = [
+      ...(entry.fields.kanban?.visible ?? defaultFields('kanban', { customFields: [], multi: true }))
+    ].filter((field) => field !== 'subtasks')
+    if (typeof config.kanbanShowDescriptionPreview === 'boolean') {
+      const at = visible.indexOf('description')
+      if (config.kanbanShowDescriptionPreview && at === -1) visible.push('description')
+      if (!config.kanbanShowDescriptionPreview && at !== -1) visible.splice(at, 1)
     }
     entry.fields.kanban = { visible }
     try {

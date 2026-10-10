@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Temporal } from 'temporal-polyfill'
 import {
   completionOutcome,
+  daysLeft,
   formatDate,
   formatDateLong,
   formatDateRange,
@@ -37,6 +38,28 @@ describe('relativeDue', () => {
   it('returns null beyond a week out', () => {
     expect(relativeDue('2026-06-22', from)).toBeNull()
     expect(relativeDue('2026-12-01', from)).toBeNull()
+  })
+})
+
+describe('daysLeft', () => {
+  it('returns empty string for empty or invalid dates', () => {
+    expect(daysLeft('', from)).toBe('')
+    expect(daysLeft('not-a-date', from)).toBe('')
+  })
+
+  it('reports days left when due in the future', () => {
+    expect(daysLeft('2026-06-16', from)).toBe('1 day left')
+    expect(daysLeft('2026-06-18', from)).toBe('3 days left')
+    expect(daysLeft('2026-07-15', from)).toBe('30 days left')
+  })
+
+  it('reports due today when due date is today', () => {
+    expect(daysLeft('2026-06-15', from)).toBe('Due today')
+  })
+
+  it('reports days overdue when due date has passed', () => {
+    expect(daysLeft('2026-06-14', from)).toBe('1 day overdue')
+    expect(daysLeft('2026-06-10', from)).toBe('5 days overdue')
   })
 })
 
@@ -132,6 +155,11 @@ describe('custom date format', () => {
     setDateFormat('YYYY-MM-DD')
     expect(formatDate('')).toBe('')
     expect(formatDateShort('not-a-date')).toBe('')
+  })
+
+  it('handles ISO datetime strings', () => {
+    expect(formatDateShort('2026-03-08T10:00:00.000Z')).toBe('Mar 8')
+    expect(formatDate('2026-03-08T10:00:00.000Z')).toBe('Mar 8, 2026')
   })
 
   it('falls back to the language format when blank', () => {

@@ -9,6 +9,7 @@ import {
   makeId,
   flattenTasks,
   setDateFormat,
+  stringToColor,
   t,
   tn
 } from '@low-level-kanban/core'
@@ -22,9 +23,26 @@ import {
 } from './integrations/tasknotes'
 import { renderPaletteFields, renderStatusDoneToggle } from './ui/PaletteListEditor'
 import { renderPersonPicker } from './ui/PersonPicker'
+import { promptText } from './ui/ModalFactory'
 
 export type { LowLevelKanbanSettings }
 export { DEFAULT_SETTINGS }
+
+/**
+ * Per-tag custom colors, keyed by tag as stored. Kept local to this module because the
+ * core settings type is owned elsewhere; optional so settings built from core defaults
+ * still fit until the core type gains the field.
+ */
+export interface TagColorSettings {
+  tagColors?: Record<string, string>
+}
+
+export const DEFAULT_TAG_COLORS: Record<string, string> = {}
+
+/** A tag's custom color when set, otherwise the automatic one. Mirrors `personColor`. */
+export function getTagColor(settings: LowLevelKanbanSettings & TagColorSettings, tag: string): string {
+  return settings.tagColors?.[tag] ?? stringToColor(tag)
+}
 
 export class LowLevelKanbanSettingTab extends PluginSettingTab {
   plugin: LowLevelKanbanPlugin
@@ -102,6 +120,7 @@ export class LowLevelKanbanSettingTab extends PluginSettingTab {
             aliases: ['appearance'],
             control: { type: 'toggle', key: 'showTagColors' }
           },
+          this.tagColorsPage(),
           {
             name: t('settings.dateFormat.name'),
             desc: t('settings.dateFormat.desc'),
@@ -491,6 +510,65 @@ export class LowLevelKanbanSettingTab extends PluginSettingTab {
                 this.persist()
               }
             })
+          }
+        }
+      ]
+    }
+  }
+
+  private tagColorsPage(): SettingDefinitionPage {
+    const tagColors = this.plugin.settings.tagColors ?? (this.plugin.settings.tagColors = {})
+    const tags = Object.keys(tagColors)
+    return {
+      type: 'page',
+      name: t('settings.tagColors.name'),
+      desc: t('settings.tagColors.desc'),
+      displayValue: () => tn('settings.tagCount', Object.keys(this.plugin.settings.tagColors ?? {}).length),
+      items: [
+        {
+          type: 'list',
+          heading: t('settings.tagColors.name'),
+          emptyState: t('settings.tagColors.empty'),
+          items: tags.map((tag) => ({
+            name: tag,
+            render: (setting: Setting) => {
+              setting.setClass('llk-palette-row')
+              const color = tagColors[tag] ?? stringToColor(tag)
+              setting.addColorPicker((picker) =>
+                picker.setValue(color).onChange((value) => {
+                  tagColors[tag] = value
+                  this.persist()
+                })
+              )
+            }
+          })),
+          onDelete: (index) => {
+            const tagToDelete = tags[index]
+            if (tagToDelete !== undefined) {
+              Reflect.deleteProperty(tagColors, tagToDelete)
+              this.persist()
+              this.update()
+            }
+          },
+          addItem: {
+            name: t('settings.tagColors.add'),
+            action: () => {
+              void (async () => {
+                const name = await promptText(
+                  this.app,
+                  t('settings.tagColors.promptTitle'),
+                  t('settings.tagColors.promptPlaceholder')
+                )
+                if (!name) return
+                const clean = name.trim().replace(/^#/, '')
+                if (!clean) return
+                if (!(clean in tagColors)) {
+                  tagColors[clean] = stringToColor(clean)
+                  this.persist()
+                  this.update()
+                }
+              })()
+            }
           }
         }
       ]

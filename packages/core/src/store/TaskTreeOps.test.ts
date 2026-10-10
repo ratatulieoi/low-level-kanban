@@ -9,7 +9,6 @@ import {
   findTask,
   flattenTasks,
   moveTaskInTree,
-  totalLoggedHours,
   updateTaskInTree
 } from './TaskTreeOps'
 
@@ -199,22 +198,5 @@ describe('collectAllTags', () => {
       task({ id: 'b', subtasks: [task({ id: 'b1', tags: ['bar', 'baz'] })] })
     ]
     expect(collectAllTags(tasks)).toEqual(['bar', 'baz', 'foo'])
-  })
-})
-
-describe('totalLoggedHours', () => {
-  it('returns 0 when no logs exist', () => {
-    expect(totalLoggedHours(task({ id: 'a' }))).toBe(0)
-  })
-
-  it('sums hours across logs', () => {
-    const t = task({
-      id: 'a',
-      timeLogs: [
-        { date: '2026-04-01', hours: 2, note: '' },
-        { date: '2026-04-02', hours: 3.5, note: '' }
-      ]
-    })
-    expect(totalLoggedHours(t)).toBe(5.5)
   })
 })

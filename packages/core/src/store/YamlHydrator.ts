@@ -167,7 +167,17 @@ export function hydrateFields(raw: unknown): ViewFields {
   if (!entry || typeof entry !== 'object') return {}
   const visible = (entry as Record<string, unknown>).visible
   if (!Array.isArray(visible)) return {}
-  return { kanban: { visible: visible.filter((id): id is string => typeof id === 'string') } }
+  const cleanVisible = visible.filter((id): id is string => typeof id === 'string' && id !== 'subtasks')
+  const order = (entry as Record<string, unknown>).order
+  const cleanOrder = Array.isArray(order)
+    ? order.filter((id): id is string => typeof id === 'string' && id !== 'subtasks')
+    : undefined
+  return {
+    kanban: {
+      visible: cleanVisible,
+      ...(cleanOrder ? { order: cleanOrder } : {})
+    }
+  }
 }
 
 export function hydrateSavedViews(raw: unknown[]): SavedView[] {
@@ -187,6 +197,16 @@ export function hydrateSavedViews(raw: unknown[]): SavedView[] {
         ...(v.isDefault === true ? { isDefault: true } : {})
       }
     })
+}
+
+/** Board ranks keyed by `field:columnId`; hand-editable so non-finite numbers are dropped. */
+function hydrateManualOrder(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: Record<string, number> = {}
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof value === 'number' && Number.isFinite(value)) out[key] = value
+  }
+  return out
 }
 
 export function mapRawToTask(r: Record<string, unknown>, overrides?: Partial<Task>): Task {
@@ -211,10 +231,7 @@ export function mapRawToTask(r: Record<string, unknown>, overrides?: Partial<Tas
       r.recurrence && typeof r.recurrence === 'object'
         ? ({ ...(r.recurrence as Task['recurrence']) } as Task['recurrence'])
         : undefined,
-    timeEstimate: typeof r.timeEstimate === 'number' ? r.timeEstimate : undefined,
-    timeLogs: Array.isArray(r.timeLogs)
-      ? (r.timeLogs as { date: string; hours: number; note: string }[]).map((log) => ({ ...log }))
-      : undefined,
+    manualOrder: hydrateManualOrder(r.manualOrder),
     customFields:
       typeof r.customFields === 'object' && r.customFields !== null
         ? { ...(r.customFields as Record<string, unknown>) }

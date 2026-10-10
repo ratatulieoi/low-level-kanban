@@ -18,10 +18,9 @@ export interface KanbanCardData {
   task: Task
   priorityColor?: string
   descriptionPreview?: string
-  parentTitle?: string
+  tagColors?: Record<string, string>
   customValues?: Record<string, CardFieldValue>
   renderSource?: (parent: HTMLElement) => void
-  loggedHours: number
   overdue: boolean
   showTagColors: boolean
 }
@@ -35,7 +34,7 @@ export interface KanbanColumnProps {
   onCardContextMenu: (task: Task, e: MouseEvent) => void
   onCardDragStart: (task: Task) => void
   onCardDragEnd: () => void
-  onDrop: (taskId: string, columnId: string) => Promise<void>
+  onDrop: (taskId: string, columnId: string, afterTaskId?: string | null) => Promise<void>
 }
 
 export class KanbanColumn {
@@ -80,10 +79,9 @@ export class KanbanColumn {
         people: card.people,
         priorityColor: card.priorityColor,
         descriptionPreview: card.descriptionPreview,
-        parentTitle: card.parentTitle,
+        tagColors: card.tagColors,
         customValues: card.customValues,
         renderSource: card.renderSource,
-        loggedHours: card.loggedHours,
         overdue: card.overdue,
         showTagColors: card.showTagColors,
         onClick: () => props.onCardClick(card.task),
@@ -93,35 +91,80 @@ export class KanbanColumn {
       })
     }
 
-    cardsEl.addEventListener('dragover', (e) => {
+    col.addEventListener('dragover', (e) => {
       e.preventDefault()
-      cardsEl.addClass('llk-kanban-drop-target')
-      const afterEl = getDragAfterElement(cardsEl, e.clientY)
-      const dragging = cardsEl.querySelector('.llk-kanban-card--dragging')
-      if (dragging) {
-        if (afterEl) {
-          cardsEl.insertBefore(dragging, afterEl)
-        } else {
-          cardsEl.appendChild(dragging)
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move'
+      }
+      col.addClass('llk-kanban-drop-target')
+
+      const dragging = col.ownerDocument.querySelector<HTMLElement>('.llk-kanban-card--dragging')
+      const cardHeight = dragging?.offsetHeight || 60
+      const placeholder = getOrCreatePlaceholder(col.ownerDocument, cardHeight)
+
+      const isOverHeader = header.contains(e.target as Node)
+      const afterEl = isOverHeader ? getFirstStationaryCard(cardsEl) : getDragAfterElement(cardsEl, e.clientY)
+
+      if (afterEl) {
+        if (placeholder.nextElementSibling !== afterEl) {
+          cardsEl.insertBefore(placeholder, afterEl)
+        }
+      } else {
+        if (placeholder.parentElement !== cardsEl || placeholder.nextElementSibling !== null) {
+          cardsEl.appendChild(placeholder)
         }
       }
     })
 
-    cardsEl.addEventListener('dragleave', () => {
-      cardsEl.removeClass('llk-kanban-drop-target')
+    col.addEventListener('dragleave', (e) => {
+      if (e.relatedTarget && col.contains(e.relatedTarget as Node)) return
+      col.removeClass('llk-kanban-drop-target')
+      const placeholder = cardsEl.querySelector('.llk-kanban-drop-placeholder')
+      placeholder?.remove()
     })
 
-    cardsEl.addEventListener(
+    col.addEventListener(
       'drop',
       safeAsync(async (e: DragEvent) => {
         e.preventDefault()
-        cardsEl.removeClass('llk-kanban-drop-target')
+        col.removeClass('llk-kanban-drop-target')
         const taskId = e.dataTransfer?.getData('text/plain') ?? ''
         if (!taskId) return
-        await props.onDrop(taskId, column.id)
+
+        const placeholder = cardsEl.querySelector<HTMLElement>('.llk-kanban-drop-placeholder')
+        let afterTaskId: string | null = null
+        if (placeholder) {
+          let nextCard = placeholder.nextElementSibling as HTMLElement | null
+          while (
+            nextCard &&
+            (!nextCard.classList.contains('llk-kanban-card') ||
+              nextCard.classList.contains('llk-kanban-card--dragging'))
+          ) {
+            nextCard = nextCard.nextElementSibling as HTMLElement | null
+          }
+          afterTaskId = nextCard?.dataset.taskId ?? null
+          placeholder.remove()
+        }
+
+        await props.onDrop(taskId, column.id, afterTaskId)
       })
     )
   }
+}
+
+function getOrCreatePlaceholder(doc: Document, height?: number): HTMLElement {
+  let placeholder = doc.querySelector<HTMLElement>('.llk-kanban-drop-placeholder')
+  if (!placeholder) {
+    placeholder = createDiv('llk-kanban-drop-placeholder')
+  }
+  if (height && height > 0) {
+    placeholder.style.height = `${height}px`
+  }
+  return placeholder
+}
+
+function getFirstStationaryCard(container: HTMLElement): Element | null {
+  return container.querySelector('.llk-kanban-card:not(.llk-kanban-card--dragging)')
 }
 
 function getDragAfterElement(container: HTMLElement, y: number): Element | null {

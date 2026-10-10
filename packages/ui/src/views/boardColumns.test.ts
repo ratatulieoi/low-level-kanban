@@ -7,7 +7,7 @@ import {
   type GroupState
 } from '@low-level-kanban/core'
 import type { FilterSetup } from '../composites/ViewHeader/filterPopover'
-import { boardColumns, boardField, groupableFields } from './boardColumns'
+import { applyManualOrder, boardColumns, boardField, groupableFields } from './boardColumns'
 
 const tasks = [
   makeTask({ id: 'a', status: 'todo', priority: 'high', assignees: ['Ada'], tags: ['web'] }),
@@ -82,5 +82,16 @@ describe('boardColumns', () => {
 
   it('groups only by fields with a list of values', () => {
     expect(groupableFields(setup)).toEqual(['status', 'priority', 'assignee', 'tag', 'type', 'cf:client'])
+  })
+})
+
+describe('applyManualOrder', () => {
+  it('reorders tasks within columns based on manualOrder rank', () => {
+    const t1 = makeTask({ id: 't1', status: 'todo', manualOrder: { 'status:todo': 2 } })
+    const t2 = makeTask({ id: 't2', status: 'todo', manualOrder: { 'status:todo': 1 } })
+    const t3 = makeTask({ id: 't3', status: 'todo' })
+    const columns = boardColumns(setup, { field: 'status' }, [t1, t2, t3])
+    applyManualOrder(setup, { field: 'status' }, columns)
+    expect(columns[0].tasks.map((t) => t.id)).toEqual(['t2', 't1', 't3'])
   })
 })
