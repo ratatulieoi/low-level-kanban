@@ -1,11 +1,11 @@
 import { ItemView, Menu, Scope, WorkspaceLeaf } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { addTabPageItems } from '#ui/tab'
-import { type Task, flattenTasks, t } from '@dotpm/core'
-import { EmptyState } from '@dotpm/ui'
+import { type Task, flattenTasks, t } from '@low-level-kanban/core'
+import { EmptyState } from '@low-level-kanban/ui'
 import { TaskEditor } from '#modals/TaskEditor'
 
-export const PM_TASK_VIEW_TYPE = 'pm-task'
+import { LLK_TASK_VIEW_TYPE } from './viewTypes'
 
 /** `filePath` addresses an existing task note; a new task has only its project and parent. */
 export interface TaskViewState {
@@ -17,13 +17,13 @@ export interface TaskViewState {
 }
 
 export class TaskView extends ItemView {
-  plugin: PMPlugin
+  plugin: LowLevelKanbanPlugin
   private editor: TaskEditor | null = null
   private state: TaskViewState = {}
   private taskTitle = t('common.task')
   private keyScope: Scope
 
-  constructor(leaf: WorkspaceLeaf, plugin: PMPlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: LowLevelKanbanPlugin) {
     super(leaf)
     this.plugin = plugin
     this.navigation = true
@@ -32,7 +32,7 @@ export class TaskView extends ItemView {
   }
 
   getViewType(): string {
-    return PM_TASK_VIEW_TYPE
+    return LLK_TASK_VIEW_TYPE
   }
   getDisplayText(): string {
     return this.taskTitle
@@ -60,7 +60,7 @@ export class TaskView extends ItemView {
   }
 
   onOpen(): Promise<void> {
-    this.contentEl.addClass('pm-te-view', 'pm-te-surface')
+    this.contentEl.addClass('llk-te-view', 'llk-te-surface')
     return Promise.resolve()
   }
 

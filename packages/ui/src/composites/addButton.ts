@@ -6,9 +6,9 @@ export function renderAddButton(
   label: string,
   onClick: (e: MouseEvent) => void
 ): HTMLButtonElement {
-  const btn = parent.createEl('button', { cls: 'pm-prop-add' })
-  setIcon(btn.createSpan({ cls: 'pm-glyph-icon' }), 'plus')
-  btn.createSpan({ cls: 'pm-prop-add-label', text: label })
+  const btn = parent.createEl('button', { cls: 'llk-prop-add' })
+  setIcon(btn.createSpan({ cls: 'llk-glyph-icon' }), 'plus')
+  btn.createSpan({ cls: 'llk-prop-add-label', text: label })
   btn.addEventListener('click', onClick)
   return btn
 }

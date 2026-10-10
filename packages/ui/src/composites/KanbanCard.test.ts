@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
-import { DEFAULT_STATUSES, makeTask } from '@dotpm/core'
+import { DEFAULT_STATUSES, makeTask } from '@low-level-kanban/core'
 import { KanbanCard } from './KanbanCard'
 import { renderStatusBadge } from '../StatusBadge'
 
@@ -26,10 +26,10 @@ describe('KanbanCard outside Obsidian', () => {
       onDragEnd: noop
     })
     expect(card.el.dataset.taskId).toBe('t1')
-    expect(card.el.find('.pm-kanban-card-title')?.textContent).toBe('Write the spec')
-    expect(card.el.find('.pm-kanban-card-parent')?.textContent).toBe('Launch')
-    expect(card.el.find('.pm-kanban-card-priority-bar')).not.toBeNull()
-    expect(card.el.find('.pm-kanban-card-field')?.textContent).toBe('SprintS1')
+    expect(card.el.find('.llk-kanban-card-title')?.textContent).toBe('Write the spec')
+    expect(card.el.find('.llk-kanban-card-parent')?.textContent).toBe('Launch')
+    expect(card.el.find('.llk-kanban-card-priority-bar')).not.toBeNull()
+    expect(card.el.find('.llk-kanban-card-field')?.textContent).toBe('SprintS1')
     card.el.click()
     expect(onClick).toHaveBeenCalledTimes(1)
   })
@@ -49,9 +49,9 @@ describe('KanbanCard outside Obsidian', () => {
       onDragStart: noop,
       onDragEnd: noop
     })
-    expect(card.el.find('.pm-kanban-card-priority-bar')).toBeNull()
-    expect(card.el.find('.pm-kanban-card-tags')).toBeNull()
-    expect(card.el.find('.pm-kanban-card-footer')).toBeNull()
+    expect(card.el.find('.llk-kanban-card-priority-bar')).toBeNull()
+    expect(card.el.find('.llk-kanban-card-tags')).toBeNull()
+    expect(card.el.find('.llk-kanban-card-footer')).toBeNull()
   })
 })
 

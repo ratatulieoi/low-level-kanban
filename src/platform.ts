@@ -11,8 +11,8 @@ import {
   setTooltip,
   stringifyYaml
 } from 'obsidian'
-import { setLocale, setYamlCodec } from '@dotpm/core'
-import { setPlatform } from '@dotpm/ui'
+import { setLocale, setYamlCodec } from '@low-level-kanban/core'
+import { setPlatform } from '@low-level-kanban/ui'
 
 /** Hands the core and ui packages Obsidian's own YAML, language, icons, components and menus. */
 export function installObsidianPlatform(): void {

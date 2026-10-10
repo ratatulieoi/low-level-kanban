@@ -1,5 +1,5 @@
 import { ButtonComponent, Menu, ItemView, WorkspaceLeaf } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { addTabPageItems, refreshTabTitle } from '#ui/tab'
 import {
   type CustomFieldDef,
@@ -17,7 +17,7 @@ import {
   mergeById,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import {
   safeAsync,
   renderAddButton,
@@ -30,12 +30,12 @@ import {
   renderCustomFieldListEditor,
   EmptyState,
   IconButton
-} from '@dotpm/ui'
+} from '@low-level-kanban/ui'
 import { confirmDialog } from '#ui/ModalFactory'
 import { renderPersonPicker } from '#ui/PersonPicker'
 import { renderPriorityListEditor, renderStatusListEditor } from '#ui/PaletteListEditor'
 
-export const PM_PROJECT_EDIT_VIEW_TYPE = 'pm-project-edit'
+import { LLK_PROJECT_EDIT_VIEW_TYPE } from './viewTypes'
 
 export interface ProjectEditState {
   filePath?: string
@@ -43,19 +43,19 @@ export interface ProjectEditState {
 }
 
 export class ProjectEditView extends ItemView {
-  plugin: PMPlugin
+  plugin: LowLevelKanbanPlugin
   private state: ProjectEditState = {}
   private project: Project | null = null
   private container!: HTMLElement
 
-  constructor(leaf: WorkspaceLeaf, plugin: PMPlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: LowLevelKanbanPlugin) {
     super(leaf)
     this.plugin = plugin
     this.navigation = false
   }
 
   getViewType(): string {
-    return PM_PROJECT_EDIT_VIEW_TYPE
+    return LLK_PROJECT_EDIT_VIEW_TYPE
   }
   getDisplayText(): string {
     return this.project?.title ?? t('common.project')
@@ -83,10 +83,10 @@ export class ProjectEditView extends ItemView {
   }
 
   onOpen(): Promise<void> {
-    this.containerEl.addClass('pm-view')
+    this.containerEl.addClass('llk-view')
     this.contentEl.empty()
-    this.contentEl.addClass('pm-root')
-    this.container = this.contentEl.createDiv('pm-edit')
+    this.contentEl.addClass('llk-root')
+    this.container = this.contentEl.createDiv('llk-edit')
     return Promise.resolve()
   }
 
@@ -121,9 +121,9 @@ export class ProjectEditView extends ItemView {
   }
 
   private section(title: string, hint = ''): HTMLElement {
-    const section = this.container.createDiv('pm-edit-section')
-    section.createDiv({ cls: 'pm-section-label', text: title })
-    if (hint) section.createDiv({ cls: 'pm-modal-hint', text: hint })
+    const section = this.container.createDiv('llk-edit-section')
+    section.createDiv({ cls: 'llk-section-label', text: title })
+    if (hint) section.createDiv({ cls: 'llk-modal-hint', text: hint })
     return section
   }
 
@@ -143,13 +143,13 @@ export class ProjectEditView extends ItemView {
   }
 
   private renderHeader(project: Project): void {
-    const header = this.container.createDiv('pm-edit-header')
-    const tile = header.createDiv({ cls: 'pm-overview-icon' })
-    tile.style.setProperty('--pm-overview-tint', project.color)
+    const header = this.container.createDiv('llk-edit-header')
+    const tile = header.createDiv({ cls: 'llk-overview-icon' })
+    tile.style.setProperty('--llk-overview-tint', project.color)
     renderGlyph(tile, { icon: project.icon, color: project.color })
-    const identity = header.createDiv('pm-overview-identity')
-    identity.createDiv({ cls: 'pm-overview-title', text: project.title })
-    identity.createDiv({ cls: 'pm-overview-subline', text: t('project.settings') })
+    const identity = header.createDiv('llk-overview-identity')
+    identity.createDiv({ cls: 'llk-overview-title', text: project.title })
+    identity.createDiv({ cls: 'llk-overview-subline', text: t('project.settings') })
     new ButtonComponent(header)
       .setButtonText(t('projectEdit.done'))
       .setCta()
@@ -158,10 +158,10 @@ export class ProjectEditView extends ItemView {
 
   private renderGeneral(project: Project): void {
     const section = this.section(t('projectEdit.general'))
-    const props = section.createDiv('pm-edit-props')
+    const props = section.createDiv('llk-edit-props')
 
     renderPropRow(props, t('projectEdit.name'), () => {
-      const cell = createDiv('pm-prop-value')
+      const cell = createDiv('llk-prop-value')
       renderInputControl({
         container: cell,
         value: project.title,
@@ -178,7 +178,7 @@ export class ProjectEditView extends ItemView {
     })
 
     renderPropRow(props, t('project.icon'), () => {
-      const cell = createDiv('pm-prop-value')
+      const cell = createDiv('llk-prop-value')
       renderIconControl({
         container: cell,
         value: project.icon,
@@ -192,8 +192,8 @@ export class ProjectEditView extends ItemView {
     })
 
     renderPropRow(props, t('project.color'), () => {
-      const cell = createDiv('pm-prop-value')
-      const picker = cell.createEl('input', { type: 'color', cls: 'pm-color-custom' })
+      const cell = createDiv('llk-prop-value')
+      const picker = cell.createEl('input', { type: 'color', cls: 'llk-color-custom' })
       picker.value = project.color
       picker.title = t('projectEdit.projectColor')
       picker.addEventListener('change', () => {
@@ -204,7 +204,7 @@ export class ProjectEditView extends ItemView {
     })
 
     renderPropRow(props, t('project.parent'), () => {
-      const cell = createDiv('pm-prop-value')
+      const cell = createDiv('llk-prop-value')
       const excluded = new Set([
         project.filePath,
         ...this.plugin.index.descendantRefs(project.filePath, true).map((ref) => ref.path)
@@ -231,7 +231,7 @@ export class ProjectEditView extends ItemView {
     })
 
     renderPropRow(props, t('common.archived'), () => {
-      const cell = createDiv('pm-prop-value')
+      const cell = createDiv('llk-prop-value')
       const ancestor = this.plugin.index.ancestorRefs(project.filePath).find((ref) => ref.archived)
       if (!project.archived && ancestor) {
         cell.createSpan({ text: t('projectEdit.archivedWith', { title: ancestor.title }) })
@@ -252,9 +252,9 @@ export class ProjectEditView extends ItemView {
       return cell
     })
 
-    const desc = section.createDiv('pm-edit-block')
-    desc.createEl('label', { text: t('common.description'), cls: 'pm-label' })
-    const area = desc.createEl('textarea', { cls: 'pm-input pm-edit-desc' })
+    const desc = section.createDiv('llk-edit-block')
+    desc.createEl('label', { text: t('common.description'), cls: 'llk-label' })
+    const area = desc.createEl('textarea', { cls: 'llk-input llk-edit-desc' })
     area.placeholder = t('projectEdit.descriptionPlaceholder')
     area.value = project.description
     area.addEventListener('change', () => {
@@ -265,7 +265,7 @@ export class ProjectEditView extends ItemView {
   private renderMembers(project: Project): void {
     const section = this.section(t('project.members'), t('projectEdit.membersHint'))
     renderPersonPicker({
-      container: section.createDiv('pm-prop-value'),
+      container: section.createDiv('llk-prop-value'),
       plugin: this.plugin,
       sourcePath: project.filePath,
       extra: () => collectAllAssignees(project.tasks),
@@ -335,12 +335,12 @@ export class ProjectEditView extends ItemView {
     renderEditor: (container: HTMLElement, items: T[]) => void
   }): void {
     const section = this.section(opts.heading, opts.hint)
-    const toggle = section.createEl('label', { cls: 'pm-status-toggle' })
+    const toggle = section.createEl('label', { cls: 'llk-status-toggle' })
     const checkbox = toggle.createEl('input', { type: 'checkbox' })
     checkbox.checked = !!opts.get()?.length
     toggle.createSpan({ text: opts.toggleLabel })
 
-    const editor = section.createDiv('pm-settings-statuses')
+    const editor = section.createDiv('llk-settings-statuses')
     const footer = section.createDiv()
     const drawEditor = (): void => {
       editor.empty()
@@ -363,14 +363,14 @@ export class ProjectEditView extends ItemView {
 
   private renderBehavior(project: Project): void {
     const section = this.section(t('projectEdit.behavior'), t('projectEdit.behaviorHint'))
-    const props = section.createDiv('pm-edit-props')
+    const props = section.createDiv('llk-edit-props')
     const row = <K extends keyof ProjectConfig>(
       label: string,
       key: K,
       options: { value: NonNullable<ProjectConfig[K]>; label: string }[]
     ): void => {
       renderPropRow(props, label, () => {
-        const cell = createDiv('pm-prop-value')
+        const cell = createDiv('llk-prop-value')
         const current = project.config?.[key]
         renderSelectControl({
           container: cell,
@@ -430,21 +430,21 @@ export class ProjectEditView extends ItemView {
     const own = new Set(project.customFields.map((field) => field.id))
     const notOverridden = inherited.filter((entry) => !own.has(entry.field.id))
     if (notOverridden.length > 0) {
-      section.createDiv({ cls: 'pm-section-sublabel', text: t('projectEdit.inherited') })
-      const inheritedList = section.createDiv('pm-cf-list')
+      section.createDiv({ cls: 'llk-section-sublabel', text: t('projectEdit.inherited') })
+      const inheritedList = section.createDiv('llk-cf-list')
       for (const entry of notOverridden) this.renderInheritedField(inheritedList, project, entry.field, entry.source)
-      section.createDiv({ cls: 'pm-section-sublabel', text: t('projectEdit.thisProject') })
+      section.createDiv({ cls: 'llk-section-sublabel', text: t('projectEdit.thisProject') })
     }
 
     const sourceById = new Map(inherited.map((entry) => [entry.field.id, entry.source]))
-    renderCustomFieldListEditor(section.createDiv('pm-cf-list'), {
+    renderCustomFieldListEditor(section.createDiv('llk-cf-list'), {
       fields: project.customFields,
       onChanged: () => this.save({ customFields: project.customFields }),
       redraw: () => this.render(),
       renderExtra: (row, field) => {
         const source = sourceById.get(field.id)
         if (source) {
-          row.createSpan({ cls: 'pm-cf-source', text: t('projectEdit.overrides', { source }) })
+          row.createSpan({ cls: 'llk-cf-source', text: t('projectEdit.overrides', { source }) })
           return
         }
         const twin = notOverridden.find((entry) => entry.field.name === field.name && entry.field.type === field.type)
@@ -482,12 +482,12 @@ export class ProjectEditView extends ItemView {
   private renderInheritedField(container: HTMLElement, project: Project, field: CustomFieldDef, source: string): void {
     const hidden = project.config?.hiddenCustomFields ?? []
     const isHidden = hidden.includes(field.id)
-    const row = container.createDiv('pm-cf-row pm-cf-row--inherited')
-    row.toggleClass('pm-cf-row--hidden', isHidden)
+    const row = container.createDiv('llk-cf-row llk-cf-row--inherited')
+    row.toggleClass('llk-cf-row--hidden', isHidden)
 
-    row.createSpan({ cls: 'pm-cf-name', text: field.name })
-    row.createSpan({ cls: 'pm-cf-type', text: customFieldTypeLabels()[field.type] })
-    row.createSpan({ cls: 'pm-cf-source', text: t('projectEdit.from', { source }) })
+    row.createSpan({ cls: 'llk-cf-name', text: field.name })
+    row.createSpan({ cls: 'llk-cf-type', text: customFieldTypeLabels()[field.type] })
+    row.createSpan({ cls: 'llk-cf-source', text: t('projectEdit.from', { source }) })
 
     new IconButton(row)
       .setIcon(isHidden ? 'eye-off' : 'eye')
@@ -512,10 +512,10 @@ export class ProjectEditView extends ItemView {
   }
 
   private renderDangerZone(project: Project): void {
-    const section = this.container.createDiv('pm-edit-danger')
-    const text = section.createDiv('pm-edit-danger-text')
-    text.createDiv({ cls: 'pm-edit-danger-title', text: t('project.delete') })
-    text.createDiv({ cls: 'pm-modal-hint', text: t('projectEdit.deleteHint') })
+    const section = this.container.createDiv('llk-edit-danger')
+    const text = section.createDiv('llk-edit-danger-text')
+    text.createDiv({ cls: 'llk-edit-danger-title', text: t('project.delete') })
+    text.createDiv({ cls: 'llk-modal-hint', text: t('projectEdit.deleteHint') })
     new ButtonComponent(section)
       .setButtonText(t('project.delete'))
       .setDestructive()

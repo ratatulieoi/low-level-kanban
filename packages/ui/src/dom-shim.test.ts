@@ -40,9 +40,9 @@ describe('dom shim', () => {
 
   it('sets css custom properties and styles', () => {
     const el = createDiv()
-    el.setCssProps({ '--pm-chip-color': 'red' })
+    el.setCssProps({ '--llk-chip-color': 'red' })
     el.setCssStyles({ width: '10px' })
-    expect(el.style.getPropertyValue('--pm-chip-color')).toBe('red')
+    expect(el.style.getPropertyValue('--llk-chip-color')).toBe('red')
     expect(el.style.width).toBe('10px')
   })
 
@@ -59,10 +59,10 @@ describe('dom shim', () => {
   it('shows and hides through a class', () => {
     const el = document.body.createDiv()
     el.hide()
-    expect(el.classList.contains('pm-hidden')).toBe(true)
+    expect(el.classList.contains('llk-hidden')).toBe(true)
     expect(el.isShown()).toBe(false)
     el.show()
-    expect(el.classList.contains('pm-hidden')).toBe(false)
+    expect(el.classList.contains('llk-hidden')).toBe(false)
     expect(el.isShown()).toBe(true)
     el.toggle(false)
     expect(el.isShown()).toBe(false)
@@ -82,8 +82,8 @@ describe('dom shim', () => {
   it('toggles visibility through a class', () => {
     const el = document.body.createDiv()
     el.toggleVisibility(false)
-    expect(el.classList.contains('pm-invisible')).toBe(true)
+    expect(el.classList.contains('llk-invisible')).toBe(true)
     el.toggleVisibility(true)
-    expect(el.classList.contains('pm-invisible')).toBe(false)
+    expect(el.classList.contains('llk-invisible')).toBe(false)
   })
 })

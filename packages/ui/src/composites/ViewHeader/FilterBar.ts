@@ -1,7 +1,7 @@
 import { ChipButton } from '#primitives/ChipButton'
 import { FilterChip } from '#primitives/FilterChip'
 import { IconButton } from '#primitives/IconButton'
-import { filterFieldIcon, filterFieldLabel, t, tn } from '@dotpm/core'
+import { filterFieldIcon, filterFieldLabel, t, tn } from '@low-level-kanban/core'
 import { renderAddButton } from '../addButton'
 import { describeCondition, openFilterPopover, type FilterSetup } from './filterPopover'
 
@@ -33,12 +33,12 @@ export class FilterBar {
     parentEl: HTMLElement,
     private props: FilterBarProps
   ) {
-    this.el = parentEl.createDiv('pm-filter-bar')
+    this.el = parentEl.createDiv('llk-filter-bar')
     this.listBtn = new ChipButton(this.el)
       .setVariant('flat')
       .onClick(() => openFilterPopover(this.listBtn.el, this.props, () => this.changed(), 'list'))
-    this.listBtn.el.addClass('pm-filter-bar-list')
-    this.chipsEl = this.el.createDiv('pm-filter-bar-chips')
+    this.listBtn.el.addClass('llk-filter-bar-list')
+    this.chipsEl = this.el.createDiv('llk-filter-bar-chips')
     this.archivedChip = new FilterChip(this.chipsEl)
       .setField(t('common.archived'), 'archive')
       .setOperator('')
@@ -49,10 +49,10 @@ export class FilterBar {
         this.changed()
       })
     this.addBtn = renderAddButton(this.chipsEl, t('header.filter'), () => this.openPicker())
-    this.addBtn.addClass('pm-filter-bar-add')
+    this.addBtn.addClass('llk-filter-bar-add')
 
-    const end = this.el.createDiv('pm-filter-bar-end')
-    this.summaryEl = end.createSpan({ cls: 'pm-filter-bar-summary', text: props.summary })
+    const end = this.el.createDiv('llk-filter-bar-end')
+    this.summaryEl = end.createSpan({ cls: 'llk-filter-bar-summary', text: props.summary })
     this.clearBtn = new ChipButton(end)
       .setVariant('flat')
       .setLabel(t('filter.clearAll'))
@@ -61,12 +61,12 @@ export class FilterBar {
         this.props.filter.showArchived = false
         this.changed()
       })
-    this.clearBtn.el.addClass('pm-filter-bar-clear')
+    this.clearBtn.el.addClass('llk-filter-bar-clear')
     new IconButton(end)
       .setIcon('x')
       .setTooltip(t('filter.hideBar'))
       .onClick(() => this.props.onClose())
-      .el.addClass('pm-filter-bar-close')
+      .el.addClass('llk-filter-bar-close')
     this.renderChips()
   }
 
@@ -114,9 +114,9 @@ export class FilterBar {
         .setRemoveLabel(t('filter.remove', { label }))
     })
     for (const extra of this.chips.splice(filter.conditions.length)) extra.el.remove()
-    this.archivedChip.el.toggleClass('pm-hidden', !filter.showArchived)
+    this.archivedChip.el.toggleClass('llk-hidden', !filter.showArchived)
     const count = filter.conditions.length + (filter.showArchived ? 1 : 0)
     this.listBtn.setLabel(count ? tn('filter.count', count) : t('filter.addFilter'))
-    this.clearBtn.el.toggleClass('pm-hidden', filter.conditions.length === 0 && !filter.showArchived)
+    this.clearBtn.el.toggleClass('llk-hidden', filter.conditions.length === 0 && !filter.showArchived)
   }
 }

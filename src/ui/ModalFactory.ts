@@ -1,6 +1,6 @@
 import { type App, ButtonComponent, Modal } from 'obsidian'
-import type PMPlugin from '#main'
-import { type Project, type Task, flattenTasks, t } from '@dotpm/core'
+import type LowLevelKanbanPlugin from '#main'
+import { type Project, type Task, flattenTasks, t } from '@low-level-kanban/core'
 import type { ProjectRef } from '#store'
 import { TaskModal } from '#modals/TaskModal'
 import { PersonLookupModal, ProjectPickerModal, TaskPickerModal } from '#modals/PickerModals'
@@ -50,21 +50,21 @@ class TextPromptModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this
-    this.modalEl.addClass('pm-prompt-modal')
+    this.modalEl.addClass('llk-prompt-modal')
 
     contentEl.createEl('p', {
       text: this.label,
-      cls: 'pm-prompt-text'
+      cls: 'llk-prompt-text'
     })
 
     const input = contentEl.createEl('input', {
       type: 'text',
       placeholder: this.placeholder,
-      cls: 'pm-prompt-input'
+      cls: 'llk-prompt-input'
     })
     input.value = this.initial
 
-    const btnRow = contentEl.createDiv('pm-modal-btn-row')
+    const btnRow = contentEl.createDiv('llk-modal-btn-row')
 
     new ButtonComponent(btnRow).setButtonText(t('common.cancel')).onClick(() => {
       this.finish(null)
@@ -123,14 +123,14 @@ class ConfirmModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this
-    this.modalEl.addClass('pm-confirm-modal')
+    this.modalEl.addClass('llk-confirm-modal')
 
     contentEl.createEl('p', {
       text: this.message,
-      cls: 'pm-confirm-text'
+      cls: 'llk-confirm-text'
     })
 
-    const btnRow = contentEl.createDiv('pm-modal-btn-row')
+    const btnRow = contentEl.createDiv('llk-modal-btn-row')
 
     new ButtonComponent(btnRow).setButtonText(t('common.cancel')).onClick(() => {
       this.finish(false)
@@ -171,14 +171,14 @@ class DuplicateSubtasksModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this
-    this.modalEl.addClass('pm-confirm-modal')
+    this.modalEl.addClass('llk-confirm-modal')
 
     contentEl.createEl('p', {
       text: t('dialog.duplicateWithSubtasks', { title: this.taskTitle }),
-      cls: 'pm-confirm-text'
+      cls: 'llk-confirm-text'
     })
 
-    const btnRow = contentEl.createDiv('pm-modal-btn-row')
+    const btnRow = contentEl.createDiv('llk-modal-btn-row')
 
     new ButtonComponent(btnRow).setButtonText(t('common.cancel')).onClick(() => {
       this.finish(null)
@@ -214,7 +214,7 @@ export interface OpenTaskModalOpts {
   onSave: (task: Task) => void | Promise<void>
 }
 
-export function openTaskModal(plugin: PMPlugin, project: Project, opts: OpenTaskModalOpts): void {
+export function openTaskModal(plugin: LowLevelKanbanPlugin, project: Project, opts: OpenTaskModalOpts): void {
   // A tab is addressed by path, so a task with no note of its own still needs the modal.
   const canOpenTab = !opts.task || Boolean(opts.task.filePath)
   if (plugin.settings.taskEditorSurface === 'tab' && canOpenTab) {
@@ -253,7 +253,11 @@ export function openTaskModal(plugin: PMPlugin, project: Project, opts: OpenTask
  * Opens the editor for a task addressed by its note, loading the project it belongs to.
  * What a link to a task leads to: the task, not the markdown behind it.
  */
-export async function openTaskByPath(plugin: PMPlugin, filePath: string, onSave?: () => void): Promise<void> {
+export async function openTaskByPath(
+  plugin: LowLevelKanbanPlugin,
+  filePath: string,
+  onSave?: () => void
+): Promise<void> {
   if (plugin.settings.taskEditorSurface === 'tab') {
     await plugin.router.openTask({ filePath })
     return
@@ -268,29 +272,33 @@ export async function openTaskByPath(plugin: PMPlugin, filePath: string, onSave?
   openTaskModal(plugin, project, { task, onSave: () => onSave?.() })
 }
 
-export function openProjectCreate(plugin: PMPlugin): void {
+export function openProjectCreate(plugin: LowLevelKanbanPlugin): void {
   new ProjectCreateModal(plugin.app, plugin).open()
 }
 
 export function openProjectPicker(
-  plugin: PMPlugin,
+  plugin: LowLevelKanbanPlugin,
   projects: ProjectRef[],
   onChoose: (project: ProjectRef) => void
 ): void {
   new ProjectPickerModal(plugin.app, projects, onChoose).open()
 }
 
-export function openTaskPicker(plugin: PMPlugin, tasks: Task[], onChoose: (task: Task) => void): void {
+export function openTaskPicker(plugin: LowLevelKanbanPlugin, tasks: Task[], onChoose: (task: Task) => void): void {
   new TaskPickerModal(plugin.app, tasks, onChoose).open()
 }
 
 /** Picks from the people already assigned somewhere, for looking up their tasks. */
-export function openPersonLookup(plugin: PMPlugin, people: string[], onChoose: (person: string) => void): void {
+export function openPersonLookup(
+  plugin: LowLevelKanbanPlugin,
+  people: string[],
+  onChoose: (person: string) => void
+): void {
   new PersonLookupModal(plugin.app, people, onChoose).open()
 }
 
 export function openImportModal(
-  plugin: PMPlugin,
+  plugin: LowLevelKanbanPlugin,
   project: Project,
   onImportComplete?: () => void | Promise<void>
 ): void {

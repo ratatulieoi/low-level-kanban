@@ -212,7 +212,7 @@ export type ProjectGroupBy = 'none' | 'folder' | 'tag'
 export const PROJECT_LIST_FIELDS = ['progress', 'tasks', 'members', 'due'] as const
 export type ProjectListField = (typeof PROJECT_LIST_FIELDS)[number]
 
-/** What the project list shows. Archived projects follow `PMSettings.showArchivedProjects`. */
+/** What the project list shows. Archived projects follow `LowLevelKanbanSettings.showArchivedProjects`. */
 export interface ProjectListState {
   filter: ProjectListFilter
   /** Empty keeps the order of the project tree. */
@@ -329,11 +329,11 @@ export function priorityIconSetLabels(): Record<PriorityIconSet, string> {
   }
 }
 
-export interface PMSettings {
+export interface LowLevelKanbanSettings {
   /** Where new projects are created. Projects are discovered vault-wide, wherever they live. */
   projectsFolder: string
   peopleFolder: string
-  /** Folders discovery skips, for templates and archives holding pm-project notes. */
+  /** Folders discovery skips, for templates and archives holding project notes. */
   excludedFolders: string[]
   defaultView: ViewMode
   statuses: StatusConfig[]
@@ -417,7 +417,7 @@ export function defaultPriorities(): PriorityConfig[] {
   return DEFAULT_PRIORITIES.map((priority) => ({ ...priority, label: labels[priority.id] ?? priority.label }))
 }
 
-export const DEFAULT_SETTINGS: PMSettings = {
+export const DEFAULT_SETTINGS: LowLevelKanbanSettings = {
   projectsFolder: 'Projects',
   peopleFolder: 'People',
   excludedFolders: [],

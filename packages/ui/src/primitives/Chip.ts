@@ -9,13 +9,13 @@ export class Chip {
   private iconEl: HTMLElement | null = null
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createSpan({ cls: 'pm-chip' })
-    this.labelEl = this.el.createSpan({ cls: 'pm-chip-label' })
+    this.el = parentEl.createSpan({ cls: 'llk-chip' })
+    this.labelEl = this.el.createSpan({ cls: 'llk-chip-label' })
   }
 
   setLeadingIcon(name: string): this {
     if (!this.iconEl) {
-      this.iconEl = this.el.createSpan({ cls: 'pm-chip-icon' })
+      this.iconEl = this.el.createSpan({ cls: 'llk-chip-icon' })
       this.el.prepend(this.iconEl)
     }
     setIcon(this.iconEl, name)
@@ -28,20 +28,20 @@ export class Chip {
   }
 
   setColor(color: string): this {
-    this.el.style.setProperty('--pm-chip-color', color)
+    this.el.style.setProperty('--llk-chip-color', color)
     return this
   }
 
   setVariant(variant: ChipVariant): this {
-    this.el.toggleClass('pm-chip--solid', variant === 'solid')
-    this.el.toggleClass('pm-chip--outline', variant === 'outline')
-    this.el.toggleClass('pm-chip--plain', variant === 'plain')
+    this.el.toggleClass('llk-chip--solid', variant === 'solid')
+    this.el.toggleClass('llk-chip--outline', variant === 'outline')
+    this.el.toggleClass('llk-chip--plain', variant === 'plain')
     return this
   }
 
   setDot(show = true): this {
     if (show && !this.dotEl) {
-      this.dotEl = this.el.createSpan({ cls: 'pm-chip-dot' })
+      this.dotEl = this.el.createSpan({ cls: 'llk-chip-dot' })
       this.el.prepend(this.dotEl)
     } else if (!show && this.dotEl) {
       this.dotEl.remove()
@@ -51,22 +51,22 @@ export class Chip {
   }
 
   setTag(isTag = true): this {
-    this.el.toggleClass('pm-chip--tag', isTag)
+    this.el.toggleClass('llk-chip--tag', isTag)
     return this
   }
 
   setStrong(strong = true): this {
-    this.el.toggleClass('pm-chip--strong', strong)
+    this.el.toggleClass('llk-chip--strong', strong)
     return this
   }
 
   setShape(shape: 'rounded' | 'pill'): this {
-    this.el.toggleClass('pm-chip--pill', shape === 'pill')
+    this.el.toggleClass('llk-chip--pill', shape === 'pill')
     return this
   }
 
   setSize(size: 'md' | 'sm'): this {
-    this.el.toggleClass('pm-chip--sm', size === 'sm')
+    this.el.toggleClass('llk-chip--sm', size === 'sm')
     return this
   }
 
@@ -76,7 +76,7 @@ export class Chip {
   }
 
   setRemovable(onRemove: () => void, label?: string): this {
-    const rmBtn = this.el.createEl('button', { cls: 'pm-chip-rm' })
+    const rmBtn = this.el.createEl('button', { cls: 'llk-chip-rm' })
     setIcon(rmBtn, 'x')
     if (label) {
       rmBtn.setAttribute('aria-label', label)
@@ -91,7 +91,7 @@ export class Chip {
   }
 
   onClick(handler: (e: MouseEvent) => unknown): this {
-    this.el.addClass('pm-chip--interactive')
+    this.el.addClass('llk-chip--interactive')
     this.el.addEventListener('click', handler)
     return this
   }

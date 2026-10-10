@@ -1,6 +1,6 @@
 import { ChipButton } from '#primitives/ChipButton'
 import { Popover } from '#primitives/Popover'
-import { type ProjectListField, PROJECT_LIST_FIELDS, t, withFieldShown } from '@dotpm/core'
+import { type ProjectListField, PROJECT_LIST_FIELDS, t, withFieldShown } from '@low-level-kanban/core'
 import { renderPopHead } from '../popoverParts'
 import { renderVisibilityList } from '../visibilityList'
 
@@ -23,7 +23,7 @@ const asFields = (ids: string[]): ProjectListField[] =>
 
 /** The project list's columns: the shown ones dragged to reorder, the hidden ones under them, and Show all. */
 export function renderProjectFieldsPanel(parent: HTMLElement, props: ProjectFieldsProps): void {
-  const body = parent.createDiv('pm-fields-pop')
+  const body = parent.createDiv('llk-fields-pop')
   let shown = [...props.shown]
 
   const set = (next: ProjectListField[]): void => {
@@ -62,7 +62,7 @@ export function renderProjectFieldsPanel(parent: HTMLElement, props: ProjectFiel
       })
     }
 
-    new ChipButton(body.createDiv('pm-fields-foot pm-pop-section'))
+    new ChipButton(body.createDiv('llk-fields-foot llk-pop-section'))
       .setVariant('flat')
       .setLabel(t('header.showAll'))
       .setDisabled(shown.join() === PROJECT_LIST_FIELDS.join())

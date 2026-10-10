@@ -11,10 +11,12 @@ import {
   hydrateGroup,
   hydrateSort,
   legacyBoardFields
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import type { ProjectResource, TaskResource } from './types'
 
-export const SNAPSHOT_FORMAT = 'dotpm-snapshot'
+export const SNAPSHOT_FORMAT = 'low-level-kanban-snapshot'
+export const LEGACY_SNAPSHOT_FORMAT = 'dotpm-snapshot'
+export const SNAPSHOT_GENERATOR = 'Low Level Kanban'
 export const SNAPSHOT_VERSION = 2
 
 /** Version 1 pages hold the filter as fixed facets; `hydrateFilter` reads either shape. */
@@ -70,11 +72,18 @@ export interface Snapshot {
   personColors?: Record<string, string>
 }
 
+/** Only readers accept the former format name. New snapshots use `Snapshot`. */
+export type ReadableSnapshot = Omit<Snapshot, 'format'> & {
+  format: typeof SNAPSHOT_FORMAT | typeof LEGACY_SNAPSHOT_FORMAT
+}
+
 /** Reads older view state as a board and leaves the exported task data intact. */
-export function normalizeSnapshot(snapshot: Snapshot): Snapshot {
+export function normalizeSnapshot(snapshot: ReadableSnapshot): Snapshot {
   const fields = hydrateFields(snapshot.view.fields)
   return {
     ...snapshot,
+    format: SNAPSHOT_FORMAT,
+    generator: { ...snapshot.generator, name: SNAPSHOT_GENERATOR },
     view: {
       mode: 'kanban',
       filter: hydrateFilter(snapshot.view.filter),
@@ -92,11 +101,11 @@ export function normalizeSnapshot(snapshot: Snapshot): Snapshot {
   }
 }
 
-export function isSnapshot(value: unknown): value is Snapshot {
+export function isSnapshot(value: unknown): value is ReadableSnapshot {
   if (typeof value !== 'object' || value === null) return false
   const record = value as Record<string, unknown>
   return (
-    record['format'] === SNAPSHOT_FORMAT &&
+    (record['format'] === SNAPSHOT_FORMAT || record['format'] === LEGACY_SNAPSHOT_FORMAT) &&
     READABLE_VERSIONS.includes(record['version']) &&
     Array.isArray(record['projects'])
   )

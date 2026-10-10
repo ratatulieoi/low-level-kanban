@@ -6,8 +6,8 @@ import {
   getCompleteStatusId,
   getDefaultStatusId,
   t
-} from '@dotpm/core'
-import { renderNoteLink, Checkbox, IconButton } from '@dotpm/ui'
+} from '@low-level-kanban/core'
+import { renderNoteLink, Checkbox, IconButton } from '@low-level-kanban/ui'
 
 /** The header count is how many subtasks sit in a terminal status. */
 export function renderSubtasksPanel(
@@ -16,13 +16,13 @@ export function renderSubtasksPanel(
   statuses: StatusConfig[],
   openSubtask: (filePath: string) => void
 ): void {
-  const subSection = container.createDiv('pm-modal-section')
+  const subSection = container.createDiv('llk-modal-section')
 
-  const subHeader = subSection.createDiv('pm-subtasks-header')
-  const heading = subHeader.createEl('h4', { text: `${t('subtasks.heading')} `, cls: 'pm-modal-section-title' })
-  const countEl = heading.createSpan({ cls: 'pm-subtasks-count' })
+  const subHeader = subSection.createDiv('llk-subtasks-header')
+  const heading = subHeader.createEl('h4', { text: `${t('subtasks.heading')} `, cls: 'llk-modal-section-title' })
+  const countEl = heading.createSpan({ cls: 'llk-subtasks-count' })
 
-  const subList = subSection.createDiv('pm-modal-subtask-list')
+  const subList = subSection.createDiv('llk-modal-subtask-list')
 
   const renderCount = () => {
     const total = task.subtasks.length
@@ -37,7 +37,7 @@ export function renderSubtasksPanel(
   const renderSubtasks = () => {
     subList.empty()
     for (const sub of task.subtasks) {
-      const row = subList.createDiv('pm-modal-subtask-row')
+      const row = subList.createDiv('llk-modal-subtask-row')
 
       const done = isTerminalStatus(sub.status, statuses)
 
@@ -53,7 +53,7 @@ export function renderSubtasksPanel(
 
       // A subtask typed into the add field below has no note yet, so there is nothing to
       // open until the editor saves.
-      const cls = done ? 'pm-subtask-title pm-subtask-title--done' : 'pm-subtask-title'
+      const cls = done ? 'llk-subtask-title llk-subtask-title--done' : 'llk-subtask-title'
       const filePath = sub.filePath
       if (filePath) {
         renderNoteLink(row, { label: sub.title, path: filePath, open: () => openSubtask(filePath), cls })
@@ -76,10 +76,10 @@ export function renderSubtasksPanel(
   renderSubtasks()
   renderCount()
 
-  const addRow = subSection.createDiv('pm-modal-subtask-row pm-subtask-add-row')
-  addRow.createSpan({ cls: 'pm-subtask-checkbox-ghost', attr: { 'aria-hidden': 'true' } })
+  const addRow = subSection.createDiv('llk-modal-subtask-row llk-subtask-add-row')
+  addRow.createSpan({ cls: 'llk-subtask-checkbox-ghost', attr: { 'aria-hidden': 'true' } })
   const addInput = addRow.createEl('input', {
-    cls: 'pm-subtask-add-input',
+    cls: 'llk-subtask-add-input',
     attr: { placeholder: t('subtasks.addPlaceholder') }
   })
   addInput.addEventListener('keydown', (e) => {

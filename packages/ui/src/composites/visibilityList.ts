@@ -28,23 +28,23 @@ export interface VisibilityListProps {
 
 /** Rows of grip, glyph, label, detail and eye: the list the Group and Fields popovers share. */
 export function renderVisibilityList(parent: HTMLElement, props: VisibilityListProps): HTMLElement {
-  const list = parent.createDiv('pm-vis-list')
+  const list = parent.createDiv('llk-vis-list')
   const movable: { el: HTMLElement; id: string }[] = []
 
   for (const item of props.rows) {
     const draggable = !item.locked && !!props.onReorder
-    const row = list.createDiv('pm-vis-row')
+    const row = list.createDiv('llk-vis-row')
     row.dataset.id = item.id
     row.toggleClass('is-hidden', item.hidden)
     row.toggleClass('is-quiet', !!item.quiet)
-    const grip = row.createSpan('pm-vis-grip')
+    const grip = row.createSpan('llk-vis-grip')
     if (draggable) setIcon(grip, 'grip-vertical')
-    if (item.glyph) item.glyph(row.createSpan('pm-vis-glyph'))
-    row.createSpan({ cls: 'pm-vis-label', text: item.label })
-    if (item.detail !== undefined) row.createSpan({ cls: 'pm-vis-detail', text: item.detail })
+    if (item.glyph) item.glyph(row.createSpan('llk-vis-glyph'))
+    row.createSpan({ cls: 'llk-vis-label', text: item.label })
+    if (item.detail !== undefined) row.createSpan({ cls: 'llk-vis-detail', text: item.detail })
 
     if (item.locked) {
-      const lock = row.createSpan('pm-vis-lock')
+      const lock = row.createSpan('llk-vis-lock')
       setIcon(lock, 'lock')
       if (props.lockedLabel) setTooltip(lock, props.lockedLabel)
     } else {
@@ -53,7 +53,7 @@ export function renderVisibilityList(parent: HTMLElement, props: VisibilityListP
         .setIcon(item.hidden ? 'eye-off' : 'eye')
         .setTooltip(label)
         .onClick(() => props.onToggle(item.id))
-        .el.addClass('pm-vis-eye')
+        .el.addClass('llk-vis-eye')
     }
     if (draggable) movable.push({ el: row, id: item.id })
   }

@@ -1,4 +1,4 @@
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 import { getIconIds, setIcon } from '#platform'
 import { Popover } from '#primitives/Popover'
 import { renderGlyph, renderOptionRow } from './optionList'
@@ -21,14 +21,14 @@ function isGlyphQuery(query: string): boolean {
 /** An icon preview that opens a searchable grid of every icon Obsidian knows. */
 export function renderIconControl(opts: IconControlOpts): void {
   let value = opts.value
-  const trigger = opts.container.createEl('button', { cls: 'pm-prop-inline pm-icon-trigger' })
+  const trigger = opts.container.createEl('button', { cls: 'llk-prop-inline llk-icon-trigger' })
 
   const drawTrigger = (): void => {
     trigger.empty()
-    trigger.toggleClass('pm-prop-inline--empty', !value)
+    trigger.toggleClass('llk-prop-inline--empty', !value)
     if (value) renderGlyph(trigger, { icon: value, color: opts.color })
-    else setIcon(trigger.createSpan({ cls: 'pm-glyph-icon' }), 'plus')
-    const chevron = trigger.createSpan({ cls: 'pm-prop-chevron' })
+    else setIcon(trigger.createSpan({ cls: 'llk-glyph-icon' }), 'plus')
+    const chevron = trigger.createSpan({ cls: 'llk-prop-chevron' })
     setIcon(chevron, 'chevron-down')
   }
   drawTrigger()
@@ -50,12 +50,12 @@ export function renderIconControl(opts: IconControlOpts): void {
     }
 
     const search = popover.contentEl.createEl('input', {
-      cls: 'pm-pop-field',
+      cls: 'llk-pop-field',
       attr: { placeholder: t('property.searchIcons'), spellcheck: 'false' }
     })
     const clearRow = popover.contentEl.createDiv()
-    const grid = popover.contentEl.createDiv('pm-icon-grid')
-    const hint = popover.contentEl.createDiv({ cls: 'pm-icon-grid-hint' })
+    const grid = popover.contentEl.createDiv('llk-icon-grid')
+    const hint = popover.contentEl.createDiv({ cls: 'llk-icon-grid-hint' })
 
     const matches = (query: string): string[] => {
       const q = query.trim().toLowerCase()
@@ -76,16 +76,16 @@ export function renderIconControl(opts: IconControlOpts): void {
       })
 
       if (isGlyphQuery(query)) {
-        const cell = grid.createEl('button', { cls: 'pm-icon-cell pm-icon-cell--glyph', text: query })
-        cell.toggleClass('pm-icon-cell--selected', query === value)
+        const cell = grid.createEl('button', { cls: 'llk-icon-cell llk-icon-cell--glyph', text: query })
+        cell.toggleClass('llk-icon-cell--selected', query === value)
         cell.setAttribute('aria-label', t('property.useGlyph', { glyph: query }))
         cell.addEventListener('click', () => commit(query))
       }
 
       const found = matches(query)
       for (const id of found.slice(0, GRID_LIMIT)) {
-        const cell = grid.createEl('button', { cls: 'pm-icon-cell', attr: { 'aria-label': id } })
-        cell.toggleClass('pm-icon-cell--selected', id === value)
+        const cell = grid.createEl('button', { cls: 'llk-icon-cell', attr: { 'aria-label': id } })
+        cell.toggleClass('llk-icon-cell--selected', id === value)
         setIcon(cell, id)
         cell.addEventListener('click', () => commit(id))
       }

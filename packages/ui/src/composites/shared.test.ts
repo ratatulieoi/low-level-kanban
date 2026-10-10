@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { PROJECT_LIST_FIELDS } from '@dotpm/core'
+import { PROJECT_LIST_FIELDS } from '@low-level-kanban/core'
 import * as ui from '../index'
 
 afterEach(() => document.body.empty())
@@ -15,8 +15,8 @@ describe('shared controls after task-view removal', () => {
       number: { min: 0, max: 100 },
       onChange
     })
-    document.body.querySelector<HTMLButtonElement>('.pm-prop-inline')?.click()
-    const input = document.body.querySelector<HTMLInputElement>('.pm-inline-edit')
+    document.body.querySelector<HTMLButtonElement>('.llk-prop-inline')?.click()
+    const input = document.body.querySelector<HTMLInputElement>('.llk-inline-edit')
     expect(input?.value).toBe('40')
     if (!input) throw new Error('no property input')
     input.value = '125'
@@ -50,14 +50,14 @@ describe('shared controls after task-view removal', () => {
       onContextMenu: vi.fn(),
       onActions
     })
-    expect(row.el.querySelector('.pm-tree-guide--elbow.pm-tree-guide--last')).not.toBeNull()
-    expect(row.el.classList.contains('pm-table-row--archived')).toBe(true)
-    expect(row.el.querySelector('.pm-project-row-tasks')?.textContent).toBe('2/4')
-    expect(row.el.querySelector('.pm-avatar')).not.toBeNull()
-    expect(row.el.querySelector('.pm-progress')).not.toBeNull()
-    row.el.querySelector<HTMLElement>('.pm-task-title-text')?.click()
+    expect(row.el.querySelector('.llk-tree-guide--elbow.llk-tree-guide--last')).not.toBeNull()
+    expect(row.el.classList.contains('llk-table-row--archived')).toBe(true)
+    expect(row.el.querySelector('.llk-project-row-tasks')?.textContent).toBe('2/4')
+    expect(row.el.querySelector('.llk-avatar')).not.toBeNull()
+    expect(row.el.querySelector('.llk-progress')).not.toBeNull()
+    row.el.querySelector<HTMLElement>('.llk-task-title-text')?.click()
     expect(onClick).toHaveBeenCalledOnce()
-    row.el.querySelector<HTMLButtonElement>('.pm-icon-btn')?.click()
+    row.el.querySelector<HTMLButtonElement>('.llk-icon-btn')?.click()
     expect(onActions).toHaveBeenCalledOnce()
     expect(onClick).toHaveBeenCalledOnce()
   })

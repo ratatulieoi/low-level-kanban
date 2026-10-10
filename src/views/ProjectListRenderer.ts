@@ -1,5 +1,5 @@
 import { Menu } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { folderOf, projectFolderOf, type ProjectRef } from '#store'
 import {
   type ProjectGroupBy,
@@ -10,19 +10,19 @@ import {
   formatDateShort,
   dateUrgency,
   t
-} from '@dotpm/core'
-import { safeAsync, CollapseToggle, ProjectRow, projectFieldLabel } from '@dotpm/ui'
+} from '@low-level-kanban/core'
+import { safeAsync, CollapseToggle, ProjectRow, projectFieldLabel } from '@low-level-kanban/ui'
 import { linkedRefs } from './linkedRefs'
 
 const columns = (fields: ProjectListField[]): { label: string; cls?: string }[] => [
   { label: '' },
-  { label: t('columns.project'), cls: 'pm-project-th-title' },
+  { label: t('columns.project'), cls: 'llk-project-th-title' },
   ...fields.map((field) => ({ label: projectFieldLabel(field) })),
   { label: '' }
 ]
 
 export interface ProjectListContext {
-  plugin: PMPlugin
+  plugin: LowLevelKanbanPlugin
   contentEl: HTMLElement
   /** The columns after the title, in order. */
   fields: ProjectListField[]
@@ -32,7 +32,7 @@ export interface ProjectListContext {
 }
 
 /** Every project the list covers, as trees, with the rolled-up counts a parent row shows. */
-export function projectListItems(plugin: PMPlugin): ProjectListItem[] {
+export function projectListItems(plugin: LowLevelKanbanPlugin): ProjectListItem[] {
   const { index } = plugin
   const showArchived = plugin.settings.showArchivedProjects
   const itemOf = (ref: ProjectRef): ProjectListItem => {
@@ -61,9 +61,9 @@ export function renderProjectTable(
   groupBy: ProjectGroupBy,
   collapsedGroups: Set<string>
 ): void {
-  const wrapper = ctx.contentEl.createDiv('pm-table-wrapper')
+  const wrapper = ctx.contentEl.createDiv('llk-table-wrapper')
   wrapper.setAttr('data-borders', ctx.plugin.settings.lineBorders)
-  const table = wrapper.createEl('table', { cls: 'pm-table pm-project-table' })
+  const table = wrapper.createEl('table', { cls: 'llk-table llk-project-table' })
   const headRow = table.createEl('thead').createEl('tr')
   const header = columns(ctx.fields)
   for (const column of header) headRow.createEl('th', { text: column.label, cls: column.cls })
@@ -72,9 +72,9 @@ export function renderProjectTable(
     const collapsed = group.key !== null && collapsedGroups.has(group.key)
     if (group.key !== null) {
       const key = group.key
-      const row = tbody.createEl('tr', { cls: 'pm-project-group-row' })
+      const row = tbody.createEl('tr', { cls: 'llk-project-group-row' })
       const cell = row.createEl('td', { attr: { colspan: String(header.length) } })
-      const inner = cell.createDiv('pm-project-group')
+      const inner = cell.createDiv('llk-project-group')
       new CollapseToggle(inner, {
         collapsed,
         subject: groupLabel(groupBy, key),
@@ -84,8 +84,8 @@ export function renderProjectTable(
           ctx.redraw()
         }
       })
-      inner.createSpan({ cls: 'pm-project-group-label', text: groupLabel(groupBy, key) })
-      inner.createSpan({ cls: 'pm-project-group-count', text: String(group.count) })
+      inner.createSpan({ cls: 'llk-project-group-label', text: groupLabel(groupBy, key) })
+      inner.createSpan({ cls: 'llk-project-group-count', text: String(group.count) })
     }
     if (!collapsed) for (const row of group.rows) renderRow(ctx, tbody, row)
   }

@@ -1,78 +1,78 @@
-.pm-kanban-board::-webkit-scrollbar,
-.pm-kanban-cards::-webkit-scrollbar,
-.pm-task-modal::-webkit-scrollbar,
-.pm-edit::-webkit-scrollbar {
+.llk-kanban-board::-webkit-scrollbar,
+.llk-kanban-cards::-webkit-scrollbar,
+.llk-task-modal::-webkit-scrollbar,
+.llk-edit::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-.pm-kanban-board::-webkit-scrollbar-track,
-.pm-kanban-cards::-webkit-scrollbar-track {
+.llk-kanban-board::-webkit-scrollbar-track,
+.llk-kanban-cards::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.pm-kanban-board::-webkit-scrollbar-thumb,
-.pm-kanban-cards::-webkit-scrollbar-thumb,
-.pm-task-modal::-webkit-scrollbar-thumb,
-.pm-edit::-webkit-scrollbar-thumb {
+.llk-kanban-board::-webkit-scrollbar-thumb,
+.llk-kanban-cards::-webkit-scrollbar-thumb,
+.llk-task-modal::-webkit-scrollbar-thumb,
+.llk-edit::-webkit-scrollbar-thumb {
   background: var(--background-modifier-border);
   border-radius: 99px;
 }
 
-.pm-segmented {
+.llk-segmented {
   display: flex;
   gap: 6px;
 }
 
-.pm-time-est-row {
+.llk-time-est-row {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 4px;
 }
-.pm-time-label {
+.llk-time-label {
   font-size: 12px;
   color: var(--text-muted);
 }
-.pm-time-est-input {
+.llk-time-est-input {
   width: 80px;
 }
 
-.pm-time-log-list {
+.llk-time-log-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
   margin-bottom: 4px;
 }
-.pm-time-log-list:empty {
+.llk-time-log-list:empty {
   display: none;
 }
-.pm-time-log-row {
+.llk-time-log-row {
   display: flex;
   gap: 6px;
   align-items: center;
   padding: 5px 6px;
   border-radius: var(--radius-s);
   background: var(--background-modifier-hover);
-  border: 1px solid var(--pm-ghost-border);
+  border: 1px solid var(--llk-ghost-border);
 }
-.pm-time-log-date {
+.llk-time-log-date {
   width: 120px;
 }
-.pm-time-log-hours {
+.llk-time-log-hours {
   width: 60px;
   text-align: center;
 }
-.pm-time-log-note {
+.llk-time-log-note {
   flex: 1;
 }
 
-.pm-kanban-card-title-row {
+.llk-kanban-card-title-row {
   display: flex;
   align-items: center;
   gap: 5px;
 }
-.pm-kanban-card-title-row .pm-kanban-card-title {
+.llk-kanban-card-title-row .llk-kanban-card-title {
   flex: 1;
   margin: 0;
   font-size: 12px;
@@ -80,7 +80,7 @@
   line-height: 1.45;
 }
 
-.pm-inline-edit {
+.llk-inline-edit {
   padding: 3px 6px;
   border: 1px solid var(--interactive-accent);
   border-radius: var(--radius-s);
@@ -92,19 +92,19 @@
   width: 100%;
 }
 
-.theme-dark .pm-root {
-  --pm-ghost-border: rgba(255, 255, 255, 0.06);
-  --pm-shadow-ambient: rgba(0, 0, 0, 0.15);
+.theme-dark .llk-root {
+  --llk-ghost-border: rgba(255, 255, 255, 0.06);
+  --llk-shadow-ambient: rgba(0, 0, 0, 0.15);
 }
-.theme-dark .pm-modal {
-  --pm-ghost-border: rgba(255, 255, 255, 0.06);
-  --pm-shadow-ambient: rgba(0, 0, 0, 0.15);
+.theme-dark .llk-modal {
+  --llk-ghost-border: rgba(255, 255, 255, 0.06);
+  --llk-shadow-ambient: rgba(0, 0, 0, 0.15);
 }
 
-.pm-modal-desc-section {
+.llk-modal-desc-section {
   position: relative;
 }
-.pm-modal-desc-preview {
+.llk-modal-desc-preview {
   padding: 6px 8px;
   background: transparent;
   border-radius: var(--radius-s);
@@ -115,30 +115,30 @@
   cursor: text;
   user-select: text;
 }
-.pm-modal-desc-preview:hover {
+.llk-modal-desc-preview:hover {
   background: var(--background-modifier-hover);
   border-color: var(--background-modifier-border);
 }
-.pm-modal-desc-preview p {
+.llk-modal-desc-preview p {
   margin: 0 0 0.5em;
 }
-.pm-modal-desc-preview p:last-child {
+.llk-modal-desc-preview p:last-child {
   margin-bottom: 0;
 }
-.pm-modal-desc-preview a {
+.llk-modal-desc-preview a {
   color: var(--interactive-accent);
   text-decoration: underline;
   cursor: pointer;
   transition: color 0.15s;
 }
-.pm-modal-desc-preview a:hover {
+.llk-modal-desc-preview a:hover {
   color: var(--interactive-accent-hover);
 }
-.pm-modal-desc-preview a.external-link {
+.llk-modal-desc-preview a.external-link {
   color: var(--interactive-accent);
 }
 
-.pm-note-suggest {
+.llk-note-suggest {
   position: absolute;
   z-index: 300;
   width: 280px;
@@ -147,14 +147,14 @@
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-m);
-  box-shadow: 0 4px 16px var(--pm-shadow-ambient);
+  box-shadow: 0 4px 16px var(--llk-shadow-ambient);
   padding: 4px;
   display: none;
 }
-.pm-note-suggest--visible {
+.llk-note-suggest--visible {
   display: block;
 }
-.pm-note-suggest-mirror {
+.llk-note-suggest-mirror {
   position: fixed;
   top: -9999px;
   left: -9999px;
@@ -163,7 +163,7 @@
   word-wrap: break-word;
   overflow: hidden;
 }
-.pm-note-suggest-item {
+.llk-note-suggest-item {
   display: flex;
   flex-direction: column;
   padding: 6px 10px;
@@ -171,19 +171,19 @@
   cursor: pointer;
   transition: background 0.1s;
 }
-.pm-note-suggest-item:hover {
+.llk-note-suggest-item:hover {
   background: var(--background-modifier-hover);
 }
-.pm-note-suggest-item--active {
+.llk-note-suggest-item--active {
   background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
 }
-.pm-note-suggest-name-row {
+.llk-note-suggest-name-row {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
 }
-.pm-note-suggest-name {
+.llk-note-suggest-name {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-normal);
@@ -191,7 +191,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.pm-note-suggest-type {
+.llk-note-suggest-type {
   flex-shrink: 0;
   font-size: 10px;
   font-weight: 600;
@@ -202,7 +202,7 @@
   padding: 1px 5px;
   border-radius: var(--radius-s);
 }
-.pm-note-suggest-path {
+.llk-note-suggest-path {
   font-size: 11px;
   color: var(--text-faint);
   white-space: nowrap;
@@ -211,23 +211,23 @@
 }
 
 /* A link the plugin draws to a note. No href, so the affordances are all from here. */
-.pm-note-link {
+.llk-note-link {
   color: var(--text-accent);
   cursor: pointer;
   text-decoration: none;
 }
-.pm-note-link:hover {
+.llk-note-link:hover {
   text-decoration: underline;
 }
-.pm-note-link:focus-visible {
+.llk-note-link:focus-visible {
   outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
   border-radius: var(--radius-s);
 }
 
-.pm-picker-suggestion {
+.llk-picker-suggestion {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  --pm-glyph-size: 15px;
+  --llk-glyph-size: 15px;
 }

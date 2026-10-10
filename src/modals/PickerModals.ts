@@ -1,7 +1,7 @@
 import { SuggestModal, App } from 'obsidian'
-import { type Task, displayName, t } from '@dotpm/core'
+import { type Task, displayName, t } from '@low-level-kanban/core'
 import type { ProjectRef } from '#store'
-import { renderGlyph } from '@dotpm/ui'
+import { renderGlyph } from '@low-level-kanban/ui'
 
 /** Lists projects from the index, so picking one doesn't load every project in the vault. */
 export class ProjectPickerModal extends SuggestModal<ProjectRef> {
@@ -20,7 +20,7 @@ export class ProjectPickerModal extends SuggestModal<ProjectRef> {
   }
 
   renderSuggestion(project: ProjectRef, el: HTMLElement): void {
-    const row = el.createSpan({ cls: 'pm-picker-suggestion' })
+    const row = el.createSpan({ cls: 'llk-picker-suggestion' })
     renderGlyph(row, { icon: project.icon, color: project.color })
     row.createSpan({ text: project.title })
   }

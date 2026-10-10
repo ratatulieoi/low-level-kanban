@@ -11,7 +11,7 @@ import {
   tidyFields,
   viewFieldLabel,
   withFieldShown
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { renderPopHead } from '../popoverParts'
 import { renderVisibilityList } from '../visibilityList'
 
@@ -24,9 +24,9 @@ export interface FieldsPopoverProps {
 
 /** The fields a board card shows, in their saved order. */
 export function renderFieldsPanel(parent: HTMLElement, props: FieldsPopoverProps): void {
-  const root = parent.createDiv('pm-fields-pop')
+  const root = parent.createDiv('llk-fields-pop')
   const { fields, catalog } = props
-  const body = root.createDiv('pm-fields-body')
+  const body = root.createDiv('llk-fields-body')
   const mode = 'kanban'
 
   const list = (): FieldList => (fields.kanban ??= { visible: shownFields(fields, mode, catalog) })
@@ -75,7 +75,7 @@ export function renderFieldsPanel(parent: HTMLElement, props: FieldsPopoverProps
       })
     }
 
-    const foot = body.createDiv('pm-fields-foot pm-pop-section')
+    const foot = body.createDiv('llk-fields-foot llk-pop-section')
     new ChipButton(foot)
       .setVariant('flat')
       .setLabel(t('header.hideAll'))

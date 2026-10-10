@@ -1,11 +1,11 @@
 import { Menu, Notice } from 'obsidian'
-import type PMPlugin from '#main'
-import { type Task, type Project, t } from '@dotpm/core'
-import { safeAsync } from '@dotpm/ui'
+import type LowLevelKanbanPlugin from '#main'
+import { type Task, type Project, t } from '@low-level-kanban/core'
+import { safeAsync } from '@low-level-kanban/ui'
 import { openTaskModal, confirmDialog, confirmDuplicateSubtasks, openProjectPicker } from './ModalFactory'
 
 export interface TaskMenuContext {
-  plugin: PMPlugin
+  plugin: LowLevelKanbanPlugin
   project: Project
   onRefresh: () => Promise<void>
 }

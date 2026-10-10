@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PRIORITIES, DEFAULT_STATUSES, makeDefaultFilter, makeTask, type GroupState } from '@dotpm/core'
+import {
+  DEFAULT_PRIORITIES,
+  DEFAULT_STATUSES,
+  makeDefaultFilter,
+  makeTask,
+  type GroupState
+} from '@low-level-kanban/core'
 import type { FilterSetup } from '../composites/ViewHeader/filterPopover'
 import { boardColumns, boardField, groupableFields } from './boardColumns'
 

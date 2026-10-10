@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import type { WorkspaceLeaf } from 'obsidian'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_SETTINGS, makeProject, makeTask, resolveProjectConfig, t, type Project } from '@dotpm/core'
-import type PMPlugin from '#main'
+import { DEFAULT_SETTINGS, makeProject, makeTask, resolveProjectConfig, t, type Project } from '@low-level-kanban/core'
+import type LowLevelKanbanPlugin from '#main'
 import { openTaskModal } from '#ui/ModalFactory'
 import { ProjectOverviewView } from './ProjectOverviewView'
 
@@ -16,7 +16,7 @@ vi.mock('#ui/ModalFactory', () => ({ openTaskModal: vi.fn() }))
 const config = resolveProjectConfig(makeProject('Release', 'Projects/Release.md'), DEFAULT_SETTINGS)
 
 describe('ProjectOverviewView milestones', () => {
-  let plugin: PMPlugin
+  let plugin: LowLevelKanbanPlugin
   let project: Project
   let view: ProjectOverviewView
   let host: HTMLElement
@@ -25,7 +25,7 @@ describe('ProjectOverviewView milestones', () => {
     vi.clearAllMocks()
     document.body.empty()
     host = document.body.createDiv()
-    plugin = {} as PMPlugin
+    plugin = {} as LowLevelKanbanPlugin
     project = makeProject('Release', 'Projects/Release.md')
     view = new ProjectOverviewView({} as WorkspaceLeaf, plugin)
     view['project'] = project
@@ -41,11 +41,11 @@ describe('ProjectOverviewView milestones', () => {
 
     view['renderMilestones'](host, tasks, config)
 
-    expect(host.findAll('.pm-overview-child-title').map((el) => el.textContent)).toEqual(['Ready', 'Launch', 'Later'])
-    expect(host.find('.pm-overview-note')?.textContent).toBe(t('overview.milestonesDone', { done: 1, total: 3 }))
+    expect(host.findAll('.llk-overview-child-title').map((el) => el.textContent)).toEqual(['Ready', 'Launch', 'Later'])
+    expect(host.find('.llk-overview-note')?.textContent).toBe(t('overview.milestonesDone', { done: 1, total: 3 }))
     expect(host.textContent).toContain(config.statuses.find((status) => status.id === 'done')!.label)
-    expect(host.findAll('.pm-overview-child')).toHaveLength(3)
-    expect(host.find('.pm-timeline')).toBeNull()
+    expect(host.findAll('.llk-overview-child')).toHaveLength(3)
+    expect(host.find('.llk-timeline')).toBeNull()
     expect(tasks).toEqual(original)
   })
 
@@ -53,9 +53,9 @@ describe('ProjectOverviewView milestones', () => {
     const task = makeTask({ id: 'launch', title: 'Launch', type: 'milestone', due: '2030-04-20' })
     view['renderMilestones'](host, [task], config)
 
-    host.find('.pm-overview-child-title')!.click()
+    host.find('.llk-overview-child-title')!.click()
     expect(openTaskModal).toHaveBeenCalledWith(plugin, project, { task, onSave: expect.any(Function) })
-    host.find('.pm-overview-child')!.click()
+    host.find('.llk-overview-child')!.click()
     expect(openTaskModal).toHaveBeenCalledTimes(2)
   })
 
@@ -63,6 +63,6 @@ describe('ProjectOverviewView milestones', () => {
     view['renderMilestones'](host, [makeTask({ title: 'Ordinary task' })], config)
 
     expect(host.textContent).toContain(t('overview.noMilestones'))
-    expect(host.findAll('.pm-overview-child')).toHaveLength(0)
+    expect(host.findAll('.llk-overview-child')).toHaveLength(0)
   })
 })

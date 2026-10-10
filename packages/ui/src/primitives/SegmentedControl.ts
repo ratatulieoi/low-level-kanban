@@ -15,7 +15,7 @@ export class SegmentedControl<T extends string> {
   el: HTMLElement
 
   constructor(parentEl: HTMLElement, props: SegmentedControlProps<T>) {
-    this.el = parentEl.createDiv('pm-segmented')
+    this.el = parentEl.createDiv('llk-segmented')
     const buttons = new Map<T, PlatformButton>()
     for (const opt of props.options) {
       const btn = createButton(this.el)

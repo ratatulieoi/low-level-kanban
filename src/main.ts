@@ -9,7 +9,9 @@ import {
   makeDefaultSort,
   hydrateFilter,
   hydrateSort,
-  type PMSettings,
+  isProjectFrontmatter,
+  isTaskFrontmatter,
+  type LowLevelKanbanSettings,
   type Project,
   type Task,
   flattenTasks,
@@ -21,7 +23,7 @@ import {
   setDateFormat,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import {
   matchPersonNotes,
   personLink,
@@ -31,17 +33,25 @@ import {
   type ProjectRef,
   type TaskSource
 } from './store'
-import { safeAsync } from '@dotpm/ui'
+import { safeAsync } from '@low-level-kanban/ui'
 import { around } from 'monkey-around'
 import { installObsidianPlatform } from './platform'
-import { PMSettingTab } from './settings'
-import { ProjectView, PM_PROJECT_VIEW_TYPE } from './views/ProjectView'
-import { ProjectOverviewView, PM_PROJECT_OVERVIEW_VIEW_TYPE } from './views/ProjectOverviewView'
-import { ProjectEditView, PM_PROJECT_EDIT_VIEW_TYPE } from './views/ProjectEditView'
-import { DashboardView, PM_DASHBOARD_VIEW_TYPE } from './views/DashboardView'
-import { TaskView, PM_TASK_VIEW_TYPE } from './views/TaskView'
+import { LowLevelKanbanSettingTab } from './settings'
+import { ProjectView } from './views/ProjectView'
+import { ProjectOverviewView } from './views/ProjectOverviewView'
+import { ProjectEditView } from './views/ProjectEditView'
+import { DashboardView } from './views/DashboardView'
+import { TaskView } from './views/TaskView'
+import {
+  LLK_PROJECT_VIEW_TYPE,
+  LLK_PROJECT_OVERVIEW_VIEW_TYPE,
+  LLK_PROJECT_EDIT_VIEW_TYPE,
+  LLK_DASHBOARD_VIEW_TYPE,
+  LLK_TASK_VIEW_TYPE,
+  registerViewWithLegacyAlias
+} from './views/viewTypes'
 import { registerStyleguide } from './views/styleguide/StyleguideView'
-import { PMViewRouter } from './views/PMViewRouter'
+import { LowLevelKanbanViewRouter } from './views/LowLevelKanbanViewRouter'
 import {
   openTaskModal,
   openProjectCreate,
@@ -58,14 +68,14 @@ import { IdRepair } from './components/IdRepair'
 import { migrateBoardCardConfig, migrateProjects, migrateProjectLayout, migrateTaskRefs } from './migration'
 import { exportViewAsHtml } from './export/exportView'
 
-export default class PMPlugin extends Plugin {
-  settings: PMSettings = { ...DEFAULT_SETTINGS }
+export default class LowLevelKanbanPlugin extends Plugin {
+  settings: LowLevelKanbanSettings = { ...DEFAULT_SETTINGS }
   store!: TaskSource
   index!: VaultIndex
   notifier!: Notifier
   autoArchiver!: AutoArchiver
   idRepair!: IdRepair
-  router!: PMViewRouter
+  router!: LowLevelKanbanViewRouter
   /** Leaves sent to the markdown editor for a note, which the swap leaves alone while they show it. */
   private markdownEscapes = new WeakMap<WorkspaceLeaf, string>()
   private viewRefreshScheduled = false
@@ -109,13 +119,13 @@ export default class PMPlugin extends Plugin {
     this.notifier = new Notifier(this)
     this.autoArchiver = new AutoArchiver(this)
     this.idRepair = new IdRepair(this)
-    this.router = new PMViewRouter(this)
+    this.router = new LowLevelKanbanViewRouter(this)
 
-    this.registerView(PM_PROJECT_VIEW_TYPE, (leaf) => new ProjectView(leaf, this))
-    this.registerView(PM_PROJECT_OVERVIEW_VIEW_TYPE, (leaf) => new ProjectOverviewView(leaf, this))
-    this.registerView(PM_PROJECT_EDIT_VIEW_TYPE, (leaf) => new ProjectEditView(leaf, this))
-    this.registerView(PM_DASHBOARD_VIEW_TYPE, (leaf) => new DashboardView(leaf, this))
-    this.registerView(PM_TASK_VIEW_TYPE, (leaf) => new TaskView(leaf, this))
+    registerViewWithLegacyAlias(this, LLK_PROJECT_VIEW_TYPE, (leaf) => new ProjectView(leaf, this))
+    registerViewWithLegacyAlias(this, LLK_PROJECT_OVERVIEW_VIEW_TYPE, (leaf) => new ProjectOverviewView(leaf, this))
+    registerViewWithLegacyAlias(this, LLK_PROJECT_EDIT_VIEW_TYPE, (leaf) => new ProjectEditView(leaf, this))
+    registerViewWithLegacyAlias(this, LLK_DASHBOARD_VIEW_TYPE, (leaf) => new DashboardView(leaf, this))
+    registerViewWithLegacyAlias(this, LLK_TASK_VIEW_TYPE, (leaf) => new TaskView(leaf, this))
     this.registerNoteSwap()
     if (__STYLEGUIDE__) registerStyleguide(this)
 
@@ -269,7 +279,7 @@ export default class PMPlugin extends Plugin {
         const file = md?.file
         if (!file) return false
         const cache = this.app.metadataCache.getFileCache(file)
-        if (cache?.frontmatter?.['pm-project'] !== true) return false
+        if (!isProjectFrontmatter(cache?.frontmatter)) return false
         if (checking) return true
         void this.router.openProjectLink(file.path, md.leaf)
         return true
@@ -296,7 +306,7 @@ export default class PMPlugin extends Plugin {
         const file = md?.file
         if (!file) return false
         const cache = this.app.metadataCache.getFileCache(file)
-        if (cache?.frontmatter?.['pm-task'] === true || cache?.frontmatter?.['pm-project'] === true) return false
+        if (isTaskFrontmatter(cache?.frontmatter) || isProjectFrontmatter(cache?.frontmatter)) return false
         if (checking) return true
         void this.showTasksForPerson(personLink(this.app, file, ''))
         return true
@@ -311,7 +321,7 @@ export default class PMPlugin extends Plugin {
       }
     })
 
-    this.addSettingTab(new PMSettingTab(this.app, this))
+    this.addSettingTab(new LowLevelKanbanSettingTab(this.app, this))
     this.notifier.start()
     this.autoArchiver.start()
     this.idRepair.start()
@@ -351,15 +361,15 @@ export default class PMPlugin extends Plugin {
     if (escaped) this.markdownEscapes.delete(leaf)
     const file = this.app.vault.getFileByPath(path)
     const frontmatter = file ? this.app.metadataCache.getFileCache(file)?.frontmatter : undefined
-    if (this.settings.taskEditorSurface === 'tab' && frontmatter?.['pm-task'] === true) {
-      return { ...viewState, type: PM_TASK_VIEW_TYPE, state: { filePath: path } }
+    if (this.settings.taskEditorSurface === 'tab' && isTaskFrontmatter(frontmatter)) {
+      return { ...viewState, type: LLK_TASK_VIEW_TYPE, state: { filePath: path } }
     }
-    if (frontmatter?.['pm-project'] === true) return { ...viewState, ...this.router.projectLinkViewState(path) }
+    if (isProjectFrontmatter(frontmatter)) return { ...viewState, ...this.router.projectLinkViewState(path) }
     return viewState
   }
 
   async loadSettings(): Promise<void> {
-    const saved = (await this.loadData()) as Partial<PMSettings> | null
+    const saved = (await this.loadData()) as Partial<LowLevelKanbanSettings> | null
     const cleaned = omitObsoleteSettings(saved ?? {})
     // Cloned: a shallow merge would hand the live settings the very arrays and objects
     // DEFAULT_SETTINGS holds, and the first edit would write into the defaults.
@@ -583,10 +593,10 @@ export default class PMPlugin extends Plugin {
     this.viewRefreshScheduled = true
     window.setTimeout(() => {
       this.viewRefreshScheduled = false
-      for (const leaf of this.app.workspace.getLeavesOfType(PM_PROJECT_VIEW_TYPE)) {
+      for (const leaf of this.app.workspace.getLeavesOfType(LLK_PROJECT_VIEW_TYPE)) {
         if (leaf.view instanceof ProjectView) leaf.view.redraw()
       }
-      for (const leaf of this.app.workspace.getLeavesOfType(PM_DASHBOARD_VIEW_TYPE)) {
+      for (const leaf of this.app.workspace.getLeavesOfType(LLK_DASHBOARD_VIEW_TYPE)) {
         if (leaf.view instanceof DashboardView) leaf.view.render()
       }
     }, 0)
@@ -755,7 +765,7 @@ export default class PMPlugin extends Plugin {
   }
 
   private importNotes(): void {
-    const activeLeaves = this.app.workspace.getLeavesOfType(PM_PROJECT_VIEW_TYPE)
+    const activeLeaves = this.app.workspace.getLeavesOfType(LLK_PROJECT_VIEW_TYPE)
     let activeProject: Project | null = null
 
     for (const leaf of activeLeaves) {

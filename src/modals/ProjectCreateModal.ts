@@ -1,8 +1,8 @@
 import { App, ButtonComponent, ExtraButtonComponent, Keymap, Modal, setIcon } from 'obsidian'
-import type PMPlugin from '#main'
-import { DEFAULT_PROJECT_COLOR, DEFAULT_PROJECT_ICON, t } from '@dotpm/core'
+import type LowLevelKanbanPlugin from '#main'
+import { DEFAULT_PROJECT_COLOR, DEFAULT_PROJECT_ICON, t } from '@low-level-kanban/core'
 import { findIgnoringCase, newProjectFolder, projectFilePath } from '#store'
-import { safeAsync, renderPropRow, renderIconControl, renderSelectControl } from '@dotpm/ui'
+import { safeAsync, renderPropRow, renderIconControl, renderSelectControl } from '@low-level-kanban/ui'
 import { saveShortcutLabel } from '../utils'
 import { renderPersonPicker } from '#ui/PersonPicker'
 
@@ -35,7 +35,7 @@ export class ProjectCreateModal extends Modal {
 
   constructor(
     app: App,
-    private plugin: PMPlugin
+    private plugin: LowLevelKanbanPlugin
   ) {
     super(app)
   }
@@ -43,15 +43,15 @@ export class ProjectCreateModal extends Modal {
   onOpen(): void {
     const { contentEl } = this
     contentEl.empty()
-    contentEl.addClass('pm-te-modal', 'pm-te-surface')
-    this.modalEl.addClass('pm-modal', 'pm-modal--create')
+    contentEl.addClass('llk-te-modal', 'llk-te-surface')
+    this.modalEl.addClass('llk-modal', 'llk-modal--create')
 
     this.renderHeader(contentEl)
 
-    const body = contentEl.createDiv('pm-te-body')
+    const body = contentEl.createDiv('llk-te-body')
     this.renderTitle(body)
 
-    const grid = body.createDiv('pm-te-props').createDiv('pm-prop-grid')
+    const grid = body.createDiv('llk-te-props').createDiv('llk-prop-grid')
     this.renderIcon(grid)
     this.renderColor(grid)
     this.renderParent(grid)
@@ -74,34 +74,34 @@ export class ProjectCreateModal extends Modal {
   }
 
   private renderHeader(parent: HTMLElement): void {
-    this.header = parent.createDiv('pm-te-header')
+    this.header = parent.createDiv('llk-te-header')
     this.paintAccent()
-    const crumb = this.header.createDiv('pm-te-crumb')
-    const folderIcon = crumb.createSpan({ cls: 'pm-te-crumb-icon' })
+    const crumb = this.header.createDiv('llk-te-crumb')
+    const folderIcon = crumb.createSpan({ cls: 'llk-te-crumb-icon' })
     setIcon(folderIcon, 'folder')
-    this.crumbFolder = crumb.createSpan({ cls: 'pm-te-crumb-name', text: this.targetFolder() })
-    const sep = crumb.createSpan({ cls: 'pm-te-crumb-sep' })
+    this.crumbFolder = crumb.createSpan({ cls: 'llk-te-crumb-name', text: this.targetFolder() })
+    const sep = crumb.createSpan({ cls: 'llk-te-crumb-sep' })
     setIcon(sep, 'chevron-right')
     crumb.createSpan({ text: t('projectCreate.crumb') })
 
-    this.header.createDiv('pm-te-header-spacer')
+    this.header.createDiv('llk-te-header-spacer')
 
     const closeBtn = new ExtraButtonComponent(this.header).setIcon('x').setTooltip(t('common.close'))
-    closeBtn.extraSettingsEl.addClass('pm-te-header-btn')
+    closeBtn.extraSettingsEl.addClass('llk-te-header-btn')
     closeBtn.onClick(() => this.close())
   }
 
   private paintAccent(): void {
-    this.header.setCssProps({ '--pm-accent-strip': this.draft.color })
+    this.header.setCssProps({ '--llk-accent-strip': this.draft.color })
   }
 
   private renderTitle(parent: HTMLElement): void {
-    const wrap = parent.createDiv('pm-te-title-wrap')
-    this.titleInput = wrap.createEl('textarea', { cls: 'pm-te-title' })
+    const wrap = parent.createDiv('llk-te-title-wrap')
+    this.titleInput = wrap.createEl('textarea', { cls: 'llk-te-title' })
     this.titleInput.rows = 1
     this.titleInput.placeholder = t('project.namePlaceholder')
     this.titleInput.spellcheck = false
-    this.titleError = wrap.createDiv({ cls: 'pm-modal-title-error', attr: { hidden: '' } })
+    this.titleError = wrap.createDiv({ cls: 'llk-modal-title-error', attr: { hidden: '' } })
 
     const autosize = () => {
       this.titleInput.setCssProps({ '--te-title-height': 'auto' })
@@ -123,7 +123,7 @@ export class ProjectCreateModal extends Modal {
       parent,
       t('project.icon'),
       () => {
-        this.iconHost = createDiv('pm-prop-value')
+        this.iconHost = createDiv('llk-prop-value')
         this.drawIcon()
         return this.iconHost
       },
@@ -148,8 +148,8 @@ export class ProjectCreateModal extends Modal {
       parent,
       t('project.color'),
       () => {
-        const cell = createDiv('pm-prop-value pm-prop-color')
-        const picker = cell.createEl('input', { type: 'color', cls: 'pm-color-custom' })
+        const cell = createDiv('llk-prop-value llk-prop-color')
+        const picker = cell.createEl('input', { type: 'color', cls: 'llk-color-custom' })
         picker.value = this.draft.color
         picker.addEventListener('change', () => {
           this.draft.color = picker.value
@@ -167,7 +167,7 @@ export class ProjectCreateModal extends Modal {
       parent,
       t('project.parent'),
       () => {
-        const cell = createDiv('pm-prop-value')
+        const cell = createDiv('llk-prop-value')
         const draw = (): void => {
           cell.empty()
           renderSelectControl({
@@ -198,7 +198,7 @@ export class ProjectCreateModal extends Modal {
       parent,
       t('project.members'),
       () => {
-        const cell = createDiv('pm-prop-value')
+        const cell = createDiv('llk-prop-value')
         renderPersonPicker({
           container: cell,
           plugin: this.plugin,
@@ -220,9 +220,9 @@ export class ProjectCreateModal extends Modal {
   }
 
   private renderDescription(parent: HTMLElement): void {
-    const section = parent.createDiv('pm-modal-section pm-modal-desc-section')
-    section.createEl('h4', { text: t('common.description'), cls: 'pm-modal-section-title' })
-    const area = section.createEl('textarea', { cls: 'pm-modal-description' })
+    const section = parent.createDiv('llk-modal-section llk-modal-desc-section')
+    section.createEl('h4', { text: t('common.description'), cls: 'llk-modal-section-title' })
+    const area = section.createEl('textarea', { cls: 'llk-modal-description' })
     area.placeholder = t('projectCreate.descriptionPlaceholder')
     const autoResize = () => {
       area.setCssProps({ '--desc-height': 'auto' })
@@ -236,13 +236,13 @@ export class ProjectCreateModal extends Modal {
   }
 
   private renderFooter(parent: HTMLElement): void {
-    const footer = parent.createDiv('pm-te-footer')
-    this.pathHint = footer.createSpan({ cls: 'pm-te-footer-path' })
-    const fileIcon = this.pathHint.createSpan({ cls: 'pm-te-footer-icon' })
+    const footer = parent.createDiv('llk-te-footer')
+    this.pathHint = footer.createSpan({ cls: 'llk-te-footer-path' })
+    const fileIcon = this.pathHint.createSpan({ cls: 'llk-te-footer-icon' })
     setIcon(fileIcon, 'file-text')
     this.pathHint.createSpan()
 
-    footer.createDiv('pm-footer-spacer')
+    footer.createDiv('llk-footer-spacer')
 
     new ButtonComponent(footer).setButtonText(t('common.cancel')).onClick(() => this.close())
     this.submit = new ButtonComponent(footer)
@@ -260,15 +260,15 @@ export class ProjectCreateModal extends Modal {
 
     this.crumbFolder.setText(this.targetFolder())
     this.pathHint.lastElementChild?.setText(path)
-    this.pathHint.toggleClass('pm-hidden', !path)
+    this.pathHint.toggleClass('llk-hidden', !path)
     if (taken) {
       this.titleError.setText(t('projectCreate.nameTaken'))
       this.titleError.removeAttribute('hidden')
-      this.titleInput.addClass('pm-input-error')
+      this.titleInput.addClass('llk-input-error')
     } else {
       this.titleError.setText('')
       this.titleError.setAttribute('hidden', '')
-      this.titleInput.removeClass('pm-input-error')
+      this.titleInput.removeClass('llk-input-error')
     }
     this.submit.setDisabled(!title || taken)
   }

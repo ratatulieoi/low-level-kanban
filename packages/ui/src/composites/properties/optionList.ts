@@ -17,14 +17,14 @@ export interface GlyphSpec {
 /** A tinted icon or emoji when `icon` is set, otherwise a colored dot. */
 export function renderGlyph(parent: HTMLElement, spec: GlyphSpec): void {
   if (spec.icon && isIconName(spec.icon)) {
-    const ic = parent.createSpan({ cls: 'pm-glyph-icon' })
+    const ic = parent.createSpan({ cls: 'llk-glyph-icon' })
     setIcon(ic, spec.icon)
-    if (spec.color) ic.setCssProps({ '--pm-glyph-color': spec.color })
+    if (spec.color) ic.setCssProps({ '--llk-glyph-color': spec.color })
   } else if (spec.icon) {
-    parent.createSpan({ cls: 'pm-glyph-icon pm-glyph-text', text: spec.icon })
+    parent.createSpan({ cls: 'llk-glyph-icon llk-glyph-text', text: spec.icon })
   } else if (spec.color) {
-    const dot = parent.createSpan({ cls: 'pm-glyph-dot' })
-    dot.setCssProps({ '--pm-glyph-color': spec.color })
+    const dot = parent.createSpan({ cls: 'llk-glyph-dot' })
+    dot.setCssProps({ '--llk-glyph-color': spec.color })
   }
 }
 
@@ -45,17 +45,17 @@ export interface OptionRow extends GlyphSpec {
 
 /** One selectable row in a popover list. */
 export function renderOptionRow(parent: HTMLElement, row: OptionRow): HTMLButtonElement {
-  const item = parent.createEl('button', { cls: 'pm-pop-item' })
-  if (row.accent) item.addClass('pm-pop-item--accent')
-  const check = createSpan({ cls: 'pm-pop-check' })
+  const item = parent.createEl('button', { cls: 'llk-pop-item' })
+  if (row.accent) item.addClass('llk-pop-item--accent')
+  const check = createSpan({ cls: 'llk-pop-check' })
   setIcon(check, 'check')
-  if (!row.selected) check.addClass('pm-pop-check--hidden')
+  if (!row.selected) check.addClass('llk-pop-check--hidden')
   if (row.check === 'start') item.appendChild(check)
   else if (row.avatar) new Avatar(item).setColor(row.color).setName(row.avatar).setSize('sm')
   else renderGlyph(item, row)
-  item.createSpan({ cls: 'pm-pop-item-label', text: row.label })
-  if (row.trailingIcon) setIcon(item.createSpan('pm-pop-item-trail'), row.trailingIcon)
-  if (row.note) item.createSpan({ cls: 'pm-pop-item-note', text: row.note })
+  item.createSpan({ cls: 'llk-pop-item-label', text: row.label })
+  if (row.trailingIcon) setIcon(item.createSpan('llk-pop-item-trail'), row.trailingIcon)
+  if (row.note) item.createSpan({ cls: 'llk-pop-item-note', text: row.note })
   if (row.check !== 'start') item.appendChild(check)
   item.addEventListener('click', row.onPick)
   return item

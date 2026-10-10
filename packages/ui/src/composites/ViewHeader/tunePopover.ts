@@ -23,16 +23,16 @@ export function renderTunePanel(
   close: () => void,
   anchor: HTMLElement
 ): void {
-  const body = parent.createDiv('pm-tune-pop')
+  const body = parent.createDiv('llk-tune-pop')
   for (const [index, items] of sections.filter((section) => section.length).entries()) {
-    const list = body.createDiv('pm-pop-list')
-    list.toggleClass('pm-pop-section', index > 0)
+    const list = body.createDiv('llk-pop-list')
+    list.toggleClass('llk-pop-section', index > 0)
     for (const item of items) {
       const { control, onOpen } = item
       if (control) {
-        const row = list.createDiv('pm-tune-row')
+        const row = list.createDiv('llk-tune-row')
         renderGlyph(row, { icon: item.icon })
-        row.createSpan({ cls: 'pm-pop-item-label', text: item.label })
+        row.createSpan({ cls: 'llk-pop-item-label', text: item.label })
         control(row)
         continue
       }

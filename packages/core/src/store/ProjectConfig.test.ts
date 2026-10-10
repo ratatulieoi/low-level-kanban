@@ -6,7 +6,7 @@ import {
   makeProject,
   makeTask,
   type CustomFieldDef,
-  type PMSettings,
+  type LowLevelKanbanSettings,
   type PriorityConfig,
   type ProjectConfig,
   type StatusConfig
@@ -121,7 +121,7 @@ const VAULT_FIELD: CustomFieldDef = { id: 'cf-budget', name: 'Budget', type: 'nu
 const PARENT_FIELD: CustomFieldDef = { id: 'cf-owner', name: 'Owner', type: 'person' }
 const CHILD_FIELD: CustomFieldDef = { id: 'cf-sprint', name: 'Sprint', type: 'text' }
 
-function withVaultFields(...customFields: CustomFieldDef[]): PMSettings {
+function withVaultFields(...customFields: CustomFieldDef[]): LowLevelKanbanSettings {
   return { ...DEFAULT_SETTINGS, customFields }
 }
 

@@ -1,5 +1,5 @@
-import type { Project, ResolvedProjectConfig, Task } from '@dotpm/core'
-import { makeTask } from '@dotpm/core'
+import type { Project, ResolvedProjectConfig, Task } from '@low-level-kanban/core'
+import { makeTask } from '@low-level-kanban/core'
 import type { ProjectResource, ProjectSummary, TaskResource } from './types'
 
 export function toTaskResource(task: Task, projectId: string, parentId: string | null, position: number): TaskResource {

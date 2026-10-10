@@ -1,4 +1,4 @@
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 import { setIcon } from '#platform'
 import { renderAddButton } from '../addButton'
 import { Popover } from '#primitives/Popover'
@@ -23,12 +23,12 @@ export function renderAddProperty(
       return
     }
     pop = new Popover({ anchor: btn, width: 190, onClose: () => (pop = null) })
-    const list = pop.contentEl.createDiv('pm-pop-list')
+    const list = pop.contentEl.createDiv('llk-pop-list')
     for (const h of hidden) {
-      const item = list.createEl('button', { cls: 'pm-pop-item' })
-      const ic = item.createSpan({ cls: 'pm-glyph-icon' })
+      const item = list.createEl('button', { cls: 'llk-pop-item' })
+      const ic = item.createSpan({ cls: 'llk-glyph-icon' })
       setIcon(ic, h.icon)
-      item.createSpan({ cls: 'pm-pop-item-label', text: h.label })
+      item.createSpan({ cls: 'llk-pop-item-label', text: h.label })
       item.addEventListener('click', () => {
         pop?.close()
         onShow(h.id)

@@ -9,11 +9,11 @@ export class SplitButton {
   private menuButton: PlatformButton | null = null
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createDiv('pm-split-btn')
+    this.el = parentEl.createDiv('llk-split-btn')
     this.main = createButton(this.el).setCta()
-    this.main.buttonEl.addClass('pm-split-btn-main')
-    this.iconEl = this.main.buttonEl.createSpan('pm-split-btn-icon')
-    this.labelEl = this.main.buttonEl.createSpan('pm-split-btn-label')
+    this.main.buttonEl.addClass('llk-split-btn-main')
+    this.iconEl = this.main.buttonEl.createSpan('llk-split-btn-icon')
+    this.labelEl = this.main.buttonEl.createSpan('llk-split-btn-label')
   }
 
   setLabel(text: string): this {
@@ -37,9 +37,9 @@ export class SplitButton {
   onMenu(label: string, handler: (anchor: HTMLElement) => unknown): this {
     if (!this.menuButton) {
       this.menuButton = createButton(this.el).setCta()
-      this.menuButton.buttonEl.addClass('pm-split-btn-menu')
-      setIcon(this.menuButton.buttonEl.createSpan('pm-split-btn-icon'), 'chevron-down')
-      this.el.addClass('pm-split-btn--split')
+      this.menuButton.buttonEl.addClass('llk-split-btn-menu')
+      setIcon(this.menuButton.buttonEl.createSpan('llk-split-btn-icon'), 'chevron-down')
+      this.el.addClass('llk-split-btn--split')
     }
     this.menuButton.buttonEl.setAttribute('aria-label', label)
     const button = this.menuButton.buttonEl

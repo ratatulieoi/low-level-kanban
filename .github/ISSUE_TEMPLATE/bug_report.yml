@@ -14,13 +14,13 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. Open a project in the table view
-        2. Select two tasks
-        3. Change the status
+        1. Open a project board
+        2. Drag a task to another status column
+        3. Reopen the board
   - type: input
-    id: dotpm-version
+    id: low-level-kanban-version
     attributes:
-      label: dotpm version
+      label: Low Level Kanban version
       description: Settings > Community plugins, or the version in the installed manifest.json.
     validations:
       required: true

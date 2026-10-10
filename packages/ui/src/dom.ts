@@ -1,4 +1,4 @@
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 import { activeDocument, showNotice, type PlatformMenu } from './platform'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -74,7 +74,7 @@ export function safeAsync<A extends unknown[]>(fn: (...args: A) => Promise<void>
       try {
         await fn(...args)
       } catch (err: unknown) {
-        console.error('[PM]', err)
+        console.error('[Low Level Kanban]', err)
         showNotice(t('common.somethingWentWrong'))
       }
     })()

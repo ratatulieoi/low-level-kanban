@@ -1,19 +1,19 @@
-import { type Task, totalLoggedHours, today, t } from '@dotpm/core'
-import { renderAddButton, IconButton } from '@dotpm/ui'
+import { type Task, totalLoggedHours, today, t } from '@low-level-kanban/core'
+import { renderAddButton, IconButton } from '@low-level-kanban/ui'
 
 export function renderTimeTrackingPanel(container: HTMLElement, task: Task): void {
   if (task.type === 'milestone') return
 
-  const timeSection = container.createDiv('pm-modal-section')
-  const timeHeader = timeSection.createDiv('pm-modal-section-header')
+  const timeSection = container.createDiv('llk-modal-section')
+  const timeHeader = timeSection.createDiv('llk-modal-section-header')
   const logged = totalLoggedHours(task)
   const est = task.timeEstimate ?? 0
   const timeLabel = est > 0 ? t('time.heading', { logged, estimate: est }) : t('time.headingLogged', { logged })
-  timeHeader.createEl('h4', { text: timeLabel, cls: 'pm-modal-section-title' })
+  timeHeader.createEl('h4', { text: timeLabel, cls: 'llk-modal-section-title' })
 
-  const estRow = timeSection.createDiv('pm-time-est-row')
-  estRow.createSpan({ text: t('time.estimate'), cls: 'pm-time-label' })
-  const estInput = estRow.createEl('input', { type: 'number', cls: 'pm-prop-text pm-time-est-input' })
+  const estRow = timeSection.createDiv('llk-time-est-row')
+  estRow.createSpan({ text: t('time.estimate'), cls: 'llk-time-label' })
+  const estInput = estRow.createEl('input', { type: 'number', cls: 'llk-prop-text llk-time-est-input' })
   estInput.value = est > 0 ? String(est) : ''
   estInput.placeholder = t('time.hours')
   estInput.min = '0'
@@ -23,22 +23,22 @@ export function renderTimeTrackingPanel(container: HTMLElement, task: Task): voi
     task.timeEstimate = isNaN(v) || v <= 0 ? undefined : v
   })
 
-  const logList = timeSection.createDiv('pm-time-log-list')
+  const logList = timeSection.createDiv('llk-time-log-list')
   const renderLogs = () => {
     logList.empty()
     if (!task.timeLogs) task.timeLogs = []
     const logs = task.timeLogs
     for (let i = 0; i < logs.length; i++) {
       const log = logs[i]
-      const row = logList.createDiv('pm-time-log-row')
+      const row = logList.createDiv('llk-time-log-row')
 
-      const dateInput = row.createEl('input', { type: 'date', cls: 'pm-prop-date pm-time-log-date' })
+      const dateInput = row.createEl('input', { type: 'date', cls: 'llk-prop-date llk-time-log-date' })
       dateInput.value = log.date
       dateInput.addEventListener('change', () => {
         log.date = dateInput.value
       })
 
-      const hoursInput = row.createEl('input', { type: 'number', cls: 'pm-prop-text pm-time-log-hours' })
+      const hoursInput = row.createEl('input', { type: 'number', cls: 'llk-prop-text llk-time-log-hours' })
       hoursInput.value = String(log.hours)
       hoursInput.min = '0'
       hoursInput.step = '0.25'
@@ -47,7 +47,7 @@ export function renderTimeTrackingPanel(container: HTMLElement, task: Task): voi
         log.hours = parseFloat(hoursInput.value) || 0
       })
 
-      const noteInput = row.createEl('input', { type: 'text', cls: 'pm-prop-text pm-time-log-note' })
+      const noteInput = row.createEl('input', { type: 'text', cls: 'llk-prop-text llk-time-log-note' })
       noteInput.value = log.note
       noteInput.placeholder = t('time.notePlaceholder')
       noteInput.addEventListener('change', () => {

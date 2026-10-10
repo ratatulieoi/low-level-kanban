@@ -1,5 +1,12 @@
 import type { Plugin, TFile } from 'obsidian'
-import type { Project, ProjectPatch, ResolvedProjectConfig, Task, TaskPriority, TaskStatus } from '@dotpm/core'
+import type {
+  Project,
+  ProjectPatch,
+  ResolvedProjectConfig,
+  Task,
+  TaskPriority,
+  TaskStatus
+} from '@low-level-kanban/core'
 import type { TaskFileNameConflictError } from './ProjectStore'
 
 export interface ImportNoteOptions {
@@ -10,7 +17,7 @@ export interface ImportNoteOptions {
 
 /**
  * The persistence surface views, modals, and commands program against (`plugin.store`).
- * ProjectStore implements it over pm-task markdown files; other backends can too.
+ * ProjectStore implements it over task Markdown files; other backends can too.
  */
 export interface TaskSource {
   registerVaultSync(plugin: Plugin): void

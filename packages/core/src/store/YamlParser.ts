@@ -1,7 +1,24 @@
 import { parseYaml } from '../yaml'
 
-export const FRONTMATTER_KEY = 'pm-project'
-export const TASK_FRONTMATTER_KEY = 'pm-task'
+export const FRONTMATTER_KEY = 'low-level-kanban-project'
+export const TASK_FRONTMATTER_KEY = 'low-level-kanban-task'
+
+// Read old notes in place. Only an ordinary save replaces these markers.
+export const LEGACY_FRONTMATTER_KEY = 'pm-project'
+export const LEGACY_TASK_FRONTMATTER_KEY = 'pm-task'
+
+function hasMarker(frontmatter: Record<string, unknown> | undefined, key: string, legacyKey: string): boolean {
+  if (!frontmatter) return false
+  return (Object.hasOwn(frontmatter, key) ? frontmatter[key] : frontmatter[legacyKey]) === true
+}
+
+export function isProjectFrontmatter(frontmatter: Record<string, unknown> | undefined): boolean {
+  return hasMarker(frontmatter, FRONTMATTER_KEY, LEGACY_FRONTMATTER_KEY)
+}
+
+export function isTaskFrontmatter(frontmatter: Record<string, unknown> | undefined): boolean {
+  return hasMarker(frontmatter, TASK_FRONTMATTER_KEY, LEGACY_TASK_FRONTMATTER_KEY)
+}
 
 /**
  * 'none' is a note without frontmatter, so its whole content is the body, matching

@@ -1,14 +1,17 @@
 import { TFile, type ViewState, type WorkspaceLeaf } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import type { ScopeSpec } from '#store'
-import { PM_DASHBOARD_VIEW_TYPE } from './DashboardView'
-import { PM_PROJECT_EDIT_VIEW_TYPE } from './ProjectEditView'
-import { PM_PROJECT_OVERVIEW_VIEW_TYPE } from './ProjectOverviewView'
-import { PM_PROJECT_VIEW_TYPE } from './ProjectView'
-import { PM_TASK_VIEW_TYPE, type TaskViewState } from './TaskView'
+import type { TaskViewState } from './TaskView'
+import {
+  LLK_DASHBOARD_VIEW_TYPE,
+  LLK_PROJECT_EDIT_VIEW_TYPE,
+  LLK_PROJECT_OVERVIEW_VIEW_TYPE,
+  LLK_PROJECT_VIEW_TYPE,
+  LLK_TASK_VIEW_TYPE
+} from './viewTypes'
 
-export class PMViewRouter {
-  constructor(private plugin: PMPlugin) {}
+export class LowLevelKanbanViewRouter {
+  constructor(private plugin: LowLevelKanbanPlugin) {}
 
   /** Pass a leaf to navigate within it instead of opening a tab. */
   private async open(type: string, state: Record<string, unknown>, leaf?: WorkspaceLeaf): Promise<void> {
@@ -19,7 +22,7 @@ export class PMViewRouter {
   }
 
   async openDashboard(): Promise<void> {
-    await this.open(PM_DASHBOARD_VIEW_TYPE, {})
+    await this.open(LLK_DASHBOARD_VIEW_TYPE, {})
   }
 
   async openProject(file: TFile): Promise<void> {
@@ -27,19 +30,19 @@ export class PMViewRouter {
   }
 
   async openScope(scope: ScopeSpec, leaf?: WorkspaceLeaf): Promise<void> {
-    await this.open(PM_PROJECT_VIEW_TYPE, { scope }, leaf)
+    await this.open(LLK_PROJECT_VIEW_TYPE, { scope }, leaf)
   }
 
   async openProjectOverview(path: string, leaf?: WorkspaceLeaf): Promise<void> {
-    await this.open(PM_PROJECT_OVERVIEW_VIEW_TYPE, { filePath: path }, leaf)
+    await this.open(LLK_PROJECT_OVERVIEW_VIEW_TYPE, { filePath: path }, leaf)
   }
 
   /** Where a project link lands, per the open projects in setting. */
   projectLinkViewState(path: string): ViewState {
     if (this.plugin.settings.projectSurface === 'tasks') {
-      return { type: PM_PROJECT_VIEW_TYPE, state: { scope: { kind: 'project', path } } }
+      return { type: LLK_PROJECT_VIEW_TYPE, state: { scope: { kind: 'project', path } } }
     }
-    return { type: PM_PROJECT_OVERVIEW_VIEW_TYPE, state: { filePath: path } }
+    return { type: LLK_PROJECT_OVERVIEW_VIEW_TYPE, state: { filePath: path } }
   }
 
   async openProjectLink(path: string, leaf?: WorkspaceLeaf): Promise<void> {
@@ -48,11 +51,11 @@ export class PMViewRouter {
   }
 
   async openProjectEdit(path: string, leaf?: WorkspaceLeaf): Promise<void> {
-    await this.open(PM_PROJECT_EDIT_VIEW_TYPE, { filePath: path }, leaf)
+    await this.open(LLK_PROJECT_EDIT_VIEW_TYPE, { filePath: path }, leaf)
   }
 
   async openTask(state: TaskViewState): Promise<void> {
-    await this.open(PM_TASK_VIEW_TYPE, state)
+    await this.open(LLK_TASK_VIEW_TYPE, state)
   }
 
   async openProjectByPath(path: string): Promise<void> {

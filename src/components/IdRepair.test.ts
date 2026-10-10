@@ -2,9 +2,9 @@ import type { App } from 'obsidian'
 import { TFile } from 'obsidian'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { makeFakeApp, type FakeVault } from '#test/fakeVault'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { ProjectStore, VaultIndex, type ProjectRef, type TaskRef } from '#store'
-import { DEFAULT_SETTINGS, type PMSettings } from '@dotpm/core'
+import { DEFAULT_SETTINGS, type LowLevelKanbanSettings } from '@low-level-kanban/core'
 import { IdRepair, planIdRepairs } from './IdRepair'
 
 const expectDefined = <T>(value: T | null | undefined, message = 'expected value to be defined'): T => {
@@ -105,7 +105,7 @@ describe('IdRepair sweep', () => {
     const fake = makeFakeApp({ liveMetadataCache: true })
     vault = fake.vault
     app = fake.app as unknown as App
-    const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+    const settings: LowLevelKanbanSettings = structuredClone(DEFAULT_SETTINGS)
     index = new VaultIndex(app, () => settings)
     store = new ProjectStore(app, () => settings, index)
     notices = []
@@ -114,7 +114,7 @@ describe('IdRepair sweep', () => {
       index,
       store,
       showNotice: (msg: string) => notices.push(msg)
-    } as unknown as PMPlugin
+    } as unknown as LowLevelKanbanPlugin
     repair = new IdRepair(plugin)
   })
 

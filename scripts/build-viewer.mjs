@@ -35,16 +35,16 @@ const bundled = readFileSync(join(dist, built), 'utf8')
 const js = bundled.replace(/<\/script/gi, '<\\/script')
 
 const html = `<!doctype html>
-<html lang="__DOTPM_LOCALE__">
+<html lang="__LOW_LEVEL_KANBAN_LOCALE__">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__DOTPM_TITLE__</title>
+<title>__LOW_LEVEL_KANBAN_TITLE__</title>
 <style>${css}</style>
 </head>
 <body>
 <div id="app"></div>
-<script id="dotpm-snapshot" type="application/json">__DOTPM_SNAPSHOT__</script>
+<script id="low-level-kanban-snapshot" type="application/json">__LOW_LEVEL_KANBAN_SNAPSHOT__</script>
 <script>${js}</script>
 </body>
 </html>

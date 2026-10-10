@@ -1,12 +1,12 @@
 name: Feature request
-description: Something dotpm should do
+description: Something Low Level Kanban should do
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
       label: The problem
-      description: What you are trying to do and where dotpm gets in the way.
+      description: What you are trying to do and where Low Level Kanban gets in the way.
     validations:
       required: true
   - type: textarea

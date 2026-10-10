@@ -26,10 +26,10 @@ export interface TuneSheetProps {
  * now shows. Edits apply as they happen; the footer and the tab names follow them.
  */
 export function renderTuneSheetPanel(parent: HTMLElement, props: TuneSheetProps, close: () => void): void {
-  const root = parent.createDiv('pm-tune-sheet')
-  const tabsEl = root.createDiv({ cls: 'pm-tune-sheet-tabs', attr: { role: 'tablist' } })
-  const body = root.createDiv('pm-tune-sheet-body')
-  const foot = root.createDiv('pm-tune-sheet-foot')
+  const root = parent.createDiv('llk-tune-sheet')
+  const tabsEl = root.createDiv({ cls: 'llk-tune-sheet-tabs', attr: { role: 'tablist' } })
+  const body = root.createDiv('llk-tune-sheet-body')
+  const foot = root.createDiv('llk-tune-sheet-foot')
   const clear = props.clear
   const clearBtn = clear
     ? createButton(foot)
@@ -39,9 +39,9 @@ export function renderTuneSheetPanel(parent: HTMLElement, props: TuneSheetProps,
           show(active)
         })
     : null
-  clearBtn?.buttonEl.addClass('pm-tune-sheet-clear')
+  clearBtn?.buttonEl.addClass('llk-tune-sheet-clear')
   const done = createButton(foot).setCta().onClick(close)
-  done.buttonEl.addClass('pm-tune-sheet-done')
+  done.buttonEl.addClass('llk-tune-sheet-done')
   let active = props.tabs.some((tab) => tab.id === props.active) ? props.active : props.tabs[0]?.id
 
   const tabButtons = props.tabs.map((tab) => {
@@ -49,7 +49,7 @@ export function renderTuneSheetPanel(parent: HTMLElement, props: TuneSheetProps,
       .setVariant('flat')
       .setLabel(tab.label)
       .onClick(() => show(tab.id))
-    button.el.addClass('pm-tune-sheet-tab')
+    button.el.addClass('llk-tune-sheet-tab')
     button.el.setAttribute('role', 'tab')
     return { tab, button }
   })
@@ -59,7 +59,7 @@ export function renderTuneSheetPanel(parent: HTMLElement, props: TuneSheetProps,
       button.setBadge(tab.badge?.() ?? '').setActive(tab.id === active)
       button.el.setAttribute('aria-selected', String(tab.id === active))
     }
-    clearBtn?.buttonEl.toggleClass('pm-hidden', !clear?.canClear())
+    clearBtn?.buttonEl.toggleClass('llk-hidden', !clear?.canClear())
     done.setButtonText(props.doneLabel())
   }
 

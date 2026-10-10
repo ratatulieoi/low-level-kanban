@@ -8,7 +8,7 @@ import {
   makeDefaultFilter,
   makeDefaultSort,
   makeTask,
-  type PMSettings,
+  type LowLevelKanbanSettings,
   type Project,
   type StatusConfig,
   type Task,
@@ -17,7 +17,7 @@ import {
   buildTaskIndex,
   findTask,
   flattenTasks
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { ProjectStore, TaskFileNameConflictError, UnreadableNoteError } from './ProjectStore'
 import { projectTaskFolder } from './vaultFs'
 import { VaultIndex } from './VaultIndex'
@@ -33,7 +33,7 @@ const STATUSES: StatusConfig[] = [
   { id: 'done', label: 'Done', color: '#0a0', icon: 'check', complete: true }
 ]
 
-const SETTINGS: PMSettings = { ...DEFAULT_SETTINGS, statuses: STATUSES }
+const SETTINGS: LowLevelKanbanSettings = { ...DEFAULT_SETTINGS, statuses: STATUSES }
 
 function newStore(): { store: ProjectStore; vault: FakeVault; app: App } {
   const { app, vault } = makeFakeApp()
@@ -1288,7 +1288,7 @@ describe('ProjectStore.importNoteAsTask', () => {
     const created = vault.getAbstractFileByPath('Projects/Import/_tasks/idea.md')
     if (!(created instanceof TFile)) throw new Error('imported task file missing')
     const content = await vault.read(created)
-    expect(content).toContain('pm-task: true')
+    expect(content).toContain('low-level-kanban-task: true')
     expect(content).toContain('status: "in-progress"')
     expect(content).toContain('priority: "high"')
     expect(content).toContain('the note body')
@@ -1302,7 +1302,7 @@ describe('ProjectStore.importNoteAsTask', () => {
     const moved = vault.getAbstractFileByPath('Projects/Import/_tasks/idea.md')
     if (!(moved instanceof TFile)) throw new Error('imported task file missing')
     const content = await vault.read(moved)
-    expect(content).toContain('pm-task: true')
+    expect(content).toContain('low-level-kanban-task: true')
     expect(content).toContain('the note body')
   })
 
@@ -1983,7 +1983,7 @@ describe('ProjectStore foreign frontmatter', () => {
 
     await store.importNoteAsTask(project, note, { status: 'todo', priority: 'low', handling: 'move' })
     const fm = await frontmatterAt(app, 'Projects/Import/_tasks/idea.md')
-    expect(fm['pm-task']).toBe(true)
+    expect(fm['low-level-kanban-task']).toBe(true)
     expect(fm.timeEntries).toEqual(EXPECTED)
   })
 })

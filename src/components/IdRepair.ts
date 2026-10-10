@@ -1,8 +1,8 @@
 import { TFile } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import type { ProjectRef, TaskRef } from '#store'
-import { safeAsync } from '@dotpm/ui'
-import { t } from '@dotpm/core'
+import { safeAsync } from '@low-level-kanban/ui'
+import { t } from '@low-level-kanban/core'
 
 const DEBOUNCE_MS = 5000
 
@@ -80,7 +80,7 @@ export class IdRepair {
   private timer: number | null = null
   private running = false
 
-  constructor(private plugin: PMPlugin) {}
+  constructor(private plugin: LowLevelKanbanPlugin) {}
 
   /** The first pass runs from the startup sweep; this catches copies made while the app is open. */
   start(): void {

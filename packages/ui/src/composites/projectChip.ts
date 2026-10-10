@@ -1,4 +1,4 @@
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 import { Chip } from '#primitives/Chip'
 
 export interface ProjectChipProps {

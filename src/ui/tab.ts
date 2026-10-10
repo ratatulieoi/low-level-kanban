@@ -1,7 +1,7 @@
 import type { Menu, WorkspaceLeaf } from 'obsidian'
-import type PMPlugin from '#main'
-import { t } from '@dotpm/core'
-import { safeAsync } from '@dotpm/ui'
+import type LowLevelKanbanPlugin from '#main'
+import { t } from '@low-level-kanban/core'
+import { safeAsync } from '@low-level-kanban/ui'
 
 /** A page of one note that a tab's "More options" menu can open in the same tab. */
 export type TabPage = 'overview' | 'tasks' | 'edit' | 'note'
@@ -9,7 +9,7 @@ export type TabPage = 'overview' | 'tasks' | 'edit' | 'note'
 /** Adds the pages to the menu in the order given, each opening `path` in `leaf`. */
 export function addTabPageItems(
   menu: Menu,
-  plugin: PMPlugin,
+  plugin: LowLevelKanbanPlugin,
   leaf: WorkspaceLeaf,
   path: string,
   pages: TabPage[]

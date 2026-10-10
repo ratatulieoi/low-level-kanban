@@ -1,7 +1,7 @@
-import type PMPlugin from '#main'
-import { type Project, today, isTerminalStatus, tn } from '@dotpm/core'
+import type LowLevelKanbanPlugin from '#main'
+import { type Project, today, isTerminalStatus, tn } from '@low-level-kanban/core'
 import { type ArchiveCandidate, collectArchivable, withoutBlockedDependents } from '#store'
-import { safeAsync } from '@dotpm/ui'
+import { safeAsync } from '@low-level-kanban/ui'
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000
 
@@ -19,7 +19,7 @@ export interface ArchivePlan {
 export class AutoArchiver {
   private running = false
 
-  constructor(private plugin: PMPlugin) {}
+  constructor(private plugin: LowLevelKanbanPlugin) {}
 
   /** The first pass runs once the index is built; this only schedules the later ones. */
   start(): void {

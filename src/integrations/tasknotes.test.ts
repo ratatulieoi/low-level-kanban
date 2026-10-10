@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_SETTINGS, type PMSettings } from '@dotpm/core'
+import { DEFAULT_SETTINGS, type LowLevelKanbanSettings } from '@low-level-kanban/core'
 import { countTaskNotesPaletteChanges, importTaskNotesPalettes, type TaskNotesApi } from './tasknotes'
 
 function makeApi(): TaskNotesApi {
@@ -22,7 +22,7 @@ function makeApi(): TaskNotesApi {
   }
 }
 
-function makeSettings(): PMSettings {
+function makeSettings(): LowLevelKanbanSettings {
   return {
     ...DEFAULT_SETTINGS,
     statuses: DEFAULT_SETTINGS.statuses.map((s) => ({ ...s })),

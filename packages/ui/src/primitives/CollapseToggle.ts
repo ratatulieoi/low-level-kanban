@@ -1,4 +1,4 @@
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 import { setIcon } from '#platform'
 
 export interface CollapseToggleProps {
@@ -12,7 +12,7 @@ export class CollapseToggle {
   el: HTMLElement
 
   constructor(parentEl: HTMLElement, props: CollapseToggleProps) {
-    this.el = parentEl.createDiv({ cls: 'tree-item-icon collapse-icon pm-collapse-toggle' })
+    this.el = parentEl.createDiv({ cls: 'tree-item-icon collapse-icon llk-collapse-toggle' })
     setIcon(this.el, 'right-triangle')
     this.el.toggleClass('is-collapsed', props.collapsed)
     const subject = props.subject ?? t('collapse.subtasks')

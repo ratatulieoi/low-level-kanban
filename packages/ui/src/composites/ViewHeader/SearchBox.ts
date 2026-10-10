@@ -19,17 +19,17 @@ export class SearchBox {
   private input: HTMLInputElement
 
   constructor(parentEl: HTMLElement, props: SearchBoxProps) {
-    this.el = parentEl.createDiv('pm-search-box')
+    this.el = parentEl.createDiv('llk-search-box')
     const toggle = new IconButton(this.el).setIcon('search').setTooltip(props.label)
-    toggle.el.addClass('pm-search-box-toggle')
+    toggle.el.addClass('llk-search-box-toggle')
     this.input = this.el.createEl('input', {
       type: 'search',
-      cls: 'pm-search-box-input',
+      cls: 'llk-search-box-input',
       attr: { placeholder: props.placeholder, spellcheck: 'false', 'aria-label': props.label }
     })
     this.input.value = props.value
     const clear = new IconButton(this.el).setIcon('x').setTooltip(props.clearLabel)
-    clear.el.addClass('pm-search-box-clear')
+    clear.el.addClass('llk-search-box-clear')
 
     const set = (value: string) => {
       this.input.value = value
@@ -85,7 +85,7 @@ export class SearchBox {
 export function openSearchPopover(anchor: HTMLElement, props: SearchBoxProps): Popover {
   const pop = new Popover({ anchor, align: 'right', width: 260 })
   const box = new SearchBox(pop.contentEl, props)
-  box.el.addClass('pm-search-box--pop')
+  box.el.addClass('llk-search-box--pop')
   pop.open()
   box.focus()
   return pop

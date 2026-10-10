@@ -7,7 +7,7 @@ export class IconButton {
   constructor(parentEl: HTMLElement) {
     this.button = createExtraButton(parentEl)
     this.el = this.button.extraSettingsEl
-    this.el.addClass('pm-icon-btn')
+    this.el.addClass('llk-icon-btn')
     this.el.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return
       e.preventDefault()
@@ -26,7 +26,7 @@ export class IconButton {
   }
 
   setRevealOnHover(enabled: boolean): this {
-    this.el.toggleClass('pm-icon-btn--hover-only', enabled)
+    this.el.toggleClass('llk-icon-btn--hover-only', enabled)
     return this
   }
 

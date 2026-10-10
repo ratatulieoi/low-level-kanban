@@ -3,7 +3,7 @@ export class Checkbox {
   el: HTMLInputElement
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createEl('input', { type: 'checkbox', cls: 'pm-checkbox' })
+    this.el = parentEl.createEl('input', { type: 'checkbox', cls: 'llk-checkbox' })
   }
 
   setChecked(checked: boolean): this {

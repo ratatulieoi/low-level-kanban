@@ -10,7 +10,7 @@ export interface InlineEditOpts {
 
 export function makeInlineEdit(opts: InlineEditOpts): void {
   const { container, display, inputType, value, onSave } = opts
-  const input = container.createEl('input', { type: inputType, cls: 'pm-inline-edit', value })
+  const input = container.createEl('input', { type: inputType, cls: 'llk-inline-edit', value })
   display.replaceWith(input)
   input.focus()
   if (inputType !== 'date') input.select()

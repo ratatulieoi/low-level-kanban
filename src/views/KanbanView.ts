@@ -1,5 +1,5 @@
 import { Menu } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import {
   type Task,
   type TaskType,
@@ -19,7 +19,7 @@ import {
   getPriorityConfig,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { personKeyer, type ProjectScope } from '#store'
 import {
   safeAsync,
@@ -35,7 +35,7 @@ import {
   type FilterSetup,
   type KanbanCardData,
   renderProjectChip
-} from '@dotpm/ui'
+} from '@low-level-kanban/ui'
 import { openTaskModal } from '#ui/ModalFactory'
 import { buildTaskContextMenu } from '#ui/TaskContextMenu'
 import { linkedRefs } from './linkedRefs'
@@ -65,7 +65,7 @@ export class KanbanView implements SubView {
   constructor(
     private container: HTMLElement,
     private scope: ProjectScope,
-    private plugin: PMPlugin,
+    private plugin: LowLevelKanbanPlugin,
     private onRefresh: () => Promise<void>,
     private query: TaskQuery,
     private sort: SortRule[],
@@ -88,9 +88,9 @@ export class KanbanView implements SubView {
     this.filterContext = this.setup.ctx
     this.cardFields = shownFields(this.fields, 'kanban', this.scope.fieldCatalog())
     this.container.empty()
-    this.container.addClass('pm-kanban-view')
+    this.container.addClass('llk-kanban-view')
 
-    const board = this.container.createDiv('pm-kanban-board')
+    const board = this.container.createDiv('llk-kanban-board')
     const columns = boardColumns(this.setup, this.group, this.visibleTasks())
     for (const column of columns.filter((c) => !c.hidden)) {
       new KanbanColumn(board, {
@@ -119,7 +119,7 @@ export class KanbanView implements SubView {
         .setLabel(tn('header.hiddenCount', hidden))
         .setAriaLabel(t('header.showHiddenColumns'))
         .onClick(() => this.onShowHidden(rail.el))
-      rail.el.addClass('pm-kanban-hidden-rail')
+      rail.el.addClass('llk-kanban-hidden-rail')
     }
   }
 

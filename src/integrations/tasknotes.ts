@@ -1,5 +1,5 @@
 import type { App } from 'obsidian'
-import type { PMSettings, PriorityConfig, StatusConfig } from '@dotpm/core'
+import type { LowLevelKanbanSettings, PriorityConfig, StatusConfig } from '@low-level-kanban/core'
 
 export interface TaskNotesStatus {
   id: string
@@ -135,7 +135,7 @@ export function resolveTaskNotesRef(app: App, ref: string, sourcePath: string): 
  */
 export function ensurePaletteEntries(
   api: TaskNotesApi,
-  settings: PMSettings,
+  settings: LowLevelKanbanSettings,
   statusValues: Set<string>,
   priorityValues: Set<string>
 ): number {
@@ -186,7 +186,10 @@ function priorityUpserts(api: TaskNotesApi): PaletteUpsert<PriorityConfig>[] {
 }
 
 /** Upsert TaskNotes' configured statuses and priorities into our palettes. */
-export function importTaskNotesPalettes(api: TaskNotesApi, settings: PMSettings): { added: number; updated: number } {
+export function importTaskNotesPalettes(
+  api: TaskNotesApi,
+  settings: LowLevelKanbanSettings
+): { added: number; updated: number } {
   const statuses = upsertPalette(settings.statuses, statusUpserts(api))
   const priorities = upsertPalette(settings.priorities, priorityUpserts(api))
   return { added: statuses.added + priorities.added, updated: statuses.updated + priorities.updated }
@@ -195,7 +198,7 @@ export function importTaskNotesPalettes(api: TaskNotesApi, settings: PMSettings)
 /** What `importTaskNotesPalettes` would change right now, without changing anything. */
 export function countTaskNotesPaletteChanges(
   api: TaskNotesApi,
-  settings: PMSettings
+  settings: LowLevelKanbanSettings
 ): { added: number; updated: number } {
   const statuses = countPaletteChanges(settings.statuses, statusUpserts(api))
   const priorities = countPaletteChanges(settings.priorities, priorityUpserts(api))

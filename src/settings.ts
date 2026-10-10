@@ -1,8 +1,8 @@
 import { App, Notice, PluginSettingTab, Setting, debounce } from 'obsidian'
 import type { SettingDefinitionItem, SettingDefinitionPage } from 'obsidian'
-import type PMPlugin from './main'
+import type LowLevelKanbanPlugin from './main'
 import {
-  type PMSettings,
+  type LowLevelKanbanSettings,
   DEFAULT_PALETTE_COLOR,
   DEFAULT_SETTINGS,
   priorityIconSetLabels,
@@ -11,9 +11,9 @@ import {
   setDateFormat,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { saveShortcutLabel } from './utils'
-import { renderCustomFieldFields, renderCustomFieldOptions } from '@dotpm/ui'
+import { renderCustomFieldFields, renderCustomFieldOptions } from '@low-level-kanban/ui'
 import {
   countTaskNotesPaletteChanges,
   getTaskNotesApi,
@@ -23,15 +23,15 @@ import {
 import { renderPaletteFields, renderStatusDoneToggle } from './ui/PaletteListEditor'
 import { renderPersonPicker } from './ui/PersonPicker'
 
-export type { PMSettings }
+export type { LowLevelKanbanSettings }
 export { DEFAULT_SETTINGS }
 
-export class PMSettingTab extends PluginSettingTab {
-  plugin: PMPlugin
+export class LowLevelKanbanSettingTab extends PluginSettingTab {
+  plugin: LowLevelKanbanPlugin
   /** A folder name is typed one character at a time; each sweep costs the whole vault. */
   private readonly rebuildIndex: () => void
 
-  constructor(app: App, plugin: PMPlugin) {
+  constructor(app: App, plugin: LowLevelKanbanPlugin) {
     super(app, plugin)
     this.plugin = plugin
     this.icon = 'kanban'
@@ -253,7 +253,7 @@ export class PMSettingTab extends PluginSettingTab {
           items: statuses.map((status) => ({
             name: status.label,
             render: (setting: Setting) => {
-              setting.setClass('pm-palette-row')
+              setting.setClass('llk-palette-row')
               renderPaletteFields(setting.controlEl, status, () => this.persist())
               renderStatusDoneToggle(setting.controlEl, status, () => this.persist())
             }
@@ -294,8 +294,8 @@ export class PMSettingTab extends PluginSettingTab {
           items: fields.map((field) => ({
             name: field.name,
             render: (setting: Setting) => {
-              setting.setClass('pm-palette-row')
-              setting.setClass('pm-cf-settings-row')
+              setting.setClass('llk-palette-row')
+              setting.setClass('llk-cf-settings-row')
               renderCustomFieldFields(
                 setting.controlEl,
                 field,
@@ -339,7 +339,7 @@ export class PMSettingTab extends PluginSettingTab {
           items: priorities.map((priority) => ({
             name: priority.label,
             render: (setting: Setting) => {
-              setting.setClass('pm-palette-row')
+              setting.setClass('llk-palette-row')
               renderPaletteFields(setting.controlEl, priority, () => this.persist())
             }
           })),
@@ -420,7 +420,7 @@ export class PMSettingTab extends PluginSettingTab {
           items: folders.map((folder, index) => ({
             name: folder || t('settings.excludedFolders.unnamed'),
             render: (setting: Setting) => {
-              setting.setClass('pm-palette-row')
+              setting.setClass('llk-palette-row')
               setting.addText((text) =>
                 text
                   .setPlaceholder(t('settings.excludedFolders.placeholder'))

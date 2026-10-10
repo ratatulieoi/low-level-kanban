@@ -1,5 +1,5 @@
 import { ButtonComponent, Menu, Component, ItemView, MarkdownRenderer, WorkspaceLeaf } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { addTabPageItems, refreshTabTitle } from '#ui/tab'
 import {
   type Project,
@@ -19,7 +19,7 @@ import {
   dueUrgency,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { personKeyer, type ProjectRef } from '#store'
 import {
   safeAsync,
@@ -34,11 +34,11 @@ import {
   renderTagChip,
   renderTimeChip,
   renderGlyph
-} from '@dotpm/ui'
+} from '@low-level-kanban/ui'
 import { openTaskModal } from '#ui/ModalFactory'
 import { linkedRefs } from './linkedRefs'
 
-export const PM_PROJECT_OVERVIEW_VIEW_TYPE = 'pm-project-overview'
+import { LLK_PROJECT_OVERVIEW_VIEW_TYPE } from './viewTypes'
 
 export interface ProjectOverviewState {
   filePath?: string
@@ -57,7 +57,7 @@ interface Rollup {
 }
 
 export class ProjectOverviewView extends ItemView {
-  plugin: PMPlugin
+  plugin: LowLevelKanbanPlugin
   private state: ProjectOverviewState = {}
   private project: Project | null = null
   private description = new Component()
@@ -65,14 +65,14 @@ export class ProjectOverviewView extends ItemView {
   /** Parent and sub-projects as last drawn, so an unrelated index change doesn't repaint. */
   private treeSignature = ''
 
-  constructor(leaf: WorkspaceLeaf, plugin: PMPlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: LowLevelKanbanPlugin) {
     super(leaf)
     this.plugin = plugin
     this.navigation = false
   }
 
   getViewType(): string {
-    return PM_PROJECT_OVERVIEW_VIEW_TYPE
+    return LLK_PROJECT_OVERVIEW_VIEW_TYPE
   }
   getDisplayText(): string {
     return this.project?.title ?? t('common.project')
@@ -100,10 +100,10 @@ export class ProjectOverviewView extends ItemView {
   }
 
   onOpen(): Promise<void> {
-    this.containerEl.addClass('pm-view')
+    this.containerEl.addClass('llk-view')
     this.contentEl.empty()
-    this.contentEl.addClass('pm-root')
-    this.container = this.contentEl.createDiv('pm-overview')
+    this.contentEl.addClass('llk-root')
+    this.container = this.contentEl.createDiv('llk-overview')
     this.register(
       this.plugin.store.onProjectChanged((path) => {
         if (path !== this.project?.filePath) return
@@ -157,9 +157,9 @@ export class ProjectOverviewView extends ItemView {
     this.renderBreadcrumbs(project)
     this.renderArchivedBanner(project)
     this.renderHeader(project, rollup)
-    const grid = this.container.createDiv('pm-overview-grid')
-    const main = grid.createDiv('pm-overview-main')
-    const side = grid.createDiv('pm-overview-side')
+    const grid = this.container.createDiv('llk-overview-grid')
+    const main = grid.createDiv('llk-overview-main')
+    const side = grid.createDiv('llk-overview-side')
 
     this.renderMetrics(main, project, rollup)
     this.renderDescription(main, project)
@@ -184,7 +184,7 @@ export class ProjectOverviewView extends ItemView {
 
   private renderArchivedBanner(project: Project): void {
     if (!this.plugin.index.isArchived(project.filePath)) return
-    const banner = this.container.createDiv('pm-overview-banner')
+    const banner = this.container.createDiv('llk-overview-banner')
     const ancestor = this.plugin.index.ancestorRefs(project.filePath).find((ref) => ref.archived)
     banner.createSpan({
       text:
@@ -200,18 +200,18 @@ export class ProjectOverviewView extends ItemView {
   }
 
   private renderHeader(project: Project, rollup: Rollup): void {
-    const header = this.container.createDiv('pm-overview-header')
-    const tile = header.createDiv({ cls: 'pm-overview-icon' })
-    tile.style.setProperty('--pm-overview-tint', project.color)
+    const header = this.container.createDiv('llk-overview-header')
+    const tile = header.createDiv({ cls: 'llk-overview-icon' })
+    tile.style.setProperty('--llk-overview-tint', project.color)
     renderGlyph(tile, { icon: project.icon, color: project.color })
 
-    const identity = header.createDiv('pm-overview-identity')
-    identity.createDiv({ cls: 'pm-overview-title', text: project.title })
+    const identity = header.createDiv('llk-overview-identity')
+    identity.createDiv({ cls: 'llk-overview-title', text: project.title })
     const children = this.children(project).length
     const bits = [tn('overview.tasksDone', rollup.total, { done: rollup.done })]
     if (children) bits.push(tn('overview.subProjects', children))
     if (project.teamMembers.length) bits.push(tn('overview.members', project.teamMembers.length))
-    identity.createDiv({ cls: 'pm-overview-subline', text: bits.join(' · ') })
+    identity.createDiv({ cls: 'llk-overview-subline', text: bits.join(' · ') })
 
     if (!this.plugin.index.isArchived(project.filePath)) {
       new ButtonComponent(header)
@@ -232,10 +232,10 @@ export class ProjectOverviewView extends ItemView {
   }
 
   private section(parent: HTMLElement, title: string, note = ''): HTMLElement {
-    const section = parent.createDiv('pm-overview-section')
-    const head = section.createDiv('pm-overview-section-head')
-    head.createSpan({ cls: 'pm-section-label', text: title })
-    if (note) head.createSpan({ cls: 'pm-overview-note', text: note })
+    const section = parent.createDiv('llk-overview-section')
+    const head = section.createDiv('llk-overview-section-head')
+    head.createSpan({ cls: 'llk-section-label', text: title })
+    if (note) head.createSpan({ cls: 'llk-overview-note', text: note })
     return section
   }
 
@@ -245,14 +245,14 @@ export class ProjectOverviewView extends ItemView {
       chain.unshift(ref)
     }
     if (chain.length === 0) return
-    const bar = this.container.createDiv('pm-overview-crumbs')
+    const bar = this.container.createDiv('llk-overview-crumbs')
     for (const crumb of chain) {
-      const link = bar.createSpan({ cls: 'pm-overview-crumb', text: crumb.title })
+      const link = bar.createSpan({ cls: 'llk-overview-crumb', text: crumb.title })
       link.addEventListener(
         'click',
         safeAsync(() => this.plugin.router.openProjectOverview(crumb.path))
       )
-      bar.createSpan({ cls: 'pm-overview-crumb-sep', text: '/' })
+      bar.createSpan({ cls: 'llk-overview-crumb-sep', text: '/' })
     }
     bar.createSpan({ text: project.title })
   }
@@ -293,7 +293,7 @@ export class ProjectOverviewView extends ItemView {
 
   private renderDescription(parent: HTMLElement, project: Project): void {
     const section = this.section(parent, t('common.description'))
-    const body = section.createDiv('pm-overview-description')
+    const body = section.createDiv('llk-overview-description')
     void this.hydrateDescription(project, body)
   }
 
@@ -302,7 +302,7 @@ export class ProjectOverviewView extends ItemView {
     if (!host.isConnected) return
     host.empty()
     if (!project.description.trim()) {
-      host.createDiv({ cls: 'pm-overview-muted', text: t('overview.noDescription') })
+      host.createDiv({ cls: 'llk-overview-muted', text: t('overview.noDescription') })
       return
     }
     this.description.unload()
@@ -321,14 +321,14 @@ export class ProjectOverviewView extends ItemView {
     const note = milestones.length ? t('overview.milestonesDone', { done, total: milestones.length }) : ''
     const section = this.section(parent, t('overview.milestones'), note)
     if (milestones.length === 0) {
-      section.createDiv({ cls: 'pm-overview-muted', text: t('overview.noMilestones') })
+      section.createDiv({ cls: 'llk-overview-muted', text: t('overview.noMilestones') })
       return
     }
 
     for (const task of milestones) {
-      const row = section.createDiv('pm-overview-child')
-      renderGlyph(row.createSpan({ cls: 'pm-overview-child-icon' }), { icon: 'diamond', color: project.color })
-      row.createEl('a', { cls: 'pm-overview-child-title', text: task.title, href: '#' })
+      const row = section.createDiv('llk-overview-child')
+      renderGlyph(row.createSpan({ cls: 'llk-overview-child-icon' }), { icon: 'diamond', color: project.color })
+      row.createEl('a', { cls: 'llk-overview-child-title', text: task.title, href: '#' })
       row.addEventListener('click', (event) => {
         event.preventDefault()
         openTaskModal(this.plugin, project, { task, onSave: () => this.render() })
@@ -348,9 +348,9 @@ export class ProjectOverviewView extends ItemView {
     const section = this.section(parent, t('overview.subProjectsHeading'))
     for (const child of children) {
       const { total, done } = this.plugin.index.rollupCounts(child)
-      const row = section.createDiv('pm-overview-child')
-      renderGlyph(row.createSpan({ cls: 'pm-overview-child-icon' }), { icon: child.icon, color: child.color })
-      row.createSpan({ cls: 'pm-overview-child-title', text: child.title })
+      const row = section.createDiv('llk-overview-child')
+      renderGlyph(row.createSpan({ cls: 'llk-overview-child-icon' }), { icon: child.icon, color: child.color })
+      row.createSpan({ cls: 'llk-overview-child-title', text: child.title })
       if (this.plugin.index.isArchived(child.path)) {
         new Chip(row).setLabel(t('common.archived')).setVariant('outline').setSize('sm')
       }
@@ -359,7 +359,7 @@ export class ProjectOverviewView extends ItemView {
         .setValue(total ? (done / total) * 100 : 0)
         .setColor(child.color)
         .setShowLabel(true)
-      row.createSpan({ cls: 'pm-overview-child-count', text: `${done}/${total}` })
+      row.createSpan({ cls: 'llk-overview-child-count', text: `${done}/${total}` })
       row.addEventListener(
         'click',
         safeAsync(() => this.plugin.router.openProjectLink(child.path))
@@ -369,11 +369,11 @@ export class ProjectOverviewView extends ItemView {
 
   private renderProperties(parent: HTMLElement, project: Project, tasks: Task[], rollup: Rollup): void {
     const section = this.section(parent, t('overview.properties'))
-    const list = section.createDiv('pm-overview-props')
+    const list = section.createDiv('llk-overview-props')
     const prop = (label: string, empty: boolean, emptyText: string, fill: (value: HTMLElement) => void): void => {
       renderPropRow(list, label, () => {
-        const value = createDiv('pm-prop-value')
-        if (empty) value.createSpan({ cls: 'pm-overview-muted', text: emptyText })
+        const value = createDiv('llk-prop-value')
+        if (empty) value.createSpan({ cls: 'llk-overview-muted', text: emptyText })
         else fill(value)
         return value
       })
@@ -381,7 +381,7 @@ export class ProjectOverviewView extends ItemView {
 
     const people = (value: HTMLElement, values: string[]): void => {
       for (const person of linkedRefs(this.app, values, project.filePath)) {
-        const holder = value.createSpan({ cls: 'pm-overview-member' })
+        const holder = value.createSpan({ cls: 'llk-overview-member' })
         const avatar = new Avatar(holder).setColor(person.color).setName(person.name).setSize('sm')
         if (person.unresolved) avatar.setUnresolved(true)
         if (person.onClick) avatar.onClick(person.onClick)
@@ -397,7 +397,7 @@ export class ProjectOverviewView extends ItemView {
     prop(t('taskForm.tags'), tags.length === 0, t('overview.noTags'), (value) => {
       for (const tag of tags.slice(0, MAX_TAGS)) renderTagChip(value, tag, this.plugin.settings.showTagColors)
       if (tags.length > MAX_TAGS) {
-        value.createSpan({ cls: 'pm-overview-muted', text: `+${tags.length - MAX_TAGS}` })
+        value.createSpan({ cls: 'llk-overview-muted', text: `+${tags.length - MAX_TAGS}` })
       }
     })
 
@@ -412,7 +412,7 @@ export class ProjectOverviewView extends ItemView {
     const parentRef = this.plugin.index.parentOf(project.filePath)
     prop(t('project.parent'), !parentRef, t('common.noParent'), (value) => {
       if (!parentRef) return
-      const link = value.createSpan({ cls: 'pm-overview-crumb', text: parentRef.title })
+      const link = value.createSpan({ cls: 'llk-overview-crumb', text: parentRef.title })
       link.addEventListener(
         'click',
         safeAsync(() => this.plugin.router.openProjectOverview(parentRef.path))
@@ -427,11 +427,11 @@ export class ProjectOverviewView extends ItemView {
     const customFields = this.plugin.store.configFor(project).customFields
     if (customFields.length === 0) return
     const fields = this.section(parent, t('settings.customFields.name'))
-    const fieldList = fields.createDiv('pm-overview-props')
+    const fieldList = fields.createDiv('llk-overview-props')
     for (const field of customFields) {
       renderPropRow(fieldList, field.name, () => {
-        const value = createDiv('pm-prop-value')
-        value.createSpan({ cls: 'pm-overview-muted', text: field.type })
+        const value = createDiv('llk-prop-value')
+        value.createSpan({ cls: 'llk-overview-muted', text: field.type })
         return value
       })
     }

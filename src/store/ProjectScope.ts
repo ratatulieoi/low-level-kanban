@@ -12,7 +12,7 @@ import {
   flattenTasks,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import type { TaskSource } from './TaskSource'
 import type { VaultIndex } from './VaultIndex'
 

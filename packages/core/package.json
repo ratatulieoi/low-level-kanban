@@ -1,5 +1,5 @@
 {
-  "name": "@dotpm/core",
+  "name": "@low-level-kanban/core",
   "version": "0.2.0",
   "private": true,
   "description": "Project and task types, dates, filtering, scheduling and YAML serialization",

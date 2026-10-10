@@ -1,12 +1,18 @@
 import type { App } from 'obsidian'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { makeFakeApp } from '#test/fakeVault'
-import { DEFAULT_SETTINGS, makeTask, type PMSettings, type Project, type StatusConfig } from '@dotpm/core'
+import {
+  DEFAULT_SETTINGS,
+  makeTask,
+  type LowLevelKanbanSettings,
+  type Project,
+  type StatusConfig
+} from '@low-level-kanban/core'
 import { ProjectStore } from './ProjectStore'
 import { ProjectScope, resolveScopePaths, scopeKey, selectionSpec } from './ProjectScope'
 import { VaultIndex } from './VaultIndex'
 
-const SETTINGS: PMSettings = { ...DEFAULT_SETTINGS }
+const SETTINGS: LowLevelKanbanSettings = { ...DEFAULT_SETTINGS }
 
 const SHIPPED: StatusConfig[] = [{ id: 'shipped', label: 'Shipped', color: '#0a0', icon: '', complete: true }]
 

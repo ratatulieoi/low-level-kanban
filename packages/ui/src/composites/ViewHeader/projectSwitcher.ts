@@ -3,7 +3,7 @@ import { Checkbox } from '#primitives/Checkbox'
 import { ChipButton } from '#primitives/ChipButton'
 import { CollapseToggle } from '#primitives/CollapseToggle'
 import { Popover } from '#primitives/Popover'
-import { t, tn } from '@dotpm/core'
+import { t, tn } from '@low-level-kanban/core'
 import { renderPopSearch } from '../popoverParts'
 import { renderOptionRow } from '../properties/optionList'
 
@@ -91,9 +91,9 @@ export function renderProjectSwitcherPanel(
     ...[...selected].filter((path) => !before.includes(path))
   ]
 
-  const root = parent.createDiv('pm-switcher')
+  const root = parent.createDiv('llk-switcher')
   const search = renderPopSearch(root, t('header.findProject'), () => renderList())
-  const presets = root.createDiv('pm-switcher-presets')
+  const presets = root.createDiv('llk-switcher-presets')
   for (const preset of props.presets) {
     new ChipButton(presets)
       .setVariant('outline')
@@ -104,9 +104,9 @@ export function renderProjectSwitcherPanel(
         end()
       })
   }
-  const list = root.createDiv('pm-pop-list pm-switcher-list')
-  const foot = root.createDiv('pm-switcher-foot pm-pop-section')
-  const summary = foot.createSpan('pm-switcher-summary')
+  const list = root.createDiv('llk-pop-list llk-switcher-list')
+  const foot = root.createDiv('llk-switcher-foot llk-pop-section')
+  const summary = foot.createSpan('llk-switcher-summary')
   const clear = new ChipButton(foot)
     .setVariant('flat')
     .setLabel(t('common.clear'))
@@ -139,8 +139,8 @@ export function renderProjectSwitcherPanel(
   }
 
   const renderRow = (project: SwitcherProject, depth: number, tree: boolean): void => {
-    const line = list.createDiv({ cls: 'pm-switcher-line', attr: { 'data-path': project.path } })
-    line.setCssProps({ '--pm-depth': String(depth) })
+    const line = list.createDiv({ cls: 'llk-switcher-line', attr: { 'data-path': project.path } })
+    line.setCssProps({ '--llk-depth': String(depth) })
     const box = new Checkbox(line)
       .setAriaLabel(t('header.showProject', { title: project.title }))
       .onChange(() => toggle(project.path))
@@ -154,7 +154,7 @@ export function renderProjectSwitcherPanel(
         onToggle: () => setExpanded(project.path, !isOpen)
       })
     } else {
-      line.createSpan('pm-switcher-gap')
+      line.createSpan('llk-switcher-gap')
     }
     const row = renderOptionRow(line, {
       label: project.title,
@@ -171,7 +171,7 @@ export function renderProjectSwitcherPanel(
         end()
       }
     })
-    row.addClass('pm-switcher-row')
+    row.addClass('llk-switcher-row')
     if (!isOpen) return
     for (const child of kids) renderRow(child, depth + 1, true)
   }
@@ -192,10 +192,10 @@ export function renderProjectSwitcherPanel(
       else folders.set(project.folder, [project])
     }
     for (const [folder, projects] of folders) {
-      list.createDiv({ cls: 'pm-pop-heading', text: folder || t('scope.vault') })
+      list.createDiv({ cls: 'llk-pop-heading', text: folder || t('scope.vault') })
       for (const project of projects) renderRow(project, 0, !query)
     }
-    if (!shown.length) list.createDiv({ cls: 'pm-pop-empty', text: t('header.noProjectMatch') })
+    if (!shown.length) list.createDiv({ cls: 'llk-pop-empty', text: t('header.noProjectMatch') })
     sync()
   }
 
@@ -203,10 +203,10 @@ export function renderProjectSwitcherPanel(
     if (open) expanded.add(path)
     else expanded.delete(path)
     renderList()
-    list.find(`[data-path="${CSS.escape(path)}"] button.pm-switcher-row`)?.focus()
+    list.find(`[data-path="${CSS.escape(path)}"] button.llk-switcher-row`)?.focus()
   }
 
-  const rows = (): HTMLButtonElement[] => list.findAll('button.pm-switcher-row') as HTMLButtonElement[]
+  const rows = (): HTMLButtonElement[] => list.findAll('button.llk-switcher-row') as HTMLButtonElement[]
   root.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
@@ -221,7 +221,7 @@ export function renderProjectSwitcherPanel(
       return
     }
     if (at === -1) return
-    const path = all[at].closest<HTMLElement>('.pm-switcher-line')?.dataset.path
+    const path = all[at].closest<HTMLElement>('.llk-switcher-line')?.dataset.path
     if (!path) return
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
@@ -255,6 +255,6 @@ export function openProjectSwitcher(anchor: HTMLElement, props: ProjectSwitcherP
   const pop = Popover.show({ anchor, width: 320, onClose }, (el, close) => {
     applyOnClose = renderProjectSwitcherPanel(el, props, close)
   })
-  pop.contentEl.find('input.pm-pop-field')?.focus()
+  pop.contentEl.find('input.llk-pop-field')?.focus()
   return pop
 }

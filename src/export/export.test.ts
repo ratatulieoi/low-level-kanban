@@ -1,30 +1,48 @@
 import type { App } from 'obsidian'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { DEFAULT_SETTINGS, makeDefaultFilter, makeDefaultGroup, makeTask, type PMSettings } from '@dotpm/core'
-import { isSnapshot, normalizeSnapshot, tasksFromResources, type Snapshot } from '@dotpm/snapshot'
+import {
+  DEFAULT_SETTINGS,
+  makeDefaultFilter,
+  makeDefaultGroup,
+  makeTask,
+  type LowLevelKanbanSettings
+} from '@low-level-kanban/core'
+import {
+  isSnapshot,
+  normalizeSnapshot,
+  tasksFromResources,
+  type ReadableSnapshot,
+  type Snapshot
+} from '@low-level-kanban/snapshot'
 import { makeFakeApp } from '#test/fakeVault'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { ProjectScope } from '#store/ProjectScope'
 import { ProjectStore } from '#store/ProjectStore'
 import { VaultIndex } from '#store/VaultIndex'
 import { renderSnapshotHtml } from './html'
 import { buildSnapshot, type ExportViewState } from './snapshot'
 
-const SETTINGS: PMSettings = { ...DEFAULT_SETTINGS, autoSchedule: false }
+const SETTINGS: LowLevelKanbanSettings = { ...DEFAULT_SETTINGS, autoSchedule: false }
 const TEMPLATE =
-  '<html lang="__DOTPM_LOCALE__"><title>__DOTPM_TITLE__</title><script id="s" type="application/json">__DOTPM_SNAPSHOT__</script>'
+  '<html lang="__LOW_LEVEL_KANBAN_LOCALE__"><title>__LOW_LEVEL_KANBAN_TITLE__</title><script id="low-level-kanban-snapshot" type="application/json">__LOW_LEVEL_KANBAN_SNAPSHOT__</script>'
 
-function fakePlugin(): { plugin: PMPlugin; store: ProjectStore; index: VaultIndex } {
+function fakePlugin(): { plugin: LowLevelKanbanPlugin; store: ProjectStore; index: VaultIndex } {
   const { app } = makeFakeApp({ liveMetadataCache: true })
   const typed = app as unknown as App
   const index = new VaultIndex(typed, () => SETTINGS)
   const store = new ProjectStore(typed, () => SETTINGS, index)
-  const plugin = { app: typed, index, store, settings: SETTINGS, manifest: { version: '9.9.9' } } as unknown as PMPlugin
+  const plugin = {
+    app: typed,
+    index,
+    store,
+    settings: SETTINGS,
+    manifest: { version: '9.9.9' }
+  } as unknown as LowLevelKanbanPlugin
   return { plugin, store, index }
 }
 
 describe('buildSnapshot', () => {
-  let plugin: PMPlugin
+  let plugin: LowLevelKanbanPlugin
   let scope: ProjectScope
 
   beforeEach(async () => {
@@ -58,7 +76,8 @@ describe('buildSnapshot', () => {
     })
     expect(isSnapshot(snapshot)).toBe(true)
     expect(snapshot.title).toBe('Roadmap <b>')
-    expect(snapshot.generator).toEqual({ name: 'dotpm', version: '9.9.9' })
+    expect(snapshot.format).toBe('low-level-kanban-snapshot')
+    expect(snapshot.generator).toEqual({ name: 'Low Level Kanban', version: '9.9.9' })
     expect(snapshot.view).toMatchObject({
       mode: 'kanban',
       sort: [{ key: 'due', dir: 'desc' }],
@@ -155,7 +174,17 @@ describe('renderSnapshotHtml', () => {
       lineBorders: 'none',
       dateFormat: ''
     }
-  } as Snapshot
+  } as ReadableSnapshot
+
+  it('re-exports a legacy snapshot with the new format, generator and script ID', () => {
+    const html = renderSnapshotHtml(snapshot, TEMPLATE)
+    expect(html).toContain('id="low-level-kanban-snapshot"')
+    expect(html).toContain('"format":"low-level-kanban-snapshot"')
+    expect(html).toContain('"generator":{"name":"Low Level Kanban","version":"0"}')
+    expect(html).not.toContain('dotpm')
+    expect(html).not.toContain('__LOW_LEVEL_KANBAN_')
+    expect(snapshot.format).toBe('dotpm-snapshot')
+  })
 
   it('escapes the title and keeps task text from closing the script tag', () => {
     const html = renderSnapshotHtml({ ...snapshot, title: 'A & <B> </script><script>alert(1)' }, TEMPLATE)

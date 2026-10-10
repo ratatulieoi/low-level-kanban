@@ -15,27 +15,27 @@ export interface PopHeadProps {
 
 /** The heading row of a popover panel or of one of its sections. */
 export function renderPopHead(parent: HTMLElement, props: PopHeadProps): HTMLElement {
-  const head = parent.createDiv('pm-pop-head')
-  head.toggleClass('pm-pop-section', !!props.section)
+  const head = parent.createDiv('llk-pop-head')
+  head.toggleClass('llk-pop-section', !!props.section)
   const { back, action } = props
   const isTitle = props.variant === 'title'
-  head.toggleClass('pm-pop-head--title', isTitle)
+  head.toggleClass('llk-pop-head--title', isTitle)
   if (back) new IconButton(head).setIcon('chevron-left').setTooltip(back.label).onClick(back.onClick)
-  head.createSpan({ cls: isTitle ? 'pm-pop-title' : 'pm-pop-heading', text: props.title })
+  head.createSpan({ cls: isTitle ? 'llk-pop-title' : 'llk-pop-heading', text: props.title })
   if (action) {
     new ChipButton(head)
       .setVariant('flat')
       .setLabel(action.label)
       .setDisabled(!!action.disabled)
       .onClick(action.onClick)
-      .el.addClass('pm-pop-head-action')
+      .el.addClass('llk-pop-head-action')
   }
   return head
 }
 
 /** The search field at the top of a popover list; `onInput` runs on every keystroke. */
 export function renderPopSearch(parent: HTMLElement, placeholder: string, onInput: () => void): HTMLInputElement {
-  const input = parent.createEl('input', { cls: 'pm-pop-field', attr: { placeholder, spellcheck: 'false' } })
+  const input = parent.createEl('input', { cls: 'llk-pop-field', attr: { placeholder, spellcheck: 'false' } })
   input.addEventListener('input', onInput)
   return input
 }

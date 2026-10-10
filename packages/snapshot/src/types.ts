@@ -1,4 +1,11 @@
-import type { CustomFieldDef, PriorityConfig, Recurrence, StatusConfig, TaskType, TimeLog } from '@dotpm/core'
+import type {
+  CustomFieldDef,
+  PriorityConfig,
+  Recurrence,
+  StatusConfig,
+  TaskType,
+  TimeLog
+} from '@low-level-kanban/core'
 
 /** Project metadata and counts captured in an exported view. */
 export interface ProjectSummary {

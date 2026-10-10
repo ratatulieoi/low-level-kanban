@@ -11,7 +11,7 @@ import {
   locale,
   PRIORITY_ICON_SETS,
   stringifyCustomValue
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import {
   SNAPSHOT_FORMAT,
   SNAPSHOT_VERSION,
@@ -20,8 +20,8 @@ import {
   type ProjectSummary,
   type Snapshot,
   type SnapshotProject
-} from '@dotpm/snapshot'
-import type PMPlugin from '#main'
+} from '@low-level-kanban/snapshot'
+import type LowLevelKanbanPlugin from '#main'
 import { personColor, type ProjectScope } from '#store'
 
 export interface ExportViewState {
@@ -47,7 +47,7 @@ const CHROME_ICONS = [
   'repeat'
 ]
 
-function summarize(plugin: PMPlugin, project: Project): ProjectSummary {
+function summarize(plugin: LowLevelKanbanPlugin, project: Project): ProjectSummary {
   const complete = new Set(
     plugin.store
       .configFor(project)
@@ -79,7 +79,7 @@ function iconMarkup(names: Iterable<string>): Record<string, string> {
 }
 
 /** Keyed by the value as the task stores it, which is what the page's views look up. */
-function personColors(plugin: PMPlugin, projects: Project[]): Record<string, string> {
+function personColors(plugin: LowLevelKanbanPlugin, projects: Project[]): Record<string, string> {
   const colors: Record<string, string> = {}
   for (const project of projects) {
     const personFields = plugin.store.configFor(project).customFields.filter((field) => field.type === 'person')
@@ -98,7 +98,11 @@ function personColors(plugin: PMPlugin, projects: Project[]): Record<string, str
   return colors
 }
 
-export async function buildSnapshot(plugin: PMPlugin, scope: ProjectScope, view: ExportViewState): Promise<Snapshot> {
+export async function buildSnapshot(
+  plugin: LowLevelKanbanPlugin,
+  scope: ProjectScope,
+  view: ExportViewState
+): Promise<Snapshot> {
   const primary = scope.primary
   if (!primary) throw new Error('nothing to export: the scope holds no project')
 
@@ -123,7 +127,7 @@ export async function buildSnapshot(plugin: PMPlugin, scope: ProjectScope, view:
   return {
     format: SNAPSHOT_FORMAT,
     version: SNAPSHOT_VERSION,
-    generator: { name: 'dotpm', version: plugin.manifest.version },
+    generator: { name: 'Low Level Kanban', version: plugin.manifest.version },
     exportedAt: new Date().toISOString(),
     locale: locale(),
     title: scope.label(),

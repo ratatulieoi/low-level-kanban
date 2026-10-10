@@ -3,7 +3,7 @@ import { makeReorderable } from '#dom'
 import type { ChipButton } from '#primitives/ChipButton'
 import { IconButton } from '#primitives/IconButton'
 import { Popover } from '#primitives/Popover'
-import { type SortDir, type SortKey, MAX_SORT_RULES, t } from '@dotpm/core'
+import { type SortDir, type SortKey, MAX_SORT_RULES, t } from '@low-level-kanban/core'
 import { renderPopHead } from '../popoverParts'
 import { renderOptionRow } from '../properties/optionList'
 
@@ -50,7 +50,7 @@ export function sortDirLabel<K extends string>(field: SortField<K>, dir: SortDir
  * and a remove button. Rows below the first break ties left by the ones above.
  */
 export function renderSortPanel<K extends string>(parent: HTMLElement, props: SortPopoverProps<K>): void {
-  const body = parent.createDiv('pm-sort-pop')
+  const body = parent.createDiv('llk-sort-pop')
   const { sort } = props
 
   const changed = (): void => {
@@ -71,17 +71,17 @@ export function renderSortPanel<K extends string>(parent: HTMLElement, props: So
       }
     })
 
-    if (!sort.length) body.createDiv({ cls: 'pm-pop-empty', text: t('header.noSort') })
+    if (!sort.length) body.createDiv({ cls: 'llk-pop-empty', text: t('header.noSort') })
 
     const rows: { el: HTMLElement; id: K }[] = []
     sort.forEach((rule, index) => {
-      const row = body.createDiv('pm-sort-row')
+      const row = body.createDiv('llk-sort-row')
       rows.push({ el: row, id: rule.key })
-      const grip = row.createSpan('pm-sort-grip')
+      const grip = row.createSpan('llk-sort-grip')
       setIcon(grip, 'grip-vertical')
-      row.createSpan({ cls: 'pm-sort-rank', text: String(index + 1) })
+      row.createSpan({ cls: 'llk-sort-rank', text: String(index + 1) })
 
-      const field = row.createEl('select', { cls: 'dropdown pm-sort-field' })
+      const field = row.createEl('select', { cls: 'dropdown llk-sort-field' })
       for (const option of props.fields) {
         if (option.id !== rule.key && sort.some((other) => other.key === option.id)) continue
         field.createEl('option', { value: option.id, text: option.label }).selected = option.id === rule.key
@@ -92,7 +92,7 @@ export function renderSortPanel<K extends string>(parent: HTMLElement, props: So
         changed()
       })
 
-      const dir = row.createEl('select', { cls: 'dropdown pm-sort-dir' })
+      const dir = row.createEl('select', { cls: 'dropdown llk-sort-dir' })
       const current = props.fields.find((option) => option.id === rule.key) ?? { id: rule.key, label: rule.key }
       for (const value of ['asc', 'desc'] as const) {
         dir.createEl('option', { value, text: sortDirLabel(current, value) }).selected = value === rule.dir
@@ -109,7 +109,7 @@ export function renderSortPanel<K extends string>(parent: HTMLElement, props: So
           sort.splice(index, 1)
           changed()
         })
-        .el.addClass('pm-sort-remove')
+        .el.addClass('llk-sort-remove')
     })
     makeReorderable(rows, (keys) => {
       const byKey = new Map(sort.map((rule) => [rule.key, rule]))
@@ -117,7 +117,7 @@ export function renderSortPanel<K extends string>(parent: HTMLElement, props: So
       changed()
     })
 
-    const foot = body.createDiv('pm-sort-pop-foot pm-pop-section')
+    const foot = body.createDiv('llk-sort-pop-foot llk-pop-section')
     const unused = props.fields.find((option) => !sort.some((rule) => rule.key === option.id))
     const add = renderOptionRow(foot, {
       label: t('header.addSortKey'),
@@ -129,10 +129,10 @@ export function renderSortPanel<K extends string>(parent: HTMLElement, props: So
         changed()
       }
     })
-    add.addClass('pm-sort-add')
+    add.addClass('llk-sort-add')
     add.disabled = !unused || sort.length >= MAX_SORT_RULES
     foot.createSpan({
-      cls: 'pm-sort-pop-count',
+      cls: 'llk-sort-pop-count',
       text: t('header.sortCount', { count: sort.length, max: MAX_SORT_RULES })
     })
   }

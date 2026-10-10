@@ -1,7 +1,7 @@
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { createPersonLink, personCandidates, personColor, personKeyer, type PersonCandidate } from '#store'
-import { renderMultiSelect } from '@dotpm/ui'
-import { dedupePeople, displayName, t } from '@dotpm/core'
+import { renderMultiSelect } from '@low-level-kanban/ui'
+import { dedupePeople, displayName, t } from '@low-level-kanban/core'
 
 export interface PeopleSource {
   /** Offered before the user types. */
@@ -14,7 +14,11 @@ export interface PeopleSource {
  * The people every picker offers: the global members plus whatever the caller already knows
  * about, one entry per person, then the vault's person notes once the user types.
  */
-export function peopleSource(plugin: PMPlugin, sourcePath: string, extra: () => string[] = () => []): PeopleSource {
+export function peopleSource(
+  plugin: LowLevelKanbanPlugin,
+  sourcePath: string,
+  extra: () => string[] = () => []
+): PeopleSource {
   return {
     known: () => dedupePeople([...extra(), ...plugin.settings.globalTeamMembers], personKeyer(plugin.app)),
     search: (query) => personCandidates(plugin.app, plugin.settings.peopleFolder, query, sourcePath)
@@ -23,7 +27,7 @@ export function peopleSource(plugin: PMPlugin, sourcePath: string, extra: () => 
 
 export interface PersonPickerOpts {
   container: HTMLElement
-  plugin: PMPlugin
+  plugin: LowLevelKanbanPlugin
   /** The note the picked value is written into, so its link resolves from there. */
   sourcePath: string
   /** People to offer besides the global members and the current value. */

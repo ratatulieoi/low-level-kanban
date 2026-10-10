@@ -1,5 +1,5 @@
 import { normalizePath, TFile, type App } from 'obsidian'
-import { displayName, readColor } from '@dotpm/core'
+import { displayName, readColor } from '@low-level-kanban/core'
 import { ensureFolder, resolveVaultLink } from './vaultFs'
 
 /** How a stored assignee value relates to the vault. */

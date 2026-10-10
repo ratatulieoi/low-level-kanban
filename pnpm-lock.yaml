@@ -18,13 +18,13 @@ importers:
       '@2bad/tsconfig':
         specifier: 4.0.0
         version: 4.0.0(typescript@6.0.3)
-      '@dotpm/core':
+      '@low-level-kanban/core':
         specifier: workspace:*
         version: link:packages/core
-      '@dotpm/snapshot':
+      '@low-level-kanban/snapshot':
         specifier: workspace:*
         version: link:packages/snapshot
-      '@dotpm/ui':
+      '@low-level-kanban/ui':
         specifier: workspace:*
         version: link:packages/ui
       '@types/node':
@@ -84,25 +84,25 @@ importers:
 
   packages/snapshot:
     dependencies:
-      '@dotpm/core':
+      '@low-level-kanban/core':
         specifier: workspace:*
         version: link:../core
 
   packages/ui:
     dependencies:
-      '@dotpm/core':
+      '@low-level-kanban/core':
         specifier: workspace:*
         version: link:../core
 
   packages/viewer:
     devDependencies:
-      '@dotpm/core':
+      '@low-level-kanban/core':
         specifier: workspace:*
         version: link:../core
-      '@dotpm/snapshot':
+      '@low-level-kanban/snapshot':
         specifier: workspace:*
         version: link:../snapshot
-      '@dotpm/ui':
+      '@low-level-kanban/ui':
         specifier: workspace:*
         version: link:../ui
 

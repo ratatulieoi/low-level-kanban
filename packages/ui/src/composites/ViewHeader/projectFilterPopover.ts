@@ -1,5 +1,11 @@
 import { Popover } from '#primitives/Popover'
-import { type ProjectListFilter, type ProjectProgress, PROJECT_PROGRESS, countProjectFilters, t } from '@dotpm/core'
+import {
+  type ProjectListFilter,
+  type ProjectProgress,
+  PROJECT_PROGRESS,
+  countProjectFilters,
+  t
+} from '@low-level-kanban/core'
 import { renderPopHead } from '../popoverParts'
 import { renderOptionRow } from '../properties/optionList'
 
@@ -23,7 +29,7 @@ const progressLabel = (stage: ProjectProgress): string =>
 
 /** The project list's filter: a checklist of progress stages and one of tags, each with its project count. */
 export function renderProjectFilterPanel(parent: HTMLElement, props: ProjectFilterProps): void {
-  const body = parent.createDiv('pm-project-filter')
+  const body = parent.createDiv('llk-project-filter')
   const { filter } = props
 
   /** `list` with `value` added, or taken out when it was there; undefined once empty. */
@@ -68,7 +74,7 @@ export function renderProjectFilterPanel(parent: HTMLElement, props: ProjectFilt
     }
 
     renderPopHead(body, { title: t('taskForm.tags'), section: true })
-    if (!props.tags.length) body.createDiv({ cls: 'pm-pop-empty', text: t('projectFilter.noTags') })
+    if (!props.tags.length) body.createDiv({ cls: 'llk-pop-empty', text: t('projectFilter.noTags') })
     for (const { tag, count } of props.tags) {
       renderOptionRow(body, {
         label: `#${tag}`,

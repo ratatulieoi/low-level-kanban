@@ -9,7 +9,7 @@ import {
   getStatusConfig,
   getPriorityConfig,
   priorityIcon
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { formatBadgeText, isIconName } from './icons'
 import { Chip } from './primitives/Chip'
 
@@ -95,7 +95,7 @@ export function renderStatusDot(
   container: HTMLElement,
   status: TaskStatus,
   statuses: StatusConfig[],
-  cls = 'pm-subtask-dot'
+  cls = 'llk-subtask-dot'
 ): HTMLElement {
   const config = getStatusConfig(statuses, status)
   const dot = container.createSpan({ cls })

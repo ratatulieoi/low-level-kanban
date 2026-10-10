@@ -1,5 +1,5 @@
 import { ChipButton } from '#primitives/ChipButton'
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 
 export interface SavedViewSlotProps {
   /** Opens the saved views, anchored to the button. */
@@ -30,22 +30,22 @@ export class SavedViewSlot {
 
   constructor(parent: HTMLElement, props: SavedViewSlotProps) {
     this.button = new ChipButton(parent).setIcon('bookmark').setChevron(true).setAriaLabel(t('header.savedViews'))
-    this.button.el.addClass('pm-vh-saved-view')
-    this.button.el.createSpan({ cls: 'pm-dirty-dot', attr: { 'aria-hidden': 'true' } })
+    this.button.el.addClass('llk-vh-saved-view')
+    this.button.el.createSpan({ cls: 'llk-dirty-dot', attr: { 'aria-hidden': 'true' } })
     this.button.onClick(() => props.onOpen(this.button.el))
     this.save = new ChipButton(parent)
       .setLabel(t('header.saveChanges'))
       .setTooltip(t('header.updateView'))
       .onClick(props.onSave)
-    this.save.el.addClass('pm-vh-save-view')
-    this.countEl = parent.createSpan('pm-vh-count')
+    this.save.el.addClass('llk-vh-save-view')
+    this.countEl = parent.createSpan('llk-vh-count')
   }
 
   sync(state: SavedViewSlotState): this {
     this.button.setLabel(state.name).setTooltip(state.name)
-    this.button.el.toggleClass('pm-vh-saved-view--none', !state.saved)
-    this.button.el.toggleClass('pm-vh-saved-view--dirty', state.dirty)
-    this.save.el.toggleClass('pm-hidden', !state.dirty)
+    this.button.el.toggleClass('llk-vh-saved-view--none', !state.saved)
+    this.button.el.toggleClass('llk-vh-saved-view--dirty', state.dirty)
+    this.save.el.toggleClass('llk-hidden', !state.dirty)
     this.countEl.setText(state.count)
     return this
   }

@@ -65,7 +65,7 @@ export default defineConfig({
           {
             paths: [
               { name: 'obsidian', message: 'packages must stay free of the Obsidian API' },
-              { name: '@dotpm/ui', message: 'core must not depend on ui' }
+              { name: '@low-level-kanban/ui', message: 'core must not depend on ui' }
             ]
           }
         ]

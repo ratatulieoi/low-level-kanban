@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PRIORITIES, DEFAULT_STATUSES, makeProject, makeTask, type ResolvedProjectConfig } from '@dotpm/core'
+import {
+  DEFAULT_PRIORITIES,
+  DEFAULT_STATUSES,
+  makeProject,
+  makeTask,
+  type ResolvedProjectConfig
+} from '@low-level-kanban/core'
 import { taskResources, toProjectResource, toTaskResource } from './resources'
 
 const CONFIG: ResolvedProjectConfig = {

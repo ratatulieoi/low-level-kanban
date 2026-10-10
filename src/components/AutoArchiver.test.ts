@@ -1,9 +1,17 @@
 import type { App } from 'obsidian'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { makeFakeApp } from '#test/fakeVault'
-import { today, findTask, DEFAULT_SETTINGS, makeTask, type PMSettings, type Project, type Task } from '@dotpm/core'
+import {
+  today,
+  findTask,
+  DEFAULT_SETTINGS,
+  makeTask,
+  type LowLevelKanbanSettings,
+  type Project,
+  type Task
+} from '@low-level-kanban/core'
 import { ProjectStore, VaultIndex } from '#store'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { AutoArchiver } from './AutoArchiver'
 
 const daysAgo = (days: number): string => today().subtract({ days }).toString()
@@ -12,7 +20,7 @@ describe('AutoArchiver', () => {
   let app: App
   let index: VaultIndex
   let store: ProjectStore
-  let settings: PMSettings
+  let settings: LowLevelKanbanSettings
   let notices: string[]
   let archiver: AutoArchiver
 
@@ -29,7 +37,7 @@ describe('AutoArchiver', () => {
       settings,
       showNotice: (msg: string) => notices.push(msg),
       saveSettings: () => Promise.resolve()
-    } as unknown as PMPlugin
+    } as unknown as LowLevelKanbanPlugin
     archiver = new AutoArchiver(plugin)
   })
 

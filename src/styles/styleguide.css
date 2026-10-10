@@ -1,36 +1,36 @@
 /* The view is compiled out of prod builds, but these rules still ship as dead CSS:
    Obsidian only loads one styles.css. */
 
-.pm-styleguide {
+.llk-styleguide {
   padding: var(--size-4-4);
   overflow-y: auto;
 }
 
-.pm-sg-group {
+.llk-sg-group {
   font-size: var(--font-ui-large);
   font-weight: 700;
   margin-top: var(--size-4-8);
 }
 
-.pm-sg-section {
+.llk-sg-section {
   margin-bottom: var(--size-4-6);
   padding-top: var(--size-4-4);
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.pm-sg-title {
+.llk-sg-title {
   font-size: var(--font-ui-small);
   font-weight: 600;
   margin-bottom: var(--size-4-2);
 }
 
-.pm-sg-caption {
+.llk-sg-caption {
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
   margin: var(--size-4-2) 0 var(--size-4-1);
 }
 
-.pm-sg-row {
+.llk-sg-row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -38,19 +38,19 @@
 }
 
 /* These normally take their width from a table cell or kanban column. */
-.pm-sg-row .pm-progress {
+.llk-sg-row .llk-progress {
   width: 160px;
 }
 
-.pm-sg-row .pm-kanban-card {
+.llk-sg-row .llk-kanban-card {
   width: 280px;
 }
 
-.pm-sg-narrow {
+.llk-sg-narrow {
   width: 300px;
 }
 
-.pm-sg-row > .pm-sg-pop {
+.llk-sg-row > .llk-sg-pop {
   position: static;
   align-self: flex-start;
   width: var(--pop-width);

@@ -1,7 +1,7 @@
 import { createMenu, isPhone, type PlatformMenu } from '#platform'
 import { showMenuBelow } from '#dom'
 import { ChipButton } from '#primitives/ChipButton'
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 import { openTunePopover, type TuneItem } from './tunePopover'
 import { openTuneSheet, type TuneSheetProps } from './tuneSheet'
 
@@ -13,11 +13,18 @@ import { openTuneSheet, type TuneSheetProps } from './tuneSheet'
  * only after the last one. The Tune levels are skipped when the view gives Tune nothing to
  * list, since it is where the folded controls, the mode included, are reached.
  */
-const COMPACT_LEVELS = ['pm-vh--icons', 'pm-vh--tuned', 'pm-vh--folded', 'pm-vh--tight', 'pm-vh--terse', 'pm-vh--bare']
-const TUNE_LEVELS = new Set(['pm-vh--tuned', 'pm-vh--bare'])
+const COMPACT_LEVELS = [
+  'llk-vh--icons',
+  'llk-vh--tuned',
+  'llk-vh--folded',
+  'llk-vh--tight',
+  'llk-vh--terse',
+  'llk-vh--bare'
+]
+const TUNE_LEVELS = new Set(['llk-vh--tuned', 'llk-vh--bare'])
 
 /** A phone lays the header out as two rows whatever its width, so nothing is measured there. */
-const PHONE_LEVELS = ['pm-vh--phone', 'pm-vh--folded', 'pm-vh--bare']
+const PHONE_LEVELS = ['llk-vh--phone', 'llk-vh--folded', 'llk-vh--bare']
 
 /**
  * The one row every task view shows, as fixed slots the orchestrator fills: context
@@ -48,14 +55,14 @@ export class ViewHeader {
   private readonly phone = isPhone()
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createDiv('pm-vh')
-    this.row = this.el.createDiv({ cls: 'pm-vh-row', attr: { role: 'toolbar' } })
-    this.context = this.row.createDiv('pm-vh-slot pm-vh-context')
-    this.view = this.row.createDiv('pm-vh-slot pm-vh-view')
-    this.row.createDiv('pm-vh-spacer')
-    this.query = this.row.createDiv('pm-vh-slot pm-vh-query')
-    this.options = this.row.createDiv('pm-vh-slot pm-vh-options')
-    const tuneSlot = this.row.createDiv('pm-vh-slot pm-vh-tune')
+    this.el = parentEl.createDiv('llk-vh')
+    this.row = this.el.createDiv({ cls: 'llk-vh-row', attr: { role: 'toolbar' } })
+    this.context = this.row.createDiv('llk-vh-slot llk-vh-context')
+    this.view = this.row.createDiv('llk-vh-slot llk-vh-view')
+    this.row.createDiv('llk-vh-spacer')
+    this.query = this.row.createDiv('llk-vh-slot llk-vh-query')
+    this.options = this.row.createDiv('llk-vh-slot llk-vh-options')
+    const tuneSlot = this.row.createDiv('llk-vh-slot llk-vh-tune')
     this.tune = new ChipButton(tuneSlot)
       .setIcon('sliders-horizontal')
       .setLabel('')
@@ -65,8 +72,8 @@ export class ViewHeader {
         if (this.phone && this.tuneSheet) openTuneSheet(this.tune.el, this.tuneSheet())
         else if (this.tuneItems) openTunePopover(this.tune.el, this.tuneItems())
       })
-    this.actions = this.row.createDiv('pm-vh-slot pm-vh-actions')
-    this.bar = this.el.createDiv('pm-vh-bar')
+    this.actions = this.row.createDiv('llk-vh-slot llk-vh-actions')
+    this.bar = this.el.createDiv('llk-vh-bar')
     this.observer = new ResizeObserver(() => this.fit())
     this.observer.observe(this.row)
     if (this.phone) this.el.addClasses(PHONE_LEVELS)
@@ -87,7 +94,7 @@ export class ViewHeader {
   /** Adds the phone's "More" button, whose menu `build` fills each time it opens. Ignored elsewhere. */
   setMoreMenu(build: (menu: PlatformMenu, anchor: HTMLElement) => void): this {
     if (!this.phone) return this
-    const more = new ChipButton(this.row.createDiv('pm-vh-slot pm-vh-more'))
+    const more = new ChipButton(this.row.createDiv('llk-vh-slot llk-vh-more'))
       .setIcon('ellipsis-vertical')
       .setLabel('')
       .setAriaLabel(t('header.more'))
@@ -103,13 +110,13 @@ export class ViewHeader {
   fit(): void {
     if (this.phone) return
     this.el.removeClasses(COMPACT_LEVELS)
-    this.el.addClass('pm-vh--measuring')
+    this.el.addClass('llk-vh--measuring')
     for (const level of COMPACT_LEVELS) {
       if (this.row.scrollWidth <= this.row.clientWidth) break
       if (TUNE_LEVELS.has(level) && !this.tuneItems) continue
       this.el.addClass(level)
     }
-    this.el.removeClass('pm-vh--measuring')
+    this.el.removeClass('llk-vh--measuring')
   }
 
   destroy(): void {

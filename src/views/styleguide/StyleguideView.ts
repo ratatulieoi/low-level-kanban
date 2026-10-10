@@ -1,5 +1,5 @@
 import { ButtonComponent, ItemView, WorkspaceLeaf } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { renderPanelSections } from './panelSections'
 import {
   type PriorityConfig,
@@ -12,7 +12,7 @@ import {
   makeDefaultFilter,
   makeTask,
   displayName
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import {
   renderDueChip,
   renderTagChip,
@@ -57,9 +57,9 @@ import {
   renderVisibilityList,
   SearchBox,
   ViewHeader
-} from '@dotpm/ui'
+} from '@low-level-kanban/ui'
 
-export const PM_STYLEGUIDE_VIEW_TYPE = 'pm-styleguide'
+import { LLK_STYLEGUIDE_VIEW_TYPE, registerViewWithLegacyAlias } from '../viewTypes'
 
 const noop = (): void => undefined
 const noopAsync = (): Promise<void> => Promise.resolve()
@@ -87,7 +87,7 @@ export class StyleguideView extends ItemView {
   }
 
   getViewType(): string {
-    return PM_STYLEGUIDE_VIEW_TYPE
+    return LLK_STYLEGUIDE_VIEW_TYPE
   }
   getDisplayText(): string {
     return 'Styleguide'
@@ -97,10 +97,10 @@ export class StyleguideView extends ItemView {
   }
 
   onOpen(): Promise<void> {
-    this.containerEl.addClass('pm-view')
+    this.containerEl.addClass('llk-view')
     const root = this.contentEl
     root.empty()
-    root.addClass('pm-root', 'pm-styleguide')
+    root.addClass('llk-root', 'llk-styleguide')
     this.group('Primitives')
     this.renderChips()
     this.renderChipButtons()
@@ -134,18 +134,18 @@ export class StyleguideView extends ItemView {
   }
 
   private group(title: string): void {
-    this.contentEl.createDiv({ cls: 'pm-sg-group', text: title })
+    this.contentEl.createDiv({ cls: 'llk-sg-group', text: title })
   }
 
   private section(title: string, id: string): HTMLElement {
-    const sec = this.contentEl.createDiv({ cls: 'pm-sg-section', attr: { 'data-sg': id } })
-    sec.createDiv({ cls: 'pm-sg-title', text: title })
+    const sec = this.contentEl.createDiv({ cls: 'llk-sg-section', attr: { 'data-sg': id } })
+    sec.createDiv({ cls: 'llk-sg-title', text: title })
     return sec
   }
 
   private row(sec: HTMLElement, caption: string): HTMLElement {
-    sec.createDiv({ cls: 'pm-sg-caption', text: caption })
-    return sec.createDiv('pm-sg-row')
+    sec.createDiv({ cls: 'llk-sg-caption', text: caption })
+    return sec.createDiv('llk-sg-row')
   }
 
   private renderChips(): void {
@@ -315,15 +315,15 @@ export class StyleguideView extends ItemView {
   private renderCustomFieldEditor(): void {
     const sec = this.section('CustomFieldListEditor', 'custom-fields')
     const inherited = this.row(sec, 'an inherited row, as the project edit page draws it')
-    const inheritedRow = inherited.createDiv('pm-cf-row pm-cf-row--inherited')
-    inheritedRow.createSpan({ cls: 'pm-cf-name', text: 'Client' })
-    inheritedRow.createSpan({ cls: 'pm-cf-type', text: customFieldTypeLabels().text })
-    inheritedRow.createSpan({ cls: 'pm-cf-source', text: 'from Platform' })
+    const inheritedRow = inherited.createDiv('llk-cf-row llk-cf-row--inherited')
+    inheritedRow.createSpan({ cls: 'llk-cf-name', text: 'Client' })
+    inheritedRow.createSpan({ cls: 'llk-cf-type', text: customFieldTypeLabels().text })
+    inheritedRow.createSpan({ cls: 'llk-cf-source', text: 'from Platform' })
     new IconButton(inheritedRow).setIcon('eye').setTooltip('Hide on this project').onClick(noop)
     new IconButton(inheritedRow).setIcon('pencil').setTooltip('Override on this project').onClick(noop)
 
     const editable = this.row(sec, 'renderCustomFieldListEditor: text and select')
-    renderCustomFieldListEditor(editable.createDiv('pm-cf-list'), {
+    renderCustomFieldListEditor(editable.createDiv('llk-cf-list'), {
       fields: [
         { id: 'cf-sprint', name: 'Sprint', type: 'text' },
         { id: 'cf-stage', name: 'Stage', type: 'select', options: ['Draft', 'Review'] }
@@ -376,7 +376,7 @@ export class StyleguideView extends ItemView {
     renderIconControl({ container: iconRow, value: 'circle-play', color: DEFAULT_STATUSES[1].color, onChange: noop })
     renderIconControl({ container: iconRow, value: '🚀', onChange: noop })
     renderIconControl({ container: iconRow, value: '', onChange: noop })
-    const glyphRow = this.row(sec, 'renderGlyph: named icon / emoji / color dot, sized by --pm-glyph-size')
+    const glyphRow = this.row(sec, 'renderGlyph: named icon / emoji / color dot, sized by --llk-glyph-size')
     renderGlyph(glyphRow, { icon: 'circle-play', color: DEFAULT_STATUSES[1].color })
     renderGlyph(glyphRow, { icon: '🚀' })
     renderGlyph(glyphRow, { color: DEFAULT_STATUSES[2].color })
@@ -425,7 +425,7 @@ export class StyleguideView extends ItemView {
       remove: noop
     })
     const depRow = this.row(sec, 'renderDepRow: read-only, as Blocks shows it')
-    renderDepRow(depRow.createDiv('pm-prop-deps'), {
+    renderDepRow(depRow.createDiv('llk-prop-deps'), {
       id: 'task-4c7d',
       title: 'Announce the release',
       tooltip: 'In Launch',
@@ -437,7 +437,7 @@ export class StyleguideView extends ItemView {
       label: 'Sign off on copy',
       path: 'Projects/Launch_tasks/task-9f8e.md',
       open: noop,
-      cls: 'pm-subtask-title pm-subtask-title--done'
+      cls: 'llk-subtask-title llk-subtask-title--done'
     })
     const addRow = this.row(sec, 'renderAddButton / renderAddProperty')
     renderAddButton(addRow, 'Add member', noop)
@@ -462,10 +462,10 @@ export class StyleguideView extends ItemView {
   private renderProjectRows(): void {
     const sec = this.section('ProjectRow', 'project-row')
     sec.createDiv({
-      cls: 'pm-sg-caption',
+      cls: 'llk-sg-caption',
       text: 'The project list: a parent with its rolled-up counts, a child on a tree connector, a collapsed one, and an archived one.'
     })
-    const table = sec.createEl('table', { cls: 'pm-table pm-project-table' })
+    const table = sec.createEl('table', { cls: 'llk-table llk-project-table' })
     const head = table.createEl('thead').createEl('tr')
     for (const column of ['', 'Project', 'Progress', 'Tasks', 'Members', 'Due', '']) {
       head.createEl('th', { text: column })
@@ -631,7 +631,7 @@ export class StyleguideView extends ItemView {
     const sec = this.section('ViewHeader', 'view-header')
     this.mountViewHeader(this.row(sec, 'breadcrumb, saved view, query, options, actions, filter bar'))
     const narrow = this.row(sec, '300px: query and options folded into Tune, filters folded into a count')
-    narrow.addClass('pm-sg-narrow')
+    narrow.addClass('llk-sg-narrow')
     this.mountViewHeader(narrow)
   }
 
@@ -647,7 +647,7 @@ export class StyleguideView extends ItemView {
       foldLabel: 'Parent projects'
     })
     new ChipButton(header.view).setIcon('bookmark').setLabel('Sprint 14').setChevron(true)
-    header.view.createSpan({ cls: 'pm-vh-count', text: '42 of 318' })
+    header.view.createSpan({ cls: 'llk-vh-count', text: '42 of 318' })
     new SearchBox(header.query, {
       value: '',
       label: 'Search',
@@ -695,7 +695,7 @@ export class StyleguideView extends ItemView {
   private renderVisibilityList(): void {
     const sec = this.section('VisibilityList', 'visibility-list')
     const host = this.row(sec, 'locked, shown, hidden; the Group and Fields popovers use it')
-    host.addClass('pm-sg-narrow')
+    host.addClass('llk-sg-narrow')
     renderVisibilityList(host, {
       rows: [
         { id: 'project', label: 'Project', hidden: false, locked: true },
@@ -713,15 +713,15 @@ export class StyleguideView extends ItemView {
   }
 }
 
-export function registerStyleguide(plugin: PMPlugin): void {
-  plugin.registerView(PM_STYLEGUIDE_VIEW_TYPE, (leaf) => new StyleguideView(leaf))
+export function registerStyleguide(plugin: LowLevelKanbanPlugin): void {
+  registerViewWithLegacyAlias(plugin, LLK_STYLEGUIDE_VIEW_TYPE, (leaf) => new StyleguideView(leaf))
   plugin.addCommand({
     id: 'open-styleguide',
     name: 'Open styleguide gallery',
     callback: safeAsync(async () => {
       // Opened directly, not via plugin.router, so no styleguide code reaches prod builds.
       const leaf = plugin.app.workspace.getLeaf('tab')
-      await leaf.setViewState({ type: PM_STYLEGUIDE_VIEW_TYPE, state: {} })
+      await leaf.setViewState({ type: LLK_STYLEGUIDE_VIEW_TYPE, state: {} })
       await plugin.app.workspace.revealLeaf(leaf)
     })
   })

@@ -1,6 +1,6 @@
 import type { App, TAbstractFile } from 'obsidian'
 import { TFile, TFolder, normalizePath } from 'obsidian'
-import { sanitizeFileName } from '@dotpm/core'
+import { sanitizeFileName } from '@low-level-kanban/core'
 
 /** A project owns a folder named after it, holding its note and its `_tasks/`. */
 export function projectFilePath(projectTitle: string, folder: string): string {

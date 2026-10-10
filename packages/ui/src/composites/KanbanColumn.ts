@@ -1,5 +1,5 @@
 import { setIcon } from '#platform'
-import type { Task } from '@dotpm/core'
+import type { Task } from '@low-level-kanban/core'
 import { formatBadgeText, isIconName } from '#icons'
 import { safeAsync } from '#dom'
 import { KanbanCard, type CardFieldValue } from './KanbanCard'
@@ -42,35 +42,35 @@ export class KanbanColumn {
   el: HTMLElement
 
   constructor(parentEl: HTMLElement, props: KanbanColumnProps) {
-    const col = parentEl.createDiv('pm-kanban-col')
+    const col = parentEl.createDiv('llk-kanban-col')
     const { column } = props
     const color = column.color ?? 'var(--text-muted)'
     col.dataset.column = column.id
     this.el = col
 
-    const header = col.createDiv('pm-kanban-col-header')
+    const header = col.createDiv('llk-kanban-col-header')
     header.style.setProperty('--col-color', color)
 
-    const topBar = header.createDiv('pm-kanban-col-topbar')
+    const topBar = header.createDiv('llk-kanban-col-topbar')
     topBar.setCssStyles({ background: color })
 
-    const titleRow = header.createDiv('pm-kanban-col-title-row')
-    const badge = titleRow.createSpan({ cls: 'pm-kanban-col-badge' })
+    const titleRow = header.createDiv('llk-kanban-col-title-row')
+    const badge = titleRow.createSpan({ cls: 'llk-kanban-col-badge' })
     if (column.icon && isIconName(column.icon)) {
-      setIcon(badge.createSpan({ cls: 'pm-kanban-col-badge-icon' }), column.icon)
+      setIcon(badge.createSpan({ cls: 'llk-kanban-col-badge-icon' }), column.icon)
       badge.appendText(column.label)
     } else {
       badge.setText(formatBadgeText(column.icon ?? '', column.label))
     }
     badge.style.color = color
 
-    const headerRight = titleRow.createDiv('pm-kanban-col-header-right')
+    const headerRight = titleRow.createDiv('llk-kanban-col-header-right')
     headerRight.createSpan({
       text: String(props.cards.length),
-      cls: 'pm-kanban-col-count'
+      cls: 'llk-kanban-col-count'
     })
 
-    const cardsEl = col.createDiv('pm-kanban-cards')
+    const cardsEl = col.createDiv('llk-kanban-cards')
     cardsEl.dataset.column = column.id
 
     for (const card of props.cards) {
@@ -95,9 +95,9 @@ export class KanbanColumn {
 
     cardsEl.addEventListener('dragover', (e) => {
       e.preventDefault()
-      cardsEl.addClass('pm-kanban-drop-target')
+      cardsEl.addClass('llk-kanban-drop-target')
       const afterEl = getDragAfterElement(cardsEl, e.clientY)
-      const dragging = cardsEl.querySelector('.pm-kanban-card--dragging')
+      const dragging = cardsEl.querySelector('.llk-kanban-card--dragging')
       if (dragging) {
         if (afterEl) {
           cardsEl.insertBefore(dragging, afterEl)
@@ -108,14 +108,14 @@ export class KanbanColumn {
     })
 
     cardsEl.addEventListener('dragleave', () => {
-      cardsEl.removeClass('pm-kanban-drop-target')
+      cardsEl.removeClass('llk-kanban-drop-target')
     })
 
     cardsEl.addEventListener(
       'drop',
       safeAsync(async (e: DragEvent) => {
         e.preventDefault()
-        cardsEl.removeClass('pm-kanban-drop-target')
+        cardsEl.removeClass('llk-kanban-drop-target')
         const taskId = e.dataTransfer?.getData('text/plain') ?? ''
         if (!taskId) return
         await props.onDrop(taskId, column.id)
@@ -125,7 +125,7 @@ export class KanbanColumn {
 }
 
 function getDragAfterElement(container: HTMLElement, y: number): Element | null {
-  const cards = Array.from(container.querySelectorAll('.pm-kanban-card:not(.pm-kanban-card--dragging)'))
+  const cards = Array.from(container.querySelectorAll('.llk-kanban-card:not(.llk-kanban-card--dragging)'))
   let closest: Element | null = null
   let closestOffset = Number.NEGATIVE_INFINITY
   for (const card of cards) {

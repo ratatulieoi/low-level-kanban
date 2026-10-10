@@ -1,53 +1,53 @@
-.pm-edit {
+.llk-edit {
   padding: 24px 28px 48px;
   overflow: auto;
 }
 
-.pm-edit-header,
-.pm-edit-section,
-.pm-edit-danger {
+.llk-edit-header,
+.llk-edit-section,
+.llk-edit-danger {
   max-width: 720px;
   margin: 0 auto;
 }
 
-.pm-edit-header {
+.llk-edit-header {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
 }
 
-.pm-edit-section {
+.llk-edit-section {
   margin-top: 28px;
 }
 
-.pm-edit-props {
+.llk-edit-props {
   margin-top: 4px;
 }
-.pm-edit-props .pm-prop-row {
+.llk-edit-props .llk-prop-row {
   grid-template-columns: 200px 1fr;
 }
 
-.pm-edit-block {
+.llk-edit-block {
   margin-top: 12px;
 }
 
-.pm-modal--create {
+.llk-modal--create {
   max-width: 560px;
 }
 
-.pm-edit-desc {
+.llk-edit-desc {
   min-height: 72px;
   resize: vertical;
 }
 
-.pm-modal-hint {
+.llk-modal-hint {
   margin: 0;
   font-size: 12px;
   color: var(--text-muted);
 }
 
-.pm-edit-danger {
+.llk-edit-danger {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -56,21 +56,21 @@
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-m);
 }
-.pm-edit-danger-text {
+.llk-edit-danger-text {
   flex: 1;
 }
-.pm-edit-danger-title {
+.llk-edit-danger-title {
   font-size: var(--font-ui-small);
   font-weight: 500;
 }
 
 /* The swatch is shorter than the pickers beside it, so the cell keeps the control height
    and centers it against them. */
-.pm-prop-color {
+.llk-prop-color {
   min-height: 30px;
 }
 
-.pm-color-custom {
+.llk-color-custom {
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -81,7 +81,7 @@
   background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
 }
 
-.pm-label {
+.llk-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
@@ -90,7 +90,7 @@
   display: block;
   margin-bottom: 4px;
 }
-.pm-input {
+.llk-input {
   width: 100%;
   padding: 7px 10px;
   border: 1px solid var(--background-modifier-border);
@@ -100,11 +100,11 @@
   font-size: 13px;
   box-sizing: border-box;
 }
-.pm-input:focus {
+.llk-input:focus {
   border-color: var(--interactive-accent);
   outline: none;
 }
-.pm-select {
+.llk-select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -112,22 +112,22 @@
   padding-right: 26px;
 }
 
-.pm-section-sublabel {
+.llk-section-sublabel {
   font-size: var(--font-ui-smaller);
   font-weight: 600;
   color: var(--text-muted);
   margin: 12px 0 6px;
 }
-.pm-section-sublabel:first-child {
+.llk-section-sublabel:first-child {
   margin-top: 0;
 }
 
-.pm-cf-list {
+.llk-cf-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.pm-cf-row {
+.llk-cf-row {
   display: flex;
   gap: 8px;
   align-items: flex-start;
@@ -137,80 +137,80 @@
   border: 1px solid var(--background-modifier-border);
   flex-wrap: wrap;
 }
-.pm-cf-row--inherited {
+.llk-cf-row--inherited {
   align-items: center;
   background: transparent;
   border-style: dashed;
 }
-.pm-cf-row--hidden .pm-cf-name,
-.pm-cf-row--hidden .pm-cf-type {
+.llk-cf-row--hidden .llk-cf-name,
+.llk-cf-row--hidden .llk-cf-type {
   color: var(--text-faint);
   text-decoration: line-through;
 }
-.pm-cf-name {
+.llk-cf-name {
   flex: 1;
   min-width: 120px;
 }
-.pm-cf-type {
+.llk-cf-type {
   flex: 0 0 130px;
 }
-.pm-cf-row--inherited .pm-cf-type {
+.llk-cf-row--inherited .llk-cf-type {
   color: var(--text-muted);
 }
-.pm-cf-source {
+.llk-cf-source {
   align-self: center;
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }
-.pm-cf-options {
+.llk-cf-options {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 4px;
   margin-top: 4px;
 }
-.pm-cf-opt-row {
+.llk-cf-opt-row {
   display: flex;
   gap: 6px;
 }
-.pm-cf-opt-input {
+.llk-cf-opt-input {
   flex: 1;
 }
 
-.pm-settings-statuses {
+.llk-settings-statuses {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-bottom: 8px;
 }
-.pm-settings-status-row {
+.llk-settings-status-row {
   display: flex;
   gap: 8px;
   align-items: center;
 }
-.pm-palette-row .setting-item-info {
+.llk-palette-row .setting-item-info {
   display: none;
 }
-.pm-palette-row .setting-item-control {
+.llk-palette-row .setting-item-control {
   flex: 1;
   flex-wrap: nowrap;
   gap: 8px;
   min-width: 0;
 }
-.pm-palette-row .pm-settings-status-label {
+.llk-palette-row .llk-settings-status-label {
   min-width: 0;
 }
-.pm-cf-settings-row .setting-item-control {
+.llk-cf-settings-row .setting-item-control {
   flex-wrap: wrap;
 }
-.pm-settings-status-icon {
+.llk-settings-status-icon {
   flex: 0 0 64px;
   width: 64px;
 }
-.pm-settings-status-label {
+.llk-settings-status-label {
   flex: 1;
 }
-.pm-settings-drag-handle {
+.llk-settings-drag-handle {
   cursor: grab;
   color: var(--text-muted);
   user-select: none;
@@ -218,10 +218,10 @@
   flex: 0 0 16px;
   text-align: center;
 }
-.pm-settings-row--dragging {
+.llk-settings-row--dragging {
   opacity: 0.4;
 }
-.pm-settings-complete-toggle {
+.llk-settings-complete-toggle {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -229,12 +229,12 @@
   flex: 0 0 auto;
   white-space: nowrap;
 }
-.pm-settings-complete-text {
+.llk-settings-complete-text {
   font-size: 12px;
   color: var(--text-muted);
 }
 
-.pm-status-toggle {
+.llk-status-toggle {
   display: flex;
   align-items: center;
   gap: 8px;

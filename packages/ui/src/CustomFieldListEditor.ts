@@ -1,4 +1,4 @@
-import { type CustomFieldDef, CUSTOM_FIELD_TYPES, makeId, t } from '@dotpm/core'
+import { type CustomFieldDef, CUSTOM_FIELD_TYPES, makeId, t } from '@low-level-kanban/core'
 import { IconButton } from './primitives/IconButton'
 import { renderAddButton } from './composites/addButton'
 
@@ -43,7 +43,7 @@ function renderRow(
   opts: CustomFieldListEditorOpts,
   rerender: () => void
 ): void {
-  const row = container.createDiv('pm-cf-row')
+  const row = container.createDiv('llk-cf-row')
   renderCustomFieldFields(row, field, opts.onChanged, rerender)
   opts.renderExtra?.(row, field)
   new IconButton(row)
@@ -63,14 +63,14 @@ export function renderCustomFieldFields(
   onChanged: () => void,
   redraw: () => void
 ): void {
-  const name = parent.createEl('input', { type: 'text', value: field.name, cls: 'pm-input pm-cf-name' })
+  const name = parent.createEl('input', { type: 'text', value: field.name, cls: 'llk-input llk-cf-name' })
   name.placeholder = t('customField.namePlaceholder')
   name.addEventListener('change', () => {
     field.name = name.value
     onChanged()
   })
 
-  const type = parent.createEl('select', { cls: 'pm-input pm-select pm-cf-type' })
+  const type = parent.createEl('select', { cls: 'llk-input llk-select llk-cf-type' })
   for (const id of CUSTOM_FIELD_TYPES) {
     const el = type.createEl('option', { value: id, text: customFieldTypeLabels()[id] })
     if (id === field.type) el.selected = true
@@ -102,12 +102,12 @@ export function renderCustomFieldOptions(parent: HTMLElement, field: CustomField
   if (field.type !== 'select' && field.type !== 'multiselect') return
   const options = field.options ?? []
   field.options = options
-  const optionsWrap = parent.createDiv('pm-cf-options')
+  const optionsWrap = parent.createDiv('llk-cf-options')
   const drawOptions = (): void => {
     optionsWrap.empty()
     options.forEach((option, i) => {
-      const optionRow = optionsWrap.createDiv('pm-cf-opt-row')
-      const input = optionRow.createEl('input', { type: 'text', value: option, cls: 'pm-input pm-cf-opt-input' })
+      const optionRow = optionsWrap.createDiv('llk-cf-opt-row')
+      const input = optionRow.createEl('input', { type: 'text', value: option, cls: 'llk-input llk-cf-opt-input' })
       input.placeholder = t('customField.option', { index: i + 1 })
       input.addEventListener('change', () => {
         options[i] = input.value

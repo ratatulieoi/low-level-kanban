@@ -1,4 +1,4 @@
-import { type Task, formatDateShort, t } from '@dotpm/core'
+import { type Task, formatDateShort, t } from '@low-level-kanban/core'
 import { AvatarStack, type AvatarPerson } from '#primitives/AvatarStack'
 import { Chip } from '#primitives/Chip'
 import { ProgressBar } from '#primitives/ProgressBar'
@@ -38,25 +38,25 @@ export class KanbanCard {
 
   constructor(parentEl: HTMLElement, props: KanbanCardProps) {
     const { task } = props
-    const card = parentEl.createDiv('pm-kanban-card')
+    const card = parentEl.createDiv('llk-kanban-card')
     card.draggable = true
     card.dataset.taskId = task.id
     this.el = card
 
     const { fields } = props
     if (props.priorityColor && fields.includes('priority')) {
-      const priorityBar = card.createDiv('pm-kanban-card-priority-bar')
+      const priorityBar = card.createDiv('llk-kanban-card-priority-bar')
       priorityBar.setCssStyles({ background: props.priorityColor })
     }
 
-    const body = card.createDiv('pm-kanban-card-body')
+    const body = card.createDiv('llk-kanban-card-body')
 
     if (props.parentTitle) {
-      body.createSpan({ text: props.parentTitle, cls: 'pm-kanban-card-parent' })
+      body.createSpan({ text: props.parentTitle, cls: 'llk-kanban-card-parent' })
     }
 
-    const titleRow = body.createDiv('pm-kanban-card-title-row')
-    titleRow.createSpan({ text: task.title, cls: 'pm-kanban-card-title' })
+    const titleRow = body.createDiv('llk-kanban-card-title-row')
+    titleRow.createSpan({ text: task.title, cls: 'llk-kanban-card-title' })
     if (task.type === 'milestone') {
       new Chip(titleRow)
         .setLabel(t('chip.milestone'))
@@ -82,14 +82,14 @@ export class KanbanCard {
         .setTooltip(t('chip.recurringTooltip'))
     }
 
-    const footer = body.createDiv('pm-kanban-card-footer')
+    const footer = body.createDiv('llk-kanban-card-footer')
     for (const field of fields) {
       if (field === 'description' && props.descriptionPreview) {
-        body.createDiv({ cls: 'pm-kanban-card-description', text: props.descriptionPreview })
+        body.createDiv({ cls: 'llk-kanban-card-description', text: props.descriptionPreview })
       } else if (field === 'time') {
         renderTimeChip(body, props.loggedHours, task.timeEstimate ?? 0, 'sm')
       } else if (field === 'tags' && task.tags.length) {
-        const tagsEl = body.createDiv('pm-kanban-card-tags')
+        const tagsEl = body.createDiv('llk-kanban-card-tags')
         for (const tag of task.tags.slice(0, 3)) {
           renderTagChip(tagsEl, tag, props.showTagColors)
         }
@@ -103,9 +103,9 @@ export class KanbanCard {
         renderDueChip(footer, formatDateShort(task.due), props.overdue ? 'overdue' : 'normal', 'sm')
       } else if (props.customValues?.[field]?.text) {
         const { name, text } = props.customValues[field]
-        const row = body.createDiv('pm-kanban-card-field')
-        row.createSpan({ cls: 'pm-kanban-card-field-name', text: name })
-        row.createSpan({ cls: 'pm-kanban-card-field-value', text })
+        const row = body.createDiv('llk-kanban-card-field')
+        row.createSpan({ cls: 'llk-kanban-card-field-name', text: name })
+        row.createSpan({ cls: 'llk-kanban-card-field-value', text })
       }
     }
     if (footer.childElementCount) body.appendChild(footer)
@@ -113,14 +113,14 @@ export class KanbanCard {
 
     card.addEventListener('dragstart', (e) => {
       e.dataTransfer?.setData('text/plain', task.id)
-      card.addClass('pm-kanban-card--dragging')
-      window.setTimeout(() => card.addClass('pm-dragging'), 0)
+      card.addClass('llk-kanban-card--dragging')
+      window.setTimeout(() => card.addClass('llk-dragging'), 0)
       props.onDragStart()
     })
 
     card.addEventListener('dragend', () => {
-      card.removeClass('pm-kanban-card--dragging')
-      card.removeClass('pm-dragging')
+      card.removeClass('llk-kanban-card--dragging')
+      card.removeClass('llk-dragging')
       props.onDragEnd()
     })
 

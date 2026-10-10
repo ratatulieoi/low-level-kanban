@@ -1,17 +1,17 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_PRIORITIES, DEFAULT_STATUSES, makeDefaultFilter, setDateFormat } from '@dotpm/core'
-import type { Snapshot } from '@dotpm/snapshot'
-import { boardTaskCount } from '@dotpm/ui'
+import { DEFAULT_PRIORITIES, DEFAULT_STATUSES, makeDefaultFilter, setDateFormat } from '@low-level-kanban/core'
+import type { Snapshot } from '@low-level-kanban/snapshot'
+import { boardTaskCount } from '@low-level-kanban/ui'
 import { iconFromMarkup, loadSnapshot, mount, readEmbeddedSnapshot, viewModelFromSnapshot } from './main'
 
 const ICON = '<svg xmlns="http://www.w3.org/2000/svg" class="svg-icon lucide-check"><path d="M1 1"/></svg>'
 
 function snapshot(): Snapshot {
   return {
-    format: 'dotpm-snapshot',
+    format: 'low-level-kanban-snapshot',
     version: 2,
-    generator: { name: 'dotpm', version: '0' },
+    generator: { name: 'Low Level Kanban', version: '0' },
     exportedAt: '2030-01-01T10:00:00.000Z',
     locale: 'en',
     title: 'Alpha',
@@ -103,6 +103,22 @@ describe('viewer', () => {
     expect(model.projects[0].config.defaultView).toBe('kanban')
   })
 
+  it.each([
+    ['low-level-kanban-snapshot', 'low-level-kanban-snapshot', 2],
+    ['dotpm-snapshot', 'dotpm-snapshot', 1],
+    ['dotpm-snapshot', 'dotpm-snapshot', 2],
+    ['low-level-kanban-snapshot', 'dotpm-snapshot', 2]
+  ])('reads embedded script %s with format %s version %s', (id, format, version) => {
+    const page = { ...snapshot(), format, version, generator: { name: 'dotpm', version: '0' } }
+    const el = document.body.createEl('script', { attr: { id: String(id), type: 'application/json' } })
+    el.textContent = JSON.stringify(page)
+    const loaded = readEmbeddedSnapshot(document)
+    expect(loaded?.format).toBe('low-level-kanban-snapshot')
+    expect(loaded?.generator.name).toBe('Low Level Kanban')
+    expect(loaded?.projects).toEqual(page.projects)
+    expect(loaded?.view.mode).toBe('kanban')
+  })
+
   it('reads the single sort key of a version 1 page', () => {
     const old = snapshot()
     old.version = 1
@@ -140,11 +156,11 @@ describe('viewer', () => {
   it('mounts the header and board without a view selector', () => {
     const root = document.body.createDiv()
     mount(root, snapshot())
-    expect(root.querySelector('.pm-snapshot-title')?.textContent).toBe('Alpha')
-    expect(root.querySelector('.pm-snapshot-icon svg')).not.toBeNull()
-    expect(root.querySelectorAll('.pm-kanban-card').length).toBe(2)
-    expect(root.querySelector('.pm-view-switcher')).toBeNull()
-    expect(root.querySelector('.pm-snapshot-meta')?.textContent).toContain('2 tasks')
+    expect(root.querySelector('.llk-snapshot-title')?.textContent).toBe('Alpha')
+    expect(root.querySelector('.llk-snapshot-icon svg')).not.toBeNull()
+    expect(root.querySelectorAll('.llk-kanban-card').length).toBe(2)
+    expect(root.querySelector('.llk-view-switcher')).toBeNull()
+    expect(root.querySelector('.llk-snapshot-meta')?.textContent).toContain('2 tasks')
   })
 
   it.each([
@@ -166,8 +182,8 @@ describe('viewer', () => {
     const root = document.body.createDiv()
     // Old JavaScript callers may still pass a third argument; it no longer selects a mode.
     Reflect.apply(mount, undefined, [root, page, { mode }])
-    expect(root.querySelector('.pm-kanban-board')).not.toBeNull()
-    expect(root.querySelector('.pm-view-switcher, .pm-table, .pm-gantt-view')).toBeNull()
+    expect(root.querySelector('.llk-kanban-board')).not.toBeNull()
+    expect(root.querySelector('.llk-view-switcher, .llk-table, .llk-gantt-view')).toBeNull()
   })
 
   it('counts filtered board tasks once across multiple visible groups', () => {
@@ -179,8 +195,8 @@ describe('viewer', () => {
     expect(boardTaskCount(model)).toBe(1)
     const root = document.body.createDiv()
     mount(root, page)
-    expect(root.querySelectorAll('.pm-kanban-card').length).toBe(2)
-    expect(root.querySelector('.pm-snapshot-meta')?.textContent).toContain('1 task')
+    expect(root.querySelectorAll('.llk-kanban-card').length).toBe(2)
+    expect(root.querySelector('.llk-snapshot-meta')?.textContent).toContain('1 task')
     page.view.filter.conditions = [{ field: 'status', op: 'any', value: ['done'] }]
     expect(boardTaskCount(viewModelFromSnapshot(page))).toBe(0)
     page.view.group.columns = {}
@@ -200,7 +216,7 @@ describe('viewer', () => {
     const exported = snapshot()
     exported.settings.dateFormat = 'DD.MM.YYYY'
     mount(root, exported)
-    expect(root.querySelector('.pm-kanban-card')?.textContent).toContain('01.02.2030')
+    expect(root.querySelector('.llk-kanban-card')?.textContent).toContain('01.02.2030')
   })
 
   it('reads the embedded snapshot and rejects anything else', () => {

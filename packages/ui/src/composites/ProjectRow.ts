@@ -1,4 +1,4 @@
-import { type ProjectListField, t, tn } from '@dotpm/core'
+import { type ProjectListField, t, tn } from '@low-level-kanban/core'
 import { AvatarStack, type AvatarPerson } from '#primitives/AvatarStack'
 import { Chip } from '#primitives/Chip'
 import { CollapseToggle } from '#primitives/CollapseToggle'
@@ -36,17 +36,17 @@ export interface ProjectRowProps {
   onActions: (e: MouseEvent) => void
 }
 
-const ROW_IGNORE_SELECTOR = 'button, .pm-chip--interactive, .pm-icon-btn, .pm-collapse-toggle'
+const ROW_IGNORE_SELECTOR = 'button, .llk-chip--interactive, .llk-icon-btn, .llk-collapse-toggle'
 
 export class ProjectRow {
   el: HTMLTableRowElement
 
   constructor(tbody: HTMLElement, props: ProjectRowProps) {
-    this.el = tbody.createEl('tr', { cls: 'pm-table-row pm-project-row' })
-    if (props.archived) this.el.addClass('pm-table-row--archived')
+    this.el = tbody.createEl('tr', { cls: 'llk-table-row llk-project-row' })
+    if (props.archived) this.el.addClass('llk-table-row--archived')
     this.el.style.setProperty('--depth', String(props.depth))
 
-    const expand = this.el.createEl('td', { cls: 'pm-table-cell-expand' })
+    const expand = this.el.createEl('td', { cls: 'llk-table-cell-expand' })
     const { onToggleCollapsed } = props
     if (props.childCount > 0 && onToggleCollapsed) {
       new CollapseToggle(expand, {
@@ -56,16 +56,16 @@ export class ProjectRow {
       })
     }
 
-    const title = this.el.createEl('td', { cls: 'pm-table-cell-title' })
+    const title = this.el.createEl('td', { cls: 'llk-table-cell-title' })
     renderTreeGuides(title, props.treeGuides, props.isLastChild)
-    const inner = title.createDiv('pm-table-title-inner')
-    renderGlyph(inner.createSpan({ cls: 'pm-project-row-icon' }), { icon: props.icon, color: props.color })
-    inner.createSpan({ text: props.title, cls: 'pm-task-title-text' })
+    const inner = title.createDiv('llk-table-title-inner')
+    renderGlyph(inner.createSpan({ cls: 'llk-project-row-icon' }), { icon: props.icon, color: props.color })
+    inner.createSpan({ text: props.title, cls: 'llk-task-title-text' })
     if (props.archived) new Chip(inner).setLabel(t('common.archived')).setVariant('outline').setSize('sm')
 
-    for (const field of props.fields) renderCell(this.el.createEl('td', { cls: 'pm-table-cell' }), field, props)
+    for (const field of props.fields) renderCell(this.el.createEl('td', { cls: 'llk-table-cell' }), field, props)
 
-    const actions = this.el.createEl('td', { cls: 'pm-table-cell pm-table-cell-actions' })
+    const actions = this.el.createEl('td', { cls: 'llk-table-cell llk-table-cell-actions' })
     new IconButton(actions)
       .setIcon('more-horizontal')
       .setTooltip(t('cell.projectActions'))
@@ -84,7 +84,7 @@ export class ProjectRow {
 function renderCell(cell: HTMLElement, field: ProjectListField, props: ProjectRowProps): void {
   switch (field) {
     case 'progress':
-      cell.addClass('pm-table-cell-progress')
+      cell.addClass('llk-table-cell-progress')
       new ProgressBar(cell)
         .setSize('sm')
         .setValue(props.tasksTotal ? (props.tasksDone / props.tasksTotal) * 100 : 0)
@@ -92,7 +92,7 @@ function renderCell(cell: HTMLElement, field: ProjectListField, props: ProjectRo
         .setShowLabel(true)
       return
     case 'tasks':
-      cell.createSpan({ cls: 'pm-project-row-tasks', text: `${props.tasksDone}/${props.tasksTotal}` })
+      cell.createSpan({ cls: 'llk-project-row-tasks', text: `${props.tasksDone}/${props.tasksTotal}` })
       if (props.overdue > 0) {
         new Chip(cell)
           .setLabel(tn('projectRow.overdue', props.overdue))
@@ -103,11 +103,11 @@ function renderCell(cell: HTMLElement, field: ProjectListField, props: ProjectRo
       }
       return
     case 'members':
-      cell.addClass('pm-table-cell-assignees')
+      cell.addClass('llk-table-cell-assignees')
       new AvatarStack(cell).setPeople(props.members).setMax(3).setSize('sm')
       return
     case 'due':
       if (props.dueLabel) renderDueChip(cell, props.dueLabel, props.dueUrgency, 'sm')
-      else cell.createSpan({ cls: 'pm-project-row-empty', text: '—' })
+      else cell.createSpan({ cls: 'llk-project-row-empty', text: '—' })
   }
 }

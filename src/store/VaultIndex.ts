@@ -2,12 +2,12 @@ import type { App, Plugin, TAbstractFile } from 'obsidian'
 import { TFile, normalizePath } from 'obsidian'
 import {
   type CustomFieldDef,
-  type PMSettings,
+  type LowLevelKanbanSettings,
   type StatusConfig,
   today,
   reaches,
-  FRONTMATTER_KEY,
-  TASK_FRONTMATTER_KEY,
+  isProjectFrontmatter,
+  isTaskFrontmatter,
   customFieldList,
   stringList,
   dedupePeople,
@@ -15,7 +15,7 @@ import {
   DEFAULT_PROJECT_COLOR,
   readColor,
   t
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { projectPathForTaskPath, resolveVaultLink } from './vaultFs'
 import { isRefLink, refToId, refToPath } from './refs'
 import { personKeyer } from './people'
@@ -94,7 +94,7 @@ function ownAutoArchiveDays(frontmatter: Record<string, unknown>): number | null
 }
 
 /**
- * Every `pm-project` and `pm-task` note in the vault, read from the metadata cache and
+ * Every project and task note in the vault, read from the metadata cache and
  * kept current by its events. Nothing here reads a file body, so a whole-vault sweep
  * costs one pass over frontmatter Obsidian has already parsed.
  *
@@ -120,7 +120,7 @@ export class VaultIndex {
 
   constructor(
     private app: App,
-    private getSettings: () => PMSettings
+    private getSettings: () => LowLevelKanbanSettings
   ) {}
 
   /** Call once, after the layout is ready. Safe to call again to recover from a bad state. */
@@ -466,8 +466,8 @@ export class VaultIndex {
     if (this.isExcluded(path)) return
     const frontmatter = cache.frontmatter
     if (!frontmatter) return
-    if (frontmatter[FRONTMATTER_KEY] === true && !insideTaskFolder(path)) this.addProject(path, file, frontmatter)
-    else if (frontmatter[TASK_FRONTMATTER_KEY] === true) this.addTask(path, frontmatter)
+    if (isProjectFrontmatter(frontmatter) && !insideTaskFolder(path)) this.addProject(path, file, frontmatter)
+    else if (isTaskFrontmatter(frontmatter)) this.addTask(path, frontmatter)
   }
 
   private addProject(path: string, file: TFile, frontmatter: Record<string, unknown>): void {
@@ -660,7 +660,7 @@ export class VaultIndex {
       const seen = new Set([path])
       for (let current = parents.get(path); current; current = parents.get(current)) {
         if (seen.has(current)) {
-          console.error(`[PM] Circular parent link on project ${path}; treating it as a root.`)
+          console.error(`[Low Level Kanban] Circular parent link on project ${path}; treating it as a root.`)
           parents.set(path, null)
           break
         }

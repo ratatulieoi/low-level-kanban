@@ -1,5 +1,5 @@
 import { App, prepareFuzzySearch, TFile } from 'obsidian'
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 
 function fileTypeLabel(extension: string): string | undefined {
   if (extension === 'canvas') return t('fileType.canvas')
@@ -22,9 +22,9 @@ export class NoteLinkSuggest {
     private textarea: HTMLTextAreaElement,
     private onInsert: (newValue: string) => void
   ) {
-    this.container = createDiv('pm-note-suggest')
+    this.container = createDiv('llk-note-suggest')
 
-    this.mirror = createDiv('pm-note-suggest-mirror')
+    this.mirror = createDiv('llk-note-suggest-mirror')
 
     activeDocument.body.appendChild(this.mirror)
 
@@ -150,7 +150,7 @@ export class NoteLinkSuggest {
 
   private show(): void {
     this.open = true
-    this.container.addClass('pm-note-suggest--visible')
+    this.container.addClass('llk-note-suggest--visible')
     this.position()
     this.renderItems()
   }
@@ -158,7 +158,7 @@ export class NoteLinkSuggest {
   private hide(): void {
     if (!this.open) return
     this.open = false
-    this.container.removeClass('pm-note-suggest--visible')
+    this.container.removeClass('llk-note-suggest--visible')
     this.triggerStart = -1
   }
 
@@ -227,16 +227,16 @@ export class NoteLinkSuggest {
     this.container.empty()
     this.items.forEach((file, i) => {
       const row = this.container.createDiv({
-        cls: 'pm-note-suggest-item' + (i === this.activeIndex ? ' pm-note-suggest-item--active' : '')
+        cls: 'llk-note-suggest-item' + (i === this.activeIndex ? ' llk-note-suggest-item--active' : '')
       })
-      const nameRow = row.createDiv({ cls: 'pm-note-suggest-name-row' })
-      nameRow.createSpan({ cls: 'pm-note-suggest-name', text: file.basename })
+      const nameRow = row.createDiv({ cls: 'llk-note-suggest-name-row' })
+      nameRow.createSpan({ cls: 'llk-note-suggest-name', text: file.basename })
       const typeLabel = fileTypeLabel(file.extension)
       if (typeLabel) {
-        nameRow.createSpan({ cls: 'pm-note-suggest-type', text: typeLabel })
+        nameRow.createSpan({ cls: 'llk-note-suggest-type', text: typeLabel })
       }
       if (file.parent && file.parent.path !== '/') {
-        row.createDiv({ cls: 'pm-note-suggest-path', text: file.parent.path })
+        row.createDiv({ cls: 'llk-note-suggest-path', text: file.parent.path })
       }
       row.addEventListener('mousedown', (e) => {
         e.preventDefault() // prevent blur
@@ -248,7 +248,7 @@ export class NoteLinkSuggest {
       })
     })
 
-    const activeEl = this.container.querySelector('.pm-note-suggest-item--active')
+    const activeEl = this.container.querySelector('.llk-note-suggest-item--active')
     if (activeEl) activeEl.scrollIntoView({ block: 'nearest' })
   }
 }

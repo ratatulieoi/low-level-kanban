@@ -7,7 +7,7 @@ import {
   displayName,
   locale,
   statusSortOrder
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 
 /** Compares by each rule in turn; a tie on every rule keeps the stored order. */
 export function compareTasks(

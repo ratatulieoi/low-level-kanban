@@ -1,6 +1,6 @@
 import { Checkbox } from '#primitives/Checkbox'
 import { Popover } from '#primitives/Popover'
-import { type GroupState, t } from '@dotpm/core'
+import { type GroupState, t } from '@low-level-kanban/core'
 import { renderPopHead } from '../popoverParts'
 import { renderGlyph } from '../properties/optionList'
 import { renderVisibilityList } from '../visibilityList'
@@ -22,7 +22,7 @@ export interface GroupPopoverProps {
  * columns hide, and the column list, dragged to reorder and toggled by its eye.
  */
 export function renderGroupPanel(parent: HTMLElement, props: GroupPopoverProps): void {
-  const body = parent.createDiv('pm-group-pop')
+  const body = parent.createDiv('llk-group-pop')
   const { group } = props
 
   const prefs = () => {
@@ -39,9 +39,9 @@ export function renderGroupPanel(parent: HTMLElement, props: GroupPopoverProps):
 
   const render = (): void => {
     body.empty()
-    const byRow = body.createDiv('pm-group-row')
-    byRow.createSpan({ cls: 'pm-group-label', text: t('header.columnsBy') })
-    const field = byRow.createEl('select', { cls: 'dropdown pm-group-field' })
+    const byRow = body.createDiv('llk-group-row')
+    byRow.createSpan({ cls: 'llk-group-label', text: t('header.columnsBy') })
+    const field = byRow.createEl('select', { cls: 'dropdown llk-group-field' })
     for (const option of props.fields) {
       field.createEl('option', { value: option.id, text: option.label }).selected = option.id === props.field()
     }
@@ -50,8 +50,8 @@ export function renderGroupPanel(parent: HTMLElement, props: GroupPopoverProps):
       changed()
     })
 
-    const emptyRow = body.createEl('label', { cls: 'pm-group-row' })
-    emptyRow.createSpan({ cls: 'pm-group-label', text: t('header.hideEmpty') })
+    const emptyRow = body.createEl('label', { cls: 'llk-group-row' })
+    emptyRow.createSpan({ cls: 'llk-group-label', text: t('header.hideEmpty') })
     new Checkbox(emptyRow).setChecked(!!group.hideEmpty).onChange((checked) => {
       if (checked) group.hideEmpty = true
       else delete group.hideEmpty

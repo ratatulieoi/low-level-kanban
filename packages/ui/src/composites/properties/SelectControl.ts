@@ -16,11 +16,11 @@ export interface SelectControlOpts {
 /** Backs Status, Priority, Type, Repeat, and Parent task. */
 export function renderSelectControl(opts: SelectControlOpts): void {
   const selected = opts.options.find((o) => o.id === opts.value) ?? null
-  const trigger = opts.container.createEl('button', { cls: 'pm-prop-inline' })
-  if (!selected) trigger.addClass('pm-prop-inline--empty')
+  const trigger = opts.container.createEl('button', { cls: 'llk-prop-inline' })
+  if (!selected) trigger.addClass('llk-prop-inline--empty')
   renderGlyph(trigger, { color: selected?.color, icon: selected?.icon })
-  trigger.createSpan({ cls: 'pm-prop-inline-label', text: selected?.label ?? opts.placeholder ?? 'Select' })
-  const chevron = trigger.createSpan({ cls: 'pm-prop-chevron' })
+  trigger.createSpan({ cls: 'llk-prop-inline-label', text: selected?.label ?? opts.placeholder ?? 'Select' })
+  const chevron = trigger.createSpan({ cls: 'llk-prop-chevron' })
   setIcon(chevron, 'chevron-down')
 
   let pop: Popover | null = null
@@ -32,11 +32,11 @@ export function renderSelectControl(opts: SelectControlOpts): void {
     pop = new Popover({ anchor: trigger, width: opts.width ?? trigger.offsetWidth, onClose: () => (pop = null) })
     const searchInput = opts.search
       ? pop.contentEl.createEl('input', {
-          cls: 'pm-pop-field',
+          cls: 'llk-pop-field',
           attr: { placeholder: opts.searchPlaceholder ?? 'Search…', spellcheck: 'false' }
         })
       : null
-    const list = pop.contentEl.createDiv('pm-pop-list')
+    const list = pop.contentEl.createDiv('llk-pop-list')
     const renderList = () => {
       list.empty()
       const q = searchInput?.value.trim().toLowerCase() ?? ''

@@ -1,17 +1,17 @@
 import { Notice } from 'obsidian'
-import { type PriorityConfig, type StatusConfig, t } from '@dotpm/core'
-import { IconButton, renderIconControl } from '@dotpm/ui'
+import { type PriorityConfig, type StatusConfig, t } from '@low-level-kanban/core'
+import { IconButton, renderIconControl } from '@low-level-kanban/ui'
 
 /** On drop, moves the dragged item to this row's index. */
 export function wireRowDragReorder<T>(row: HTMLElement, index: number, items: T[], onChanged: () => void): void {
-  row.createSpan({ text: '⠿', cls: 'pm-settings-drag-handle' })
+  row.createSpan({ text: '⠿', cls: 'llk-settings-drag-handle' })
   row.draggable = true
   row.addEventListener('dragstart', (e) => {
     e.dataTransfer?.setData('text/plain', String(index))
-    row.addClass('pm-settings-row--dragging')
+    row.addClass('llk-settings-row--dragging')
   })
   row.addEventListener('dragend', () => {
-    row.removeClass('pm-settings-row--dragging')
+    row.removeClass('llk-settings-row--dragging')
   })
   row.addEventListener('dragover', (e) => {
     e.preventDefault()
@@ -34,7 +34,7 @@ export interface PaletteEntry {
 }
 
 export function renderPaletteFields(parent: HTMLElement, item: PaletteEntry, onChanged: () => void): void {
-  const iconCell = parent.createDiv('pm-settings-status-icon')
+  const iconCell = parent.createDiv('llk-settings-status-icon')
   renderIconControl({
     container: iconCell,
     value: item.icon,
@@ -46,7 +46,7 @@ export function renderPaletteFields(parent: HTMLElement, item: PaletteEntry, onC
   })
 
   const label = parent.createEl('input', { type: 'text', value: item.label })
-  label.addClass('pm-settings-status-label')
+  label.addClass('llk-settings-status-label')
   label.addEventListener('change', () => {
     item.label = label.value
     onChanged()
@@ -60,10 +60,10 @@ export function renderPaletteFields(parent: HTMLElement, item: PaletteEntry, onC
 }
 
 export function renderStatusDoneToggle(parent: HTMLElement, status: StatusConfig, onChanged: () => void): void {
-  const wrapper = parent.createEl('label', { cls: 'pm-settings-complete-toggle' })
+  const wrapper = parent.createEl('label', { cls: 'llk-settings-complete-toggle' })
   const checkbox = wrapper.createEl('input', { type: 'checkbox' })
   checkbox.checked = status.complete
-  wrapper.createSpan({ text: t('palette.complete'), cls: 'pm-settings-complete-text' })
+  wrapper.createSpan({ text: t('palette.complete'), cls: 'llk-settings-complete-text' })
   checkbox.addEventListener('change', () => {
     status.complete = checkbox.checked
     onChanged()
@@ -86,7 +86,7 @@ function renderPaletteListEditor<T extends PaletteEntry>(container: HTMLElement,
   const rerender = (): void => renderPaletteListEditor(container, opts)
   container.empty()
   opts.items.forEach((item, i) => {
-    const row = container.createDiv('pm-settings-status-row')
+    const row = container.createDiv('llk-settings-status-row')
 
     wireRowDragReorder(row, i, opts.items, () => {
       opts.onChanged()

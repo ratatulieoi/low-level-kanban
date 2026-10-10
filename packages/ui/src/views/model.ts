@@ -17,7 +17,7 @@ import {
   mergeById,
   matchesQuery,
   shownFields
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import type { AvatarPerson } from '../primitives/AvatarStack'
 import type { FilterSetup } from '../composites/ViewHeader/filterPopover'
 import { boardCandidates } from './boardCards'

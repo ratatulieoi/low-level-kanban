@@ -1,10 +1,10 @@
-.pm-content {
+.llk-content {
   flex: 1;
   overflow: auto;
   position: relative;
 }
 
-.pm-empty-state {
+.llk-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -14,73 +14,73 @@
   color: var(--text-muted);
   padding: 40px;
 }
-.pm-empty-icon {
+.llk-empty-icon {
   display: flex;
   font-size: 48px;
   --icon-size: 32px;
 }
-.pm-empty-action {
+.llk-empty-action {
   display: flex;
   gap: 8px;
 }
 
-.pm-filter-empty {
+.llk-filter-empty {
   flex: 1;
 }
 
-.pm-project-list-container {
+.llk-project-list-container {
   padding: 8px 16px 24px;
 }
 
-.pm-project-th-title {
+.llk-project-th-title {
   width: 100%;
 }
-.pm-project-table td {
+.llk-project-table td {
   white-space: nowrap;
 }
-.pm-project-row {
+.llk-project-row {
   cursor: pointer;
 }
 
 /* The title column takes what the others leave, and its name truncates beside the icon
    rather than wrapping under it; the columns after it scroll. */
-.pm-project-table .pm-table-cell-title {
+.llk-project-table .llk-table-cell-title {
   max-width: 0;
 }
-.pm-project-table .pm-table-title-inner {
+.llk-project-table .llk-table-title-inner {
   flex-wrap: nowrap;
 }
-.pm-project-table .pm-task-title-text {
+.llk-project-table .llk-task-title-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.pm-project-row-icon {
+.llk-project-row-icon {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   font-size: 15px;
-  --pm-glyph-size: 15px;
+  --llk-glyph-size: 15px;
   line-height: 1;
 }
-.pm-project-row:hover .pm-task-title-text {
+.llk-project-row:hover .llk-task-title-text {
   color: var(--interactive-accent);
 }
-.pm-project-row-empty {
+.llk-project-row-empty {
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }
 
-.pm-project-row-tasks {
+.llk-project-row-tasks {
   color: var(--text-muted);
   margin-right: 6px;
 }
 
-.pm-project-group-row td {
+.llk-project-group-row td {
   padding: 10px 4px 4px;
   border-bottom: 1px solid var(--background-modifier-border);
 }
-.pm-project-group {
+.llk-project-group {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -88,7 +88,7 @@
   font-weight: 600;
   color: var(--text-muted);
 }
-.pm-project-group-count {
+.llk-project-group-count {
   color: var(--text-faint);
   font-weight: 400;
   font-variant-numeric: tabular-nums;

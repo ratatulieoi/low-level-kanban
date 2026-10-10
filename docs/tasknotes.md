@@ -1,10 +1,10 @@
 # Use with TaskNotes
 
-dotpm works alongside the TaskNotes plugin, 4.10 or newer. Both edit note properties without removing what they do not know, so each plugin's fields remain after the other writes.
+Low Level Kanban works alongside the TaskNotes plugin, 4.10 or newer. Both edit note properties without removing what they do not know, so each plugin's fields remain after the other writes.
 
 ## Import TaskNotes tasks
 
-**dotpm: Import notes as tasks** recognizes TaskNotes tasks and converts them with their fields:
+**Low Level Kanban: Import notes as tasks** recognizes TaskNotes tasks and converts them with their fields:
 
 - scheduled and due dates become start and due
 - `blockedBy` links between imported notes become dependencies
@@ -16,14 +16,16 @@ Choose **move** to turn the notes into task files inside the project's task fold
 
 ## Share statuses and priorities
 
-**Settings > TaskNotes > Statuses and priorities** copies TaskNotes' palettes into dotpm, so both plugins use the same ids, names and colors. Entries TaskNotes does not have are kept.
+**Settings > Low Level Kanban > TaskNotes > Statuses and priorities** copies TaskNotes' palettes into Low Level Kanban, so both plugins use the same ids, names and colors. Entries TaskNotes does not have are kept.
 
-## Let TaskNotes list dotpm tasks
+## Let TaskNotes list Low Level Kanban tasks
 
-TaskNotes can show and edit dotpm tasks in place, without conversion:
+TaskNotes can show and edit Low Level Kanban tasks in place, without conversion:
 
-1. In TaskNotes settings, set task identification to **property**, name `pm-task`, value `true`.
+1. In TaskNotes settings, set task identification to **property**, name `low-level-kanban-task`, value `true`.
 2. In its field mapping, map **scheduled** to `start`.
-3. Add your dotpm status and priority values to TaskNotes' palettes.
+3. Add your Low Level Kanban status and priority values to TaskNotes' palettes.
 
-Hierarchy and dependencies do not resolve on the TaskNotes side, since it uses project links and `blockedBy` where dotpm uses its own references.
+Low Level Kanban writes `low-level-kanban-project: true` for projects and `low-level-kanban-task: true` for tasks. It also reads the legacy `pm-project` and `pm-task` markers. Older task notes need the new task marker for TaskNotes to list them with this configuration.
+
+Hierarchy and dependencies do not resolve on the TaskNotes side, since it uses project links and `blockedBy` where Low Level Kanban uses its own references.

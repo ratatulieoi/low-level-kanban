@@ -12,7 +12,7 @@ import {
   setIcon,
   setTooltip
 } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import {
   type Project,
   type Task,
@@ -22,9 +22,9 @@ import {
   getDefaultPriorityId,
   getPriorityConfig,
   t
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { TaskFileNameConflictError } from '#store'
-import { safeAsync, renderGlyph } from '@dotpm/ui'
+import { safeAsync, renderGlyph } from '@low-level-kanban/ui'
 import { saveShortcutLabel } from '../utils'
 import { confirmDialog, openTaskByPath } from '#ui/ModalFactory'
 import { renderTaskFormFields } from './TaskFormFields'
@@ -58,7 +58,7 @@ export class TaskEditor {
 
   constructor(
     private app: App,
-    private plugin: PMPlugin,
+    private plugin: LowLevelKanbanPlugin,
     private project: Project,
     task: Task | null,
     private parentId: string | null,
@@ -311,17 +311,17 @@ export class TaskEditor {
     if (!contentEl) return
     contentEl.empty()
 
-    const header = contentEl.createDiv('pm-te-header')
+    const header = contentEl.createDiv('llk-te-header')
     const prio = getPriorityConfig(this.plugin.store.configFor(this.project).priorities, this.task.priority)
-    if (prio?.color) header.setCssProps({ '--pm-accent-strip': prio.color })
-    const crumb = header.createDiv('pm-te-crumb')
+    if (prio?.color) header.setCssProps({ '--llk-accent-strip': prio.color })
+    const crumb = header.createDiv('llk-te-crumb')
     if (this.project.icon) {
-      renderGlyph(crumb.createSpan({ cls: 'pm-te-crumb-icon' }), { icon: this.project.icon })
+      renderGlyph(crumb.createSpan({ cls: 'llk-te-crumb-icon' }), { icon: this.project.icon })
     }
-    crumb.createSpan({ cls: 'pm-te-crumb-name', text: this.project.title })
-    const crumbSep = crumb.createSpan({ cls: 'pm-te-crumb-sep' })
+    crumb.createSpan({ cls: 'llk-te-crumb-name', text: this.project.title })
+    const crumbSep = crumb.createSpan({ cls: 'llk-te-crumb-sep' })
     setIcon(crumbSep, 'chevron-right')
-    const idEl = crumb.createSpan({ cls: 'pm-te-crumb-id pm-te-copyable', text: this.task.id })
+    const idEl = crumb.createSpan({ cls: 'llk-te-crumb-id llk-te-copyable', text: this.task.id })
     setTooltip(idEl, t('taskEditor.copyId'))
     idEl.addEventListener(
       'click',
@@ -331,26 +331,26 @@ export class TaskEditor {
       })
     )
 
-    header.createDiv('pm-te-header-spacer')
+    header.createDiv('llk-te-header-spacer')
 
     if (!this.isNew) {
       const moreBtn = new ExtraButtonComponent(header)
         .setIcon('more-horizontal')
         .setTooltip(t('taskEditor.moreActions'))
-      moreBtn.extraSettingsEl.addClass('pm-te-header-btn')
+      moreBtn.extraSettingsEl.addClass('llk-te-header-btn')
       moreBtn.onClick(() => this.openOverflowMenu(moreBtn.extraSettingsEl))
     }
     const closeBtn = new ExtraButtonComponent(header).setIcon('x').setTooltip(t('common.close'))
-    closeBtn.extraSettingsEl.addClass('pm-te-header-btn')
+    closeBtn.extraSettingsEl.addClass('llk-te-header-btn')
     closeBtn.onClick(() => {
       this.cancelled = true
       this.host.close()
     })
 
-    const body = contentEl.createDiv('pm-te-body')
+    const body = contentEl.createDiv('llk-te-body')
 
-    const titleWrap = body.createDiv('pm-te-title-wrap')
-    const titleInput = titleWrap.createEl('textarea', { cls: 'pm-te-title' })
+    const titleWrap = body.createDiv('llk-te-title-wrap')
+    const titleInput = titleWrap.createEl('textarea', { cls: 'llk-te-title' })
     this.titleInput = titleInput
     titleInput.rows = 1
     titleInput.value = this.task.title
@@ -360,17 +360,17 @@ export class TaskEditor {
       titleInput.setCssProps({ '--te-title-height': 'auto' })
       titleInput.setCssProps({ '--te-title-height': titleInput.scrollHeight + 'px' })
     }
-    const titleError = titleWrap.createDiv({ cls: 'pm-modal-title-error', attr: { hidden: '' } })
+    const titleError = titleWrap.createDiv({ cls: 'llk-modal-title-error', attr: { hidden: '' } })
     const clearTitleError = () => {
       if (titleError.hasAttribute('hidden')) return
       titleError.setAttribute('hidden', '')
       titleError.setText('')
-      titleInput.classList.remove('pm-input-error')
+      titleInput.classList.remove('llk-input-error')
     }
     const showTitleError = (message: string) => {
       titleError.setText(message)
       titleError.removeAttribute('hidden')
-      titleInput.classList.add('pm-input-error')
+      titleInput.classList.add('llk-input-error')
       titleInput.focus()
       titleInput.select()
     }
@@ -384,7 +384,7 @@ export class TaskEditor {
     })
     window.setTimeout(autosizeTitle, 0)
 
-    const props = body.createDiv('pm-te-props')
+    const props = body.createDiv('llk-te-props')
     renderTaskFormFields(props, {
       task: this.task,
       project: this.project,
@@ -398,11 +398,11 @@ export class TaskEditor {
       openTask: (path) => this.openLinkedTask(path)
     })
 
-    const descSection = body.createDiv('pm-modal-section pm-modal-desc-section')
-    descSection.createEl('h4', { text: t('common.description'), cls: 'pm-modal-section-title' })
+    const descSection = body.createDiv('llk-modal-section llk-modal-desc-section')
+    descSection.createEl('h4', { text: t('common.description'), cls: 'llk-modal-section-title' })
 
-    const descPreview = descSection.createDiv('pm-modal-desc-preview')
-    const descArea = descSection.createEl('textarea', { cls: 'pm-modal-description' })
+    const descPreview = descSection.createDiv('llk-modal-desc-preview')
+    const descArea = descSection.createEl('textarea', { cls: 'llk-modal-description' })
     descArea.placeholder = t('taskEditor.descriptionPlaceholder')
     descArea.value = this.task.description
 
@@ -424,7 +424,7 @@ export class TaskEditor {
     this.descResizeObserver = new ResizeObserver(() => {
       if (descArea.clientWidth === measuredWidth) return
       measuredWidth = descArea.clientWidth
-      if (!descArea.classList.contains('pm-hidden')) autoResize()
+      if (!descArea.classList.contains('llk-hidden')) autoResize()
     })
     this.descResizeObserver.observe(descArea)
 
@@ -480,8 +480,8 @@ export class TaskEditor {
     }
 
     const showEdit = (caret?: number) => {
-      descPreview.classList.add('pm-hidden')
-      descArea.classList.remove('pm-hidden')
+      descPreview.classList.add('llk-hidden')
+      descArea.classList.remove('llk-hidden')
       descArea.value = this.task.description
       window.setTimeout(() => {
         autoResize()
@@ -493,8 +493,8 @@ export class TaskEditor {
     const showPreview = () => {
       if (!hasContent()) return
       void renderPreview()
-      descArea.classList.add('pm-hidden')
-      descPreview.classList.remove('pm-hidden')
+      descArea.classList.add('llk-hidden')
+      descPreview.classList.remove('llk-hidden')
     }
 
     descArea.addEventListener('input', () => {
@@ -533,7 +533,7 @@ export class TaskEditor {
       const files = e.dataTransfer?.files
       if (!files || files.length === 0) return
       e.preventDefault()
-      if (descArea.classList.contains('pm-hidden')) {
+      if (descArea.classList.contains('llk-hidden')) {
         showEdit()
         descArea.selectionStart = descArea.selectionEnd = descArea.value.length
       }
@@ -603,10 +603,10 @@ export class TaskEditor {
     })
 
     if (hasContent()) {
-      descArea.classList.add('pm-hidden')
+      descArea.classList.add('llk-hidden')
       void renderPreview()
     } else {
-      descPreview.classList.add('pm-hidden')
+      descPreview.classList.add('llk-hidden')
       window.setTimeout(autoResize, 0)
     }
 
@@ -616,12 +616,12 @@ export class TaskEditor {
 
     renderTimeTrackingPanel(body, this.task)
 
-    const footer = contentEl.createDiv('pm-te-footer')
+    const footer = contentEl.createDiv('llk-te-footer')
 
     if (!this.isNew && this.task.filePath) {
       const filePath = this.task.filePath
-      const pathHint = footer.createSpan({ cls: 'pm-te-footer-path pm-te-copyable' })
-      const fileIcon = pathHint.createSpan({ cls: 'pm-te-footer-icon' })
+      const pathHint = footer.createSpan({ cls: 'llk-te-footer-path llk-te-copyable' })
+      const fileIcon = pathHint.createSpan({ cls: 'llk-te-footer-icon' })
       setIcon(fileIcon, 'file-text')
       pathHint.createSpan({ text: filePath })
       setTooltip(pathHint, t('taskEditor.copyPath'))
@@ -634,7 +634,7 @@ export class TaskEditor {
       )
     }
 
-    footer.createDiv('pm-footer-spacer')
+    footer.createDiv('llk-footer-spacer')
 
     new ButtonComponent(footer).setButtonText(t('common.cancel')).onClick(() => {
       this.cancelled = true
@@ -652,7 +652,7 @@ export class TaskEditor {
       try {
         if (!this.task.title.trim()) {
           titleInput.focus()
-          titleInput.classList.add('pm-input-error')
+          titleInput.classList.add('llk-input-error')
           return
         }
         clearTitleError()
@@ -664,7 +664,7 @@ export class TaskEditor {
           showTitleError(t('taskEditor.titleConflict', { name: err.fileName }))
           return
         }
-        console.error('[PM]', err)
+        console.error('[Low Level Kanban]', err)
         new Notice(t('common.somethingWentWrong'))
       } finally {
         saving = false

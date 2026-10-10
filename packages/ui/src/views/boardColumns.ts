@@ -7,7 +7,7 @@ import {
   makeDefaultGroup,
   t,
   valueKey
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { valueOptions, type FilterSetup } from '../composites/ViewHeader/filterPopover'
 
 export interface BoardColumn {

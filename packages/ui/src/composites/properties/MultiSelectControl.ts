@@ -1,4 +1,4 @@
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 import { setIcon } from '#platform'
 import { safeAsync } from '#dom'
 import { Popover } from '#primitives/Popover'
@@ -58,31 +58,31 @@ export function renderMultiSelect(opts: MultiSelectOpts): void {
 
   // In stack mode the trigger is both the anchor and the value display; otherwise the values
   // sit in their own row above a trailing ghost that anchors the picker.
-  const chipsEl = stackMode || listMode ? null : opts.container.createDiv('pm-prop-chips')
-  const depsEl = listMode ? opts.container.createDiv('pm-prop-deps') : null
+  const chipsEl = stackMode || listMode ? null : opts.container.createDiv('llk-prop-chips')
+  const depsEl = listMode ? opts.container.createDiv('llk-prop-deps') : null
   const anchorBtn = stackMode
     ? opts.container.createEl('button')
-    : opts.container.createEl('button', { cls: 'pm-prop-add' })
+    : opts.container.createEl('button', { cls: 'llk-prop-add' })
   let addLabelEl: HTMLElement | null = null
   if (!stackMode) {
-    setIcon(anchorBtn.createSpan({ cls: 'pm-glyph-icon' }), 'plus')
-    addLabelEl = anchorBtn.createSpan({ cls: 'pm-prop-add-label', text: opts.addLabel })
+    setIcon(anchorBtn.createSpan({ cls: 'llk-glyph-icon' }), 'plus')
+    addLabelEl = anchorBtn.createSpan({ cls: 'llk-prop-add-label', text: opts.addLabel })
   }
 
   const renderStackTrigger = () => {
     anchorBtn.empty()
     const ids = opts.selected()
     if (ids.length === 0) {
-      anchorBtn.className = 'pm-prop-add'
-      setIcon(anchorBtn.createSpan({ cls: 'pm-glyph-icon' }), 'plus')
-      anchorBtn.createSpan({ cls: 'pm-prop-add-label', text: opts.addLabel })
+      anchorBtn.className = 'llk-prop-add'
+      setIcon(anchorBtn.createSpan({ cls: 'llk-glyph-icon' }), 'plus')
+      anchorBtn.createSpan({ cls: 'llk-prop-add-label', text: opts.addLabel })
       return
     }
-    anchorBtn.className = 'pm-prop-inline pm-assignees-trigger'
-    const stack = anchorBtn.createSpan({ cls: 'pm-avatar-stack' })
+    anchorBtn.className = 'llk-prop-inline llk-assignees-trigger'
+    const stack = anchorBtn.createSpan({ cls: 'llk-avatar-stack' })
     for (const id of ids) new Avatar(stack).setColor(opts.colorFor?.(id)).setName(labelOf(id)).setSize('sm')
     if (ids.length === 1) {
-      anchorBtn.createSpan({ cls: 'pm-assignees-label', text: labelOf(ids[0]) })
+      anchorBtn.createSpan({ cls: 'llk-assignees-label', text: labelOf(ids[0]) })
     }
   }
 
@@ -141,11 +141,11 @@ export function renderMultiSelect(opts: MultiSelectOpts): void {
     let query = ''
     const searchInput = opts.search
       ? popover.contentEl.createEl('input', {
-          cls: 'pm-pop-field',
+          cls: 'llk-pop-field',
           attr: { placeholder: opts.placeholder ?? 'Search…', spellcheck: 'false' }
         })
       : null
-    const listEl = popover.contentEl.createDiv('pm-pop-list')
+    const listEl = popover.contentEl.createDiv('llk-pop-list')
 
     const renderList = () => {
       listEl.empty()
@@ -173,7 +173,7 @@ export function renderMultiSelect(opts: MultiSelectOpts): void {
       const known = new Set(items.map((it) => keyOf(it.id)))
       const extra = more.filter((it) => !known.has(keyOf(it.id)))
       if (extra.length && opts.moreHeading) {
-        listEl.createDiv({ cls: 'pm-pop-heading', text: opts.moreHeading })
+        listEl.createDiv({ cls: 'llk-pop-heading', text: opts.moreHeading })
       }
       for (const it of extra) {
         renderOptionRow(listEl, {

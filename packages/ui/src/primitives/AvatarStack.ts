@@ -16,7 +16,7 @@ export class AvatarStack {
   private size: 'md' | 'sm' = 'md'
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createDiv('pm-avatar-stack')
+    this.el = parentEl.createDiv('llk-avatar-stack')
   }
 
   setNames(names: string[]): this {
@@ -52,9 +52,9 @@ export class AvatarStack {
     }
     const overflow = this.people.length - visible.length
     if (overflow > 0) {
-      const more = this.el.createSpan({ cls: 'pm-avatar pm-avatar--more' })
+      const more = this.el.createSpan({ cls: 'llk-avatar llk-avatar--more' })
       more.setText(`+${overflow}`)
-      if (this.size === 'sm') more.addClass('pm-avatar--sm')
+      if (this.size === 'sm') more.addClass('llk-avatar--sm')
     }
   }
 }

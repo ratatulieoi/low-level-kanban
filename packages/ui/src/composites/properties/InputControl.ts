@@ -1,4 +1,4 @@
-import { t } from '@dotpm/core'
+import { t } from '@low-level-kanban/core'
 import { makeInlineEdit } from '../cells/inlineEdit'
 
 export interface InputControlOpts {
@@ -15,10 +15,10 @@ export interface InputControlOpts {
 export function renderInputControl(opts: InputControlOpts): void {
   const inputType = opts.inputType ?? 'text'
   const has = opts.value !== ''
-  const trigger = opts.container.createEl('button', { cls: 'pm-prop-inline' })
-  if (!has) trigger.addClass('pm-prop-inline--empty')
+  const trigger = opts.container.createEl('button', { cls: 'llk-prop-inline' })
+  if (!has) trigger.addClass('llk-prop-inline--empty')
   trigger.createSpan({
-    cls: 'pm-prop-inline-label',
+    cls: 'llk-prop-inline-label',
     text: has ? `${opts.value}${opts.suffix ?? ''}` : (opts.placeholder ?? t('property.setValue'))
   })
 

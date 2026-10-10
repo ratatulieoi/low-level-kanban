@@ -1,6 +1,6 @@
 import { App, Modal } from 'obsidian'
-import type PMPlugin from '#main'
-import type { Project, Task } from '@dotpm/core'
+import type LowLevelKanbanPlugin from '#main'
+import type { Project, Task } from '@low-level-kanban/core'
 import { TaskEditor } from './TaskEditor'
 
 export class TaskModal extends Modal {
@@ -8,7 +8,7 @@ export class TaskModal extends Modal {
 
   constructor(
     app: App,
-    plugin: PMPlugin,
+    plugin: LowLevelKanbanPlugin,
     project: Project,
     task: Task | null,
     parentId: string | null,
@@ -31,8 +31,8 @@ export class TaskModal extends Modal {
   onOpen(): void {
     const { contentEl } = this
     contentEl.empty()
-    contentEl.addClass('pm-te-modal', 'pm-te-surface')
-    this.modalEl.addClass('pm-modal', 'pm-modal--task')
+    contentEl.addClass('llk-te-modal', 'llk-te-surface')
+    this.modalEl.addClass('llk-modal', 'llk-modal--task')
     this.editor.mount(contentEl)
   }
 

@@ -1,5 +1,5 @@
 import { Notice, TFile } from 'obsidian'
-import type PMPlugin from './main'
+import type LowLevelKanbanPlugin from './main'
 import type { ScopeSpec } from './store'
 import { isRefLink } from './store/refs'
 import {
@@ -10,12 +10,13 @@ import {
   makeDefaultSort,
   parseFrontmatter,
   isOldFormat,
+  isProjectFrontmatter,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 
 /** Rewrites projects whose tasks are embedded in frontmatter as one file per task. */
-export async function migrateProjects(plugin: PMPlugin): Promise<void> {
+export async function migrateProjects(plugin: LowLevelKanbanPlugin): Promise<void> {
   let migrated = 0
 
   for (const path of plugin.index.projectPaths(true)) {
@@ -24,7 +25,7 @@ export async function migrateProjects(plugin: PMPlugin): Promise<void> {
     try {
       const content = await plugin.app.vault.read(file)
       const parsed = parseFrontmatter(content)
-      if (parsed.kind !== 'frontmatter' || parsed.frontmatter['pm-project'] !== true) continue
+      if (parsed.kind !== 'frontmatter' || !isProjectFrontmatter(parsed.frontmatter)) continue
       if (!isOldFormat(parsed.frontmatter)) continue
 
       const project = await plugin.store.loadProject(file)
@@ -35,7 +36,7 @@ export async function migrateProjects(plugin: PMPlugin): Promise<void> {
       await plugin.store.saveProject(project)
       migrated++
     } catch (e) {
-      console.error(`[PM] Migration failed for ${file.path}:`, e)
+      console.error(`[Low Level Kanban] Migration failed for ${file.path}:`, e)
       new Notice(t('migration.failed', { file: file.basename }))
     }
   }
@@ -52,7 +53,7 @@ const LEGACY_BOARD_KEYS = ['kanbanShowSubtasks', 'kanbanShowDescriptionPreview']
  * board card fields of that project's view, then drops them from the note. A note without
  * them is left alone, which is what makes a second run free.
  */
-export async function migrateBoardCardConfig(plugin: PMPlugin): Promise<void> {
+export async function migrateBoardCardConfig(plugin: LowLevelKanbanPlugin): Promise<void> {
   let changed = false
   for (const path of plugin.index.projectPaths(true)) {
     const config = frontmatterOf(plugin, path)?.config as Record<string, unknown> | undefined
@@ -90,7 +91,7 @@ export async function migrateBoardCardConfig(plugin: PMPlugin): Promise<void> {
         if (!Object.keys(own).length) Reflect.deleteProperty(frontmatter, 'config')
       })
     } catch (e) {
-      console.error(`[PM] Failed to move the board settings out of "${path}":`, e)
+      console.error(`[Low Level Kanban] Failed to move the board settings out of "${path}":`, e)
     }
     changed = true
   }
@@ -109,7 +110,7 @@ function holdsBareId(frontmatter: Record<string, unknown> | undefined): boolean 
   return false
 }
 
-function frontmatterOf(plugin: PMPlugin, path: string): Record<string, unknown> | undefined {
+function frontmatterOf(plugin: LowLevelKanbanPlugin, path: string): Record<string, unknown> | undefined {
   const file = plugin.app.vault.getAbstractFileByPath(path)
   return file instanceof TFile ? plugin.app.metadataCache.getFileCache(file)?.frontmatter : undefined
 }
@@ -120,7 +121,7 @@ function frontmatterOf(plugin: PMPlugin, path: string): Record<string, unknown> 
  * the frontmatter cache rather than the notes, and touches nothing in a vault that holds
  * no ids, which is what makes a second run free.
  */
-export async function migrateTaskRefs(plugin: PMPlugin): Promise<void> {
+export async function migrateTaskRefs(plugin: LowLevelKanbanPlugin): Promise<void> {
   let rewritten = 0
 
   for (const path of plugin.index.projectPaths(true)) {
@@ -137,7 +138,7 @@ export async function migrateTaskRefs(plugin: PMPlugin): Promise<void> {
       await plugin.store.normalizeTaskRefs(project, stale, projectNoteStale)
       rewritten += stale.length
     } catch (e) {
-      console.error(`[PM] Failed to update the references in "${path}":`, e)
+      console.error(`[Low Level Kanban] Failed to update the references in "${path}":`, e)
     }
   }
 
@@ -159,7 +160,7 @@ interface ProjectMove {
  * project that already owns its folder is skipped, so a run interrupted halfway finishes
  * on the next launch.
  */
-export async function migrateProjectLayout(plugin: PMPlugin): Promise<void> {
+export async function migrateProjectLayout(plugin: LowLevelKanbanPlugin): Promise<void> {
   const moves: ProjectMove[] = []
   // Read before the first move: a sub-project's parent link stops resolving once the
   // parent note moves, so the index can no longer answer who belongs to whom.
@@ -180,7 +181,7 @@ export async function migrateProjectLayout(plugin: PMPlugin): Promise<void> {
         tasksTo: `${to.slice(0, to.lastIndexOf('/'))}/_tasks`
       })
     } catch (e) {
-      console.error(`[PM] Failed to move "${path}" into its own folder:`, e)
+      console.error(`[Low Level Kanban] Failed to move "${path}" into its own folder:`, e)
       new Notice(t('migration.moveFailed', { path }))
     }
   }
@@ -209,7 +210,7 @@ function movedPath(path: string, moves: ProjectMove[]): string | null {
 }
 
 /** Per-project filters, saved views and collapsed state are keyed by the project's path. */
-function remapProjectSettings(plugin: PMPlugin, moves: ProjectMove[]): void {
+function remapProjectSettings(plugin: LowLevelKanbanPlugin, moves: ProjectMove[]): void {
   const { projectFilters, scopeViews, collapsedTasks, collapsedProjects } = plugin.settings
 
   for (const { from, to } of moves) {
@@ -240,7 +241,7 @@ function remapProjectSettings(plugin: PMPlugin, moves: ProjectMove[]): void {
 }
 
 /** The workspace restores its tabs before this runs, so open views still hold old paths. */
-function retargetOpenViews(plugin: PMPlugin, moves: ProjectMove[]): void {
+function retargetOpenViews(plugin: LowLevelKanbanPlugin, moves: ProjectMove[]): void {
   plugin.app.workspace.iterateAllLeaves((leaf) => {
     const viewState = leaf.getViewState()
     const state = { ...(viewState.state as Record<string, unknown>) }

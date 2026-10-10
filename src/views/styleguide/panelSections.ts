@@ -7,7 +7,7 @@ import {
   DEFAULT_STATUSES,
   filterFieldLabel,
   makeTask
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import {
   type FilterSetup,
   type SwitcherProject,
@@ -25,7 +25,7 @@ import {
   renderSortPanel,
   renderTunePanel,
   renderTuneSheetPanel
-} from '@dotpm/ui'
+} from '@low-level-kanban/ui'
 
 export interface GalleryLayout {
   section: (title: string, id: string) => HTMLElement
@@ -61,9 +61,9 @@ function setupWith(conditions: FilterCondition[]): FilterSetup {
 
 /** The chrome a `Popover` gives its content, drawn in place so the panel shows at rest. */
 function frame(parent: HTMLElement, width: number): HTMLElement {
-  const pop = parent.createDiv('pm-pop pm-sg-pop')
+  const pop = parent.createDiv('llk-pop llk-sg-pop')
   pop.setCssProps({ '--pop-width': `${width}px` })
-  return pop.createDiv('pm-pop-body')
+  return pop.createDiv('llk-pop-body')
 }
 
 /**

@@ -1,7 +1,14 @@
 import type { App, WorkspaceLeaf } from 'obsidian'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_SETTINGS, makeDefaultFilter, makeDefaultGroup, makeProject, t, type SavedView } from '@dotpm/core'
-import type PMPlugin from '#main'
+import {
+  DEFAULT_SETTINGS,
+  makeDefaultFilter,
+  makeDefaultGroup,
+  makeProject,
+  t,
+  type SavedView
+} from '@low-level-kanban/core'
+import type LowLevelKanbanPlugin from '#main'
 import { makeFakeApp } from '#test/fakeVault'
 import { ProjectScope } from '#store/ProjectScope'
 import { ProjectStore } from '#store/ProjectStore'
@@ -35,7 +42,7 @@ const savedView = (): SavedView => ({
 })
 
 describe('ProjectView board state', () => {
-  let plugin: PMPlugin
+  let plugin: LowLevelKanbanPlugin
   let view: ProjectView
 
   beforeEach(() => {
@@ -47,7 +54,7 @@ describe('ProjectView board state', () => {
       settings,
       store,
       saveSettings: vi.fn().mockResolvedValue(undefined)
-    } as unknown as PMPlugin
+    } as unknown as LowLevelKanbanPlugin
     view = new ProjectView({} as WorkspaceLeaf, plugin)
     const project = makeProject('Roadmap', 'Projects/Roadmap.md')
     view.projectScope = new ProjectScope({ kind: 'project', path: project.filePath }, [project], store)

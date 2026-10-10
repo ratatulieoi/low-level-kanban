@@ -1,5 +1,5 @@
 import { ItemView, Menu, Scope, WorkspaceLeaf } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import {
   type ProjectGroupBy,
   type ProjectListField,
@@ -21,7 +21,7 @@ import {
   tidyProjectFields,
   tn,
   withDefault
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import {
   ChipButton,
   EmptyState,
@@ -51,11 +51,11 @@ import {
   SavedViewSlot,
   summarizeSort,
   syncSortButton
-} from '@dotpm/ui'
+} from '@low-level-kanban/ui'
 import { openProjectCreate } from '#ui/ModalFactory'
 import { projectListItems, renderProjectTable, type ProjectListContext } from './ProjectListRenderer'
 
-export const PM_DASHBOARD_VIEW_TYPE = 'pm-dashboard'
+import { LLK_DASHBOARD_VIEW_TYPE } from './viewTypes'
 
 const sortFields = (): SortField<ProjectSortKey>[] => [
   { id: 'title', label: t('columns.project') },
@@ -67,7 +67,7 @@ const groupLabel = (group: ProjectGroupBy): string =>
   ({ none: t('header.groupNone'), folder: t('header.groupFolder'), tag: t('header.groupTag') })[group]
 
 export class DashboardView extends ItemView {
-  private plugin: PMPlugin
+  private plugin: LowLevelKanbanPlugin
   private headerEl!: HTMLElement
   private bodyEl!: HTMLElement
   private header: ViewHeader | null = null
@@ -85,7 +85,7 @@ export class DashboardView extends ItemView {
   private items: ProjectListItem[] = []
   private shown = 0
 
-  constructor(leaf: WorkspaceLeaf, plugin: PMPlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: LowLevelKanbanPlugin) {
     super(leaf)
     this.plugin = plugin
     this.navigation = false
@@ -98,7 +98,7 @@ export class DashboardView extends ItemView {
   }
 
   getViewType(): string {
-    return PM_DASHBOARD_VIEW_TYPE
+    return LLK_DASHBOARD_VIEW_TYPE
   }
   getDisplayText(): string {
     return t('dashboard.title')
@@ -112,12 +112,12 @@ export class DashboardView extends ItemView {
   }
 
   onOpen(): Promise<void> {
-    this.containerEl.addClass('pm-view')
+    this.containerEl.addClass('llk-view')
     const root = this.contentEl
     root.empty()
-    root.addClass('pm-root')
-    this.headerEl = root.createDiv('pm-vh-mount')
-    this.bodyEl = root.createDiv('pm-content pm-project-list-container')
+    root.addClass('llk-root')
+    this.headerEl = root.createDiv('llk-vh-mount')
+    this.bodyEl = root.createDiv('llk-content llk-project-list-container')
     // An untouched list opens with the starred view.
     const starred = this.plugin.settings.projectListViews.find((view) => view.isDefault)
     if (starred && !this.state.activeViewId && sameValue(this.state, makeDefaultProjectList())) {
@@ -307,7 +307,7 @@ export class DashboardView extends ItemView {
           render: (parent, changed) => {
             const draw = (): void => {
               parent.empty()
-              const list = parent.createDiv('pm-pop-list')
+              const list = parent.createDiv('llk-pop-list')
               for (const option of ['none', 'folder', 'tag'] as const) {
                 renderOptionRow(list, {
                   label: groupLabel(option),
@@ -495,7 +495,7 @@ export class DashboardView extends ItemView {
     this.header?.tune.setBadge(filters).setActive(isProjectQueryActive(this.state.filter, this.text))
     const hasArchived = index.projectRefs(true).length > index.projectRefs().length
     this.archivedButton?.setActive(settings.showArchivedProjects)
-    this.archivedButton?.el.toggleClass('pm-hidden', !hasArchived && !settings.showArchivedProjects)
+    this.archivedButton?.el.toggleClass('llk-hidden', !hasArchived && !settings.showArchivedProjects)
     if (this.sortButton) syncSortButton(this.sortButton, summarizeSort(sortFields(), this.state.sort))
     const grouped = this.state.group !== 'none'
     this.groupButton?.setLabel(grouped ? groupLabel(this.state.group) : t('header.group')).setActive(grouped)

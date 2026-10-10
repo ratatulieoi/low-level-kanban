@@ -1,4 +1,4 @@
-import { type Recurrence, type Task, makeTask } from '@dotpm/core'
+import { type Recurrence, type Task, makeTask } from '@low-level-kanban/core'
 import type { TaskNotesTaskInfo } from './tasknotes'
 
 /** A selected TaskNotes task, its link references already resolved to vault paths. */

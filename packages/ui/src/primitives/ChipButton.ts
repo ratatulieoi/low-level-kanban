@@ -12,8 +12,8 @@ export class ChipButton {
   constructor(parentEl: HTMLElement) {
     this.button = createButton(parentEl)
     this.el = this.button.buttonEl
-    this.el.addClass('pm-chip-btn')
-    this.labelEl = this.el.createSpan('pm-chip-btn-label')
+    this.el.addClass('llk-chip-btn')
+    this.labelEl = this.el.createSpan('llk-chip-btn-label')
   }
 
   setLabel(text: string): this {
@@ -23,7 +23,7 @@ export class ChipButton {
   }
 
   setIcon(name: string): this {
-    this.iconEl ??= this.el.createSpan('pm-chip-btn-icon')
+    this.iconEl ??= this.el.createSpan('llk-chip-btn-icon')
     this.iconEl.empty()
     setIcon(this.iconEl, name)
     this.order()
@@ -38,7 +38,7 @@ export class ChipButton {
       this.order()
       return this
     }
-    this.badgeEl ??= this.el.createSpan('pm-chip-btn-badge')
+    this.badgeEl ??= this.el.createSpan('llk-chip-btn-badge')
     this.badgeEl.setText(String(text))
     this.order()
     return this
@@ -52,7 +52,7 @@ export class ChipButton {
       this.order()
       return this
     }
-    this.detailEl ??= this.el.createSpan('pm-chip-btn-detail')
+    this.detailEl ??= this.el.createSpan('llk-chip-btn-detail')
     this.detailEl.setText(text)
     this.order()
     return this
@@ -67,7 +67,7 @@ export class ChipButton {
       return this
     }
     if (!this.chevronEl) {
-      this.chevronEl = this.el.createSpan('pm-chip-btn-chevron')
+      this.chevronEl = this.el.createSpan('llk-chip-btn-chevron')
       setIcon(this.chevronEl, 'chevron-down')
     }
     this.order()
@@ -75,7 +75,7 @@ export class ChipButton {
   }
 
   setActive(active: boolean): this {
-    this.el.toggleClass('pm-chip-btn--active', active)
+    this.el.toggleClass('llk-chip-btn--active', active)
     return this
   }
 
@@ -84,13 +84,13 @@ export class ChipButton {
    * a panel or a bar; `outline` is a thin border, for one of a set of choices.
    */
   setVariant(variant: 'raised' | 'flat' | 'outline'): this {
-    this.el.toggleClass('pm-chip-btn--flat', variant === 'flat')
-    this.el.toggleClass('pm-chip-btn--outline', variant === 'outline')
+    this.el.toggleClass('llk-chip-btn--flat', variant === 'flat')
+    this.el.toggleClass('llk-chip-btn--outline', variant === 'outline')
     return this
   }
 
   setShape(shape: 'rounded' | 'pill'): this {
-    this.el.toggleClass('pm-chip-btn--pill', shape === 'pill')
+    this.el.toggleClass('llk-chip-btn--pill', shape === 'pill')
     return this
   }
 
@@ -125,6 +125,6 @@ export class ChipButton {
       if (part) this.el.appendChild(part)
     }
     const iconOnly = !this.labelEl.textContent && !this.detailEl && !this.badgeEl && !this.chevronEl
-    this.el.toggleClass('pm-chip-btn--icon-only', iconOnly)
+    this.el.toggleClass('llk-chip-btn--icon-only', iconOnly)
   }
 }

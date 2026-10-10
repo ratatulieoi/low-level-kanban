@@ -1,4 +1,4 @@
-import type { CustomFieldDef, PMSettings, Project, ResolvedProjectConfig, Task } from '../types'
+import type { CustomFieldDef, LowLevelKanbanSettings, Project, ResolvedProjectConfig, Task } from '../types'
 import { DEFAULT_PALETTE_COLOR } from '../types'
 import { flattenTasks } from './TaskTreeOps'
 
@@ -13,7 +13,7 @@ import { flattenTasks } from './TaskTreeOps'
  */
 export function resolveProjectConfig(
   project: Project,
-  settings: PMSettings,
+  settings: LowLevelKanbanSettings,
   ancestorFields: CustomFieldDef[][] = []
 ): ResolvedProjectConfig {
   const config = project.config
@@ -63,7 +63,7 @@ export function mergeById<T extends { id: string }>(lists: T[][]): T[] {
 
 function resolveCustomFields(
   project: Project,
-  settings: PMSettings,
+  settings: LowLevelKanbanSettings,
   ancestorFields: CustomFieldDef[][]
 ): CustomFieldDef[] {
   const fields = mergeById([settings.customFields, ...ancestorFields, project.customFields])

@@ -1,17 +1,30 @@
-import type PMPlugin from '#main'
-import { type Project, type Task, type CustomFieldDef, collectAllAssignees, stringifyCustomValue, t } from '@dotpm/core'
-import { Checkbox, renderDateControl, renderInputControl, renderMultiSelect, renderSelectControl } from '@dotpm/ui'
+import type LowLevelKanbanPlugin from '#main'
+import {
+  type Project,
+  type Task,
+  type CustomFieldDef,
+  collectAllAssignees,
+  stringifyCustomValue,
+  t
+} from '@low-level-kanban/core'
+import {
+  Checkbox,
+  renderDateControl,
+  renderInputControl,
+  renderMultiSelect,
+  renderSelectControl
+} from '@low-level-kanban/ui'
 import { renderPersonPicker } from '#ui/PersonPicker'
 
 export function renderCustomFieldInput(
   cf: CustomFieldDef,
   task: Task,
   project: Project,
-  plugin: PMPlugin,
+  plugin: LowLevelKanbanPlugin,
   rerender: () => void
 ): HTMLElement {
   const value = task.customFields[cf.id]
-  const wrap = createDiv('pm-prop-value')
+  const wrap = createDiv('llk-prop-value')
   const commit = (next: unknown): void => {
     task.customFields[cf.id] = next
     rerender()

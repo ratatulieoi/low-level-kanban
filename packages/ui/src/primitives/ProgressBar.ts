@@ -5,9 +5,9 @@ export class ProgressBar {
   private value = 0
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createDiv('pm-progress')
-    const track = this.el.createDiv('pm-progress-track')
-    this.fill = track.createDiv('pm-progress-fill')
+    this.el = parentEl.createDiv('llk-progress')
+    const track = this.el.createDiv('llk-progress-track')
+    this.fill = track.createDiv('llk-progress-fill')
   }
 
   setValue(percent: number): this {
@@ -18,18 +18,18 @@ export class ProgressBar {
   }
 
   setColor(color: string): this {
-    this.el.style.setProperty('--pm-progress-color', color)
+    this.el.style.setProperty('--llk-progress-color', color)
     return this
   }
 
   setSize(size: 'sm' | 'md'): this {
-    this.el.toggleClass('pm-progress--sm', size === 'sm')
+    this.el.toggleClass('llk-progress--sm', size === 'sm')
     return this
   }
 
   setShowLabel(show: boolean): this {
     if (show && !this.labelEl) {
-      this.labelEl = this.el.createSpan({ cls: 'pm-progress-label', text: `${Math.round(this.value)}%` })
+      this.labelEl = this.el.createSpan({ cls: 'llk-progress-label', text: `${Math.round(this.value)}%` })
     } else if (!show && this.labelEl) {
       this.labelEl.remove()
       this.labelEl = null

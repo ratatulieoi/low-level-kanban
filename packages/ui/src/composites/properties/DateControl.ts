@@ -1,6 +1,6 @@
 import { setIcon } from '#platform'
 import { Popover } from '#primitives/Popover'
-import { formatDate, today, type DueTone, t } from '@dotpm/core'
+import { formatDate, today, type DueTone, t } from '@low-level-kanban/core'
 
 export interface DateControlOpts {
   container: HTMLElement
@@ -13,15 +13,15 @@ export interface DateControlOpts {
 /** Backs Due, Start, and Completed. */
 export function renderDateControl(opts: DateControlOpts): void {
   const has = !!opts.value
-  const trigger = opts.container.createEl('button', { cls: 'pm-prop-inline' })
-  if (!has) trigger.addClass('pm-prop-inline--empty')
-  const icon = trigger.createSpan({ cls: 'pm-glyph-icon' })
+  const trigger = opts.container.createEl('button', { cls: 'llk-prop-inline' })
+  if (!has) trigger.addClass('llk-prop-inline--empty')
+  const icon = trigger.createSpan({ cls: 'llk-glyph-icon' })
   setIcon(icon, 'calendar')
   trigger.createSpan({
-    cls: 'pm-prop-inline-label',
+    cls: 'llk-prop-inline-label',
     text: has ? formatDate(opts.value) : (opts.emptyLabel ?? t('taskForm.setDate'))
   })
-  if (opts.hint) trigger.createSpan({ cls: `pm-due pm-due--${opts.hint.tone}`, text: opts.hint.text })
+  if (opts.hint) trigger.createSpan({ cls: `llk-due llk-due--${opts.hint.tone}`, text: opts.hint.text })
 
   let pop: Popover | null = null
   trigger.addEventListener('click', () => {
@@ -42,7 +42,7 @@ export function renderDateControl(opts: DateControlOpts): void {
         if (value !== opts.value) opts.onChange(value)
       }
     })
-    const field = pop.contentEl.createEl('input', { type: 'date', cls: 'pm-pop-field' })
+    const field = pop.contentEl.createEl('input', { type: 'date', cls: 'llk-pop-field' })
     field.value = opts.value
     field.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -50,15 +50,15 @@ export function renderDateControl(opts: DateControlOpts): void {
         pop?.close()
       }
     })
-    const actions = pop.contentEl.createDiv('pm-pop-actions')
-    const todayBtn = actions.createEl('button', { cls: 'pm-pop-item pm-pop-item--center', text: t('dates.today') })
+    const actions = pop.contentEl.createDiv('llk-pop-actions')
+    const todayBtn = actions.createEl('button', { cls: 'llk-pop-item llk-pop-item--center', text: t('dates.today') })
     todayBtn.addEventListener('click', () => {
       next = today().toString()
       pop?.close()
     })
     if (has) {
       const clearBtn = actions.createEl('button', {
-        cls: 'pm-pop-item pm-pop-item--center pm-pop-item--danger',
+        cls: 'llk-pop-item llk-pop-item--center llk-pop-item--danger',
         text: t('common.clear')
       })
       clearBtn.addEventListener('click', () => {

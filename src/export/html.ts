@@ -1,4 +1,4 @@
-import type { Snapshot } from '@dotpm/snapshot'
+import { normalizeSnapshot, type ReadableSnapshot } from '@low-level-kanban/snapshot'
 
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -9,14 +9,14 @@ function escapeHtml(text: string): string {
  * the snapshot embedded as JSON. Every `<` in the JSON is written as a unicode escape, so
  * no task text can close the script tag or open a comment.
  */
-export function renderSnapshotHtml(snapshot: Snapshot, template: string = __VIEWER_TEMPLATE__): string {
+export function renderSnapshotHtml(snapshot: ReadableSnapshot, template: string = __VIEWER_TEMPLATE__): string {
   if (!template) throw new Error('this build carries no viewer; run the viewer build first')
-  const json = JSON.stringify(snapshot).replace(/</g, '\\u003c')
+  const json = JSON.stringify(normalizeSnapshot(snapshot)).replace(/</g, '\\u003c')
   return template
-    .split('__DOTPM_LOCALE__')
+    .split('__LOW_LEVEL_KANBAN_LOCALE__')
     .join(escapeHtml(snapshot.locale))
-    .split('__DOTPM_TITLE__')
+    .split('__LOW_LEVEL_KANBAN_TITLE__')
     .join(escapeHtml(snapshot.title))
-    .split('__DOTPM_SNAPSHOT__')
+    .split('__LOW_LEVEL_KANBAN_SNAPSHOT__')
     .join(json)
 }

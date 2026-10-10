@@ -23,7 +23,7 @@ import {
   priorityIcon,
   t,
   valueKey
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { renderPopHead, renderPopSearch } from '../popoverParts'
 import { renderOptionRow } from '../properties/optionList'
 
@@ -209,12 +209,12 @@ export function renderFilterPanel(
   start?: number | 'list',
   { showClear = true }: { showClear?: boolean } = {}
 ): void {
-  const body = parent.createDiv('pm-filter-pop')
+  const body = parent.createDiv('llk-filter-pop')
   const { filter } = setup
 
   const showList = (): void => {
     body.empty()
-    const list = body.createDiv('pm-pop-list')
+    const list = body.createDiv('llk-pop-list')
     const remove = (row: HTMLElement, label: string, onRemove: () => void): void => {
       new IconButton(row)
         .setIcon('x')
@@ -224,12 +224,12 @@ export function renderFilterPanel(
           onChange()
           showList()
         })
-        .el.addClass('pm-filter-list-remove')
+        .el.addClass('llk-filter-list-remove')
     }
     filter.conditions.forEach((condition, index) => {
       const label = filterFieldLabel(condition.field, setup.ctx.customFields)
       const { op, value } = describeCondition(setup, condition)
-      const row = list.createDiv('pm-filter-list-row')
+      const row = list.createDiv('llk-filter-list-row')
       renderOptionRow(row, {
         label,
         icon: filterFieldIcon(condition.field, setup.ctx.customFields),
@@ -239,7 +239,7 @@ export function renderFilterPanel(
       remove(row, label, () => filter.conditions.splice(index, 1))
     })
     if (filter.showArchived) {
-      const row = list.createDiv('pm-filter-list-row')
+      const row = list.createDiv('llk-filter-list-row')
       renderOptionRow(row, {
         label: t('common.archived'),
         icon: 'archive',
@@ -255,7 +255,7 @@ export function renderFilterPanel(
       onPick: () => showFields(showList)
     })
     if (!showClear || (!filter.conditions.length && !filter.showArchived)) return
-    const clear = body.createDiv('pm-filter-list-foot pm-pop-section')
+    const clear = body.createDiv('llk-filter-list-foot llk-pop-section')
     renderOptionRow(clear, {
       label: t('filter.clearAll'),
       icon: 'x',
@@ -278,7 +278,7 @@ export function renderFilterPanel(
       })
     }
     const search = renderPopSearch(body, t('filter.filterBy'), () => renderList())
-    const list = body.createDiv('pm-pop-list')
+    const list = body.createDiv('llk-pop-list')
     const fields = offeredFields(setup)
     const renderList = (): void => {
       list.empty()
@@ -289,7 +289,7 @@ export function renderFilterPanel(
       let headed = false
       for (const field of shown) {
         if (field.startsWith('cf:') && !headed) {
-          list.createDiv({ cls: 'pm-pop-heading', text: t('filter.customFields') })
+          list.createDiv({ cls: 'llk-pop-heading', text: t('filter.customFields') })
           headed = true
         }
         const index = filter.conditions.findIndex((c) => c.field === field)
@@ -351,8 +351,8 @@ export function renderFilterPanel(
       back: back && { label: t('filter.back'), onClick: back }
     })
 
-    const ops = body.createDiv('pm-filter-pop-ops')
-    const valueEl = body.createDiv('pm-filter-pop-value')
+    const ops = body.createDiv('llk-filter-pop-ops')
+    const valueEl = body.createDiv('llk-filter-pop-value')
     const renderOps = (): void => {
       ops.empty()
       for (const op of OPS_BY_KIND[kind]) {
@@ -369,7 +369,7 @@ export function renderFilterPanel(
             renderOps()
             renderValue()
           })
-          .el.addClass('pm-filter-pop-op')
+          .el.addClass('llk-filter-pop-op')
       }
     }
 
@@ -384,7 +384,7 @@ export function renderFilterPanel(
         case 'contains':
         case 'not-contains': {
           const input = valueEl.createEl('input', {
-            cls: 'pm-pop-field',
+            cls: 'llk-pop-field',
             attr: { placeholder: t('filter.valuePlaceholder'), spellcheck: 'false' }
           })
           input.value = typeof draft.value === 'string' ? draft.value : ''
@@ -403,12 +403,12 @@ export function renderFilterPanel(
           const isDate = kind === 'date'
           const count = draft.op === 'between' ? 2 : 1
           const current = Array.isArray(draft.value) ? draft.value : []
-          const row = valueEl.createDiv('pm-filter-pop-range')
+          const row = valueEl.createDiv('llk-filter-pop-range')
           const inputs: HTMLInputElement[] = []
           for (let i = 0; i < count; i++) {
             const input = row.createEl('input', {
               type: isDate ? 'date' : 'number',
-              cls: 'pm-pop-field',
+              cls: 'llk-pop-field',
               attr: { placeholder: t('filter.valuePlaceholder') }
             })
             input.value = current[i] === undefined || current[i] === null ? '' : String(current[i])
@@ -423,7 +423,7 @@ export function renderFilterPanel(
           return
         }
         case 'bucket': {
-          const list = valueEl.createDiv('pm-pop-list')
+          const list = valueEl.createDiv('llk-pop-list')
           for (const bucket of DATE_BUCKETS) {
             renderOptionRow(list, {
               label: bucketLabel(bucket),
@@ -471,13 +471,13 @@ function renderChecklist(
 ): void {
   const options = valueOptions(setup, field)
   const search = options.length > 8 ? renderPopSearch(parent, t('filter.findValue'), () => render()) : null
-  const list = parent.createDiv('pm-pop-list')
+  const list = parent.createDiv('llk-pop-list')
   const selected = (): string[] => (Array.isArray(draft.value) ? draft.value.map(String) : [])
   const keyOf = (id: string): string => valueKey(field, id, setup.ctx)
   const render = (): void => {
     list.empty()
     if (!options.length) {
-      list.createDiv({ cls: 'pm-pop-empty', text: t('filter.noValues') })
+      list.createDiv({ cls: 'llk-pop-empty', text: t('filter.noValues') })
       return
     }
     const q = search?.value.trim().toLowerCase() ?? ''

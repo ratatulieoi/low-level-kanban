@@ -1,9 +1,9 @@
 {
-  "id": "project-manager",
-  "name": "dotpm",
+  "id": "low-level-kanban",
+  "name": "Low Level Kanban",
   "version": "2.6.0",
   "minAppVersion": "1.13.0",
   "description": "Local Kanban boards over Markdown notes, with task dependencies, custom fields and offline HTML export.",
-  "author": "dotpm",
+  "author": "Low Level Kanban contributors",
   "isDesktopOnly": false
 }

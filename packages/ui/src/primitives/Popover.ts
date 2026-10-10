@@ -68,10 +68,10 @@ export class Popover {
     this.align = opts.align ?? 'left'
     this.width = opts.width
     this.onCloseCb = opts.onClose
-    this.el = createDiv('pm-pop')
-    if (isPhone()) this.el.addClass('pm-pop--sheet')
+    this.el = createDiv('llk-pop')
+    if (isPhone()) this.el.addClass('llk-pop--sheet')
     if (this.width != null) this.el.setCssProps({ '--pop-width': `${this.width}px` })
-    this.contentEl = this.el.createDiv('pm-pop-body')
+    this.contentEl = this.el.createDiv('llk-pop-body')
   }
 
   /** Opens a popover whose content `fill` draws, handing it the way to close the popover. */

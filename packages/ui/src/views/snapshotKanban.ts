@@ -1,4 +1,11 @@
-import { type Task, dueUrgency, flattenTasks, getPriorityConfig, shownFields, totalLoggedHours } from '@dotpm/core'
+import {
+  type Task,
+  dueUrgency,
+  flattenTasks,
+  getPriorityConfig,
+  shownFields,
+  totalLoggedHours
+} from '@low-level-kanban/core'
 import { KanbanColumn, type KanbanCardData } from '../composites/KanbanColumn'
 import { boardColumns } from './boardColumns'
 import { cardCustomValues, descriptionPreview } from './boardCards'
@@ -49,8 +56,8 @@ function cardData(model: ViewModel, task: Task, fields: string[]): KanbanCardDat
 
 /** The board without drag, menus or editing: the columns the view grouped by, cards in the order it sorted. */
 export function renderSnapshotKanban(container: HTMLElement, model: ViewModel): HTMLElement {
-  container.addClass('pm-kanban-view')
-  const board = container.createDiv('pm-kanban-board')
+  container.addClass('llk-kanban-view')
+  const board = container.createDiv('llk-kanban-board')
   if (!model.projects.length) return board
   const fields = shownFields(model.fields, 'kanban', fieldCatalogOf(model))
   const tasks = boardTasks(model)

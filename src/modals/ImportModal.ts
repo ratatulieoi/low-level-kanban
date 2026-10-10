@@ -1,5 +1,5 @@
 import { App, ButtonComponent, Modal, TFile, Notice } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import {
   type PriorityConfig,
   type Project,
@@ -8,9 +8,10 @@ import {
   type TaskPriority,
   getDefaultStatusId,
   getDefaultPriorityId,
+  isTaskFrontmatter,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import {
   ensurePaletteEntries,
   getTaskNotesApi,
@@ -45,7 +46,7 @@ export class ImportModal extends Modal {
 
   constructor(
     app: App,
-    private plugin: PMPlugin
+    private plugin: LowLevelKanbanPlugin
   ) {
     super(app)
     this.defaultStatus = getDefaultStatusId(plugin.settings.statuses)
@@ -332,8 +333,8 @@ export class ImportModal extends Modal {
     const taskNotesTasks: Array<{ file: TFile; info: TaskNotesTaskInfo }> = []
 
     for (const file of selectedFiles) {
-      const alreadyPmTask = this.app.metadataCache.getFileCache(file)?.frontmatter?.['pm-task'] === true
-      if (taskNotesApi && !alreadyPmTask) {
+      const alreadyTask = isTaskFrontmatter(this.app.metadataCache.getFileCache(file)?.frontmatter)
+      if (taskNotesApi && !alreadyTask) {
         const info = await taskNotesApi.getTask(file.path).catch(() => null)
         if (info) {
           taskNotesTasks.push({ file, info })

@@ -3,9 +3,15 @@ import { TFile } from 'obsidian'
 import { describe, expect, it, vi } from 'vitest'
 import { makeFakeApp } from '#test/fakeVault'
 import { migrateBoardCardConfig, migrateProjectLayout, migrateTaskRefs } from './migration'
-import type PMPlugin from './main'
+import type LowLevelKanbanPlugin from './main'
 import { ProjectStore, VaultIndex } from './store'
-import { DEFAULT_SETTINGS, makeDefaultFilter, makeDefaultGroup, makeDefaultSort, type PMSettings } from '@dotpm/core'
+import {
+  DEFAULT_SETTINGS,
+  makeDefaultFilter,
+  makeDefaultGroup,
+  makeDefaultSort,
+  type LowLevelKanbanSettings
+} from '@low-level-kanban/core'
 
 const expectDefined = <T>(value: T | null | undefined): T => {
   if (value == null) throw new Error('expected value to be defined')
@@ -37,14 +43,16 @@ function fakeLeaf(state: Record<string, unknown>): FakeLeaf {
   return leaf
 }
 
-async function legacyVault(leaves: FakeLeaf[]): Promise<{ plugin: PMPlugin; app: App; settings: PMSettings }> {
+async function legacyVault(
+  leaves: FakeLeaf[]
+): Promise<{ plugin: LowLevelKanbanPlugin; app: App; settings: LowLevelKanbanSettings }> {
   const { app, vault } = makeFakeApp({ liveMetadataCache: true })
   const typed = app as unknown as App
   await vault.create('Projects/Roadmap.md', projectNote('p1', 'Roadmap'))
   await vault.create('Projects/Roadmap_tasks/design.md', taskNote('t1', 'Design', 'p1'))
   await vault.create('Projects/Roadmap_tasks/Archive/old.md', taskNote('t2', 'Old', 'p1'))
 
-  const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+  const settings: LowLevelKanbanSettings = structuredClone(DEFAULT_SETTINGS)
   const index = new VaultIndex(typed, () => settings)
   index.build()
   const store = new ProjectStore(typed, () => settings, index)
@@ -62,7 +70,7 @@ async function legacyVault(leaves: FakeLeaf[]): Promise<{ plugin: PMPlugin; app:
     store,
     settings,
     saveSettings: async () => {}
-  } as unknown as PMPlugin
+  } as unknown as LowLevelKanbanPlugin
 
   return { plugin, app: typed, settings }
 }
@@ -161,18 +169,18 @@ const idRefTask = (id: string, title: string, extra: string[]): string =>
     '\n'
   )
 
-async function idRefVault(): Promise<{ plugin: PMPlugin; app: App }> {
+async function idRefVault(): Promise<{ plugin: LowLevelKanbanPlugin; app: App }> {
   const { app, vault } = makeFakeApp({ liveMetadataCache: true })
   const typed = app as unknown as App
   await vault.create('Projects/Roadmap/Roadmap.md', idRefProject())
   await vault.create('Projects/Roadmap/_tasks/parent.md', idRefTask('t1', 'Parent', ['subtaskIds:', '  - t2']))
   await vault.create('Projects/Roadmap/_tasks/child.md', idRefTask('t2', 'Child', ['parentId: t1']))
 
-  const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+  const settings: LowLevelKanbanSettings = structuredClone(DEFAULT_SETTINGS)
   const index = new VaultIndex(typed, () => settings)
   index.build()
   const store = new ProjectStore(typed, () => settings, index)
-  const plugin = { app, index, store, settings, saveSettings: async () => {} } as unknown as PMPlugin
+  const plugin = { app, index, store, settings, saveSettings: async () => {} } as unknown as LowLevelKanbanPlugin
   return { plugin, app: typed }
 }
 
@@ -227,11 +235,11 @@ describe('migrateTaskRefs leaves the note itself alone', () => {
     )
     await vault.create('Projects/Roadmap/_tasks/child.md', idRefTask('t2', 'Child', ['parentId: t1']))
 
-    const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+    const settings: LowLevelKanbanSettings = structuredClone(DEFAULT_SETTINGS)
     const index = new VaultIndex(typed, () => settings)
     index.build()
     const store = new ProjectStore(typed, () => settings, index)
-    const plugin = { app, index, store, settings, saveSettings: async () => {} } as unknown as PMPlugin
+    const plugin = { app, index, store, settings, saveSettings: async () => {} } as unknown as LowLevelKanbanPlugin
 
     await migrateTaskRefs(plugin)
 
@@ -245,15 +253,17 @@ describe('migrateTaskRefs leaves the note itself alone', () => {
 })
 
 describe('migrateBoardCardConfig', () => {
-  async function vaultWith(config: string[]): Promise<{ plugin: PMPlugin; app: App; settings: PMSettings }> {
+  async function vaultWith(
+    config: string[]
+  ): Promise<{ plugin: LowLevelKanbanPlugin; app: App; settings: LowLevelKanbanSettings }> {
     const { app, vault } = makeFakeApp({ liveMetadataCache: true })
     const typed = app as unknown as App
     const note = ['---', 'pm-project: true', 'id: p1', 'title: Roadmap', 'config:', ...config, '---', ''].join('\n')
     await vault.create('Projects/Roadmap/Roadmap.md', note)
-    const settings: PMSettings = structuredClone(DEFAULT_SETTINGS)
+    const settings: LowLevelKanbanSettings = structuredClone(DEFAULT_SETTINGS)
     const index = new VaultIndex(typed, () => settings)
     index.build()
-    const plugin = { app: typed, index, settings, saveSettings: async () => {} } as unknown as PMPlugin
+    const plugin = { app: typed, index, settings, saveSettings: async () => {} } as unknown as LowLevelKanbanPlugin
     return { plugin, app: typed, settings }
   }
 
@@ -314,7 +324,7 @@ describe('migrateBoardCardConfig', () => {
       ganttGranularity: 'month',
       nonWorkingDays: { weekends: true }
     }
-    settings.projectFilters[key] = legacy as unknown as PMSettings['projectFilters'][string]
+    settings.projectFilters[key] = legacy as unknown as LowLevelKanbanSettings['projectFilters'][string]
     await migrateBoardCardConfig(plugin)
     expect(settings.projectFilters[key]).toEqual({
       filter: legacy.filter,

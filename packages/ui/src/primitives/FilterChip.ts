@@ -12,30 +12,30 @@ export class FilterChip {
   private removeEl: HTMLButtonElement
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createDiv('pm-filter-chip')
-    this.fieldEl = this.el.createEl('button', { cls: 'pm-filter-chip-part pm-filter-chip-field' })
-    this.opEl = this.el.createEl('button', { cls: 'pm-filter-chip-part pm-filter-chip-op' })
-    this.valueEl = this.el.createEl('button', { cls: 'pm-filter-chip-part pm-filter-chip-value' })
-    this.removeEl = this.el.createEl('button', { cls: 'pm-filter-chip-part pm-filter-chip-remove' })
+    this.el = parentEl.createDiv('llk-filter-chip')
+    this.fieldEl = this.el.createEl('button', { cls: 'llk-filter-chip-part llk-filter-chip-field' })
+    this.opEl = this.el.createEl('button', { cls: 'llk-filter-chip-part llk-filter-chip-op' })
+    this.valueEl = this.el.createEl('button', { cls: 'llk-filter-chip-part llk-filter-chip-value' })
+    this.removeEl = this.el.createEl('button', { cls: 'llk-filter-chip-part llk-filter-chip-remove' })
     setIcon(this.removeEl, 'x')
   }
 
   setField(label: string, icon?: string): this {
     this.fieldEl.empty()
-    if (icon) setIcon(this.fieldEl.createSpan('pm-filter-chip-icon'), icon)
+    if (icon) setIcon(this.fieldEl.createSpan('llk-filter-chip-icon'), icon)
     this.fieldEl.createSpan({ text: label })
     return this
   }
 
   setOperator(text: string): this {
     this.opEl.setText(text)
-    this.opEl.toggleClass('pm-hidden', !text)
+    this.opEl.toggleClass('llk-hidden', !text)
     return this
   }
 
   setValue(text: string): this {
     this.valueEl.setText(text)
-    this.valueEl.toggleClass('pm-hidden', !text)
+    this.valueEl.toggleClass('llk-hidden', !text)
     setTooltip(this.valueEl, text)
     return this
   }

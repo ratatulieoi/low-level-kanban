@@ -1,4 +1,11 @@
-import { type CustomFieldDef, type Task, flattenTasks, formatDateLong, stringifyCustomValue, t } from '@dotpm/core'
+import {
+  type CustomFieldDef,
+  type Task,
+  flattenTasks,
+  formatDateLong,
+  stringifyCustomValue,
+  t
+} from '@low-level-kanban/core'
 import type { CardFieldValue } from '../composites/KanbanCard'
 
 /** The tasks a board deals cards for: the top-level ones, or every task once subtasks get cards of their own. */

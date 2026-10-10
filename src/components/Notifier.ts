@@ -1,6 +1,6 @@
 import { Notice } from 'obsidian'
-import type PMPlugin from '#main'
-import { Temporal, today, parsePlainDate, t, tn } from '@dotpm/core'
+import type LowLevelKanbanPlugin from '#main'
+import { Temporal, today, parsePlainDate, t, tn } from '@low-level-kanban/core'
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000
 
@@ -8,7 +8,7 @@ export class Notifier {
   private intervalId: number | null = null
   private notifiedIds = new Set<string>()
 
-  constructor(private plugin: PMPlugin) {}
+  constructor(private plugin: LowLevelKanbanPlugin) {}
 
   /** The first sweep runs once the index is built; this only schedules the later ones. */
   start(): void {

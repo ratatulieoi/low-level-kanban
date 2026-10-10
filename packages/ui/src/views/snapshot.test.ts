@@ -8,7 +8,7 @@ import {
   makeTask,
   stringToColor,
   type ResolvedProjectConfig
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import { boardTaskCount, boardTasks, type ViewModel } from './model'
 import { renderSnapshotKanban } from './snapshotKanban'
 
@@ -77,7 +77,7 @@ function model(overrides: Partial<ViewModel> = {}): ViewModel {
 }
 
 const cardIds = (host: HTMLElement): string[] =>
-  Array.from(host.querySelectorAll<HTMLElement>('.pm-kanban-card')).map((card) => card.dataset.taskId ?? '')
+  Array.from(host.querySelectorAll<HTMLElement>('.llk-kanban-card')).map((card) => card.dataset.taskId ?? '')
 
 afterEach(() => document.body.empty())
 
@@ -85,7 +85,7 @@ describe('snapshot kanban', () => {
   it('puts each task in its status column, in the order the view sorts by', () => {
     const host = document.body.createDiv()
     renderSnapshotKanban(host, model())
-    const columns = host.querySelectorAll<HTMLElement>('.pm-kanban-col')
+    const columns = host.querySelectorAll<HTMLElement>('.llk-kanban-col')
     expect(columns.length).toBe(DEFAULT_STATUSES.length)
     expect(cardIds(columns[0])).toEqual(['m', 'a'])
     expect(cardIds(host)).toEqual(['m', 'a', 'b'])
@@ -105,9 +105,9 @@ describe('snapshot kanban', () => {
     view.projects[0].tasks[0].assignees = ['[[Jane Doe]]', 'Sam Lee']
     const host = document.body.createDiv()
     renderSnapshotKanban(host, view)
-    const avatars = host.querySelectorAll<HTMLElement>('[data-task-id="a"] .pm-avatar')
-    expect(avatars[0].style.getPropertyValue('--pm-avatar-color')).toBe('#c47070')
-    expect(avatars[1].style.getPropertyValue('--pm-avatar-color')).toBe(stringToColor('Sam Lee'))
+    const avatars = host.querySelectorAll<HTMLElement>('[data-task-id="a"] .llk-avatar')
+    expect(avatars[0].style.getPropertyValue('--llk-avatar-color')).toBe('#c47070')
+    expect(avatars[1].style.getPropertyValue('--llk-avatar-color')).toBe(stringToColor('Sam Lee'))
   })
 
   it('shows archived cards only when the filter asks', () => {
@@ -140,9 +140,9 @@ describe('snapshot kanban', () => {
     const host = document.body.createDiv()
     const view = model({ fields: { kanban: { visible: ['subtasks', 'cf:sprint'] } } })
     renderSnapshotKanban(host, view)
-    expect(host.querySelector('[data-task-id="c"] .pm-kanban-card-parent')?.textContent).toBe('Parent')
-    expect(host.querySelector('[data-task-id="a"] .pm-kanban-card-field')?.textContent).toBe('SprintS1')
-    expect(host.querySelector('.pm-kanban-card-footer')).toBeNull()
+    expect(host.querySelector('[data-task-id="c"] .llk-kanban-card-parent')?.textContent).toBe('Parent')
+    expect(host.querySelector('[data-task-id="a"] .llk-kanban-card-field')?.textContent).toBe('SprintS1')
+    expect(host.querySelector('.llk-kanban-card-footer')).toBeNull()
     expect(boardTaskCount(view)).toBe(4)
   })
 
@@ -168,7 +168,7 @@ describe('snapshot kanban', () => {
     const host = document.body.createDiv()
     renderSnapshotKanban(host, view)
     const fields = host.querySelectorAll(
-      '[data-task-id="a"] .pm-kanban-card-field, [data-task-id="a"] .pm-kanban-card-description'
+      '[data-task-id="a"] .llk-kanban-card-field, [data-task-id="a"] .llk-kanban-card-description'
     )
     expect(Array.from(fields).map((field) => field.textContent)).toEqual([
       'ReviewJan 20, 30',
@@ -180,8 +180,8 @@ describe('snapshot kanban', () => {
   it('keeps project source chips on boards covering several projects', () => {
     const host = document.body.createDiv()
     renderSnapshotKanban(host, model())
-    expect(host.querySelector('[data-task-id="a"] .pm-kanban-card-footer')?.textContent).toContain('Alpha')
-    expect(host.querySelector('[data-task-id="b"] .pm-kanban-card-footer')?.textContent).toContain('Beta')
+    expect(host.querySelector('[data-task-id="a"] .llk-kanban-card-footer')?.textContent).toContain('Alpha')
+    expect(host.querySelector('[data-task-id="b"] .llk-kanban-card-footer')?.textContent).toContain('Beta')
   })
 
   it('follows column order and hides the columns the view leaves out', () => {
@@ -191,7 +191,7 @@ describe('snapshot kanban', () => {
       group: { field: 'type', columns: { type: { order: ['milestone', 'task'], hidden: ['subtask'] } } }
     })
     renderSnapshotKanban(host, view)
-    expect(Array.from(host.querySelectorAll<HTMLElement>('.pm-kanban-col')).map((col) => col.dataset.column)).toEqual([
+    expect(Array.from(host.querySelectorAll<HTMLElement>('.llk-kanban-col')).map((col) => col.dataset.column)).toEqual([
       'milestone',
       'task'
     ])
@@ -219,7 +219,7 @@ describe('snapshot kanban', () => {
     const view = model({ projects: [] })
     const host = document.body.createDiv()
     renderSnapshotKanban(host, view)
-    expect(host.querySelector('.pm-kanban-board')).not.toBeNull()
+    expect(host.querySelector('.llk-kanban-board')).not.toBeNull()
     expect(cardIds(host)).toEqual([])
     expect(boardTasks(view)).toEqual([])
     expect(boardTaskCount(view)).toBe(0)

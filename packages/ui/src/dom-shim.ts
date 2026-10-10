@@ -186,8 +186,8 @@ const elementMethods = {
 }
 
 /** Both classes come from the plugin stylesheet, which every host of the shim bundles. */
-const HIDDEN_CLASS = 'pm-hidden'
-const INVISIBLE_CLASS = 'pm-invisible'
+const HIDDEN_CLASS = 'llk-hidden'
+const INVISIBLE_CLASS = 'llk-invisible'
 
 function isHidden(el: HTMLElement): boolean {
   return el.classList.contains(HIDDEN_CLASS) || el.style.display === 'none'

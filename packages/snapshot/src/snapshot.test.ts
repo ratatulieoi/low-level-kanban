@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { makeDefaultFilter, makeProject, makeTask } from '@dotpm/core'
+import { makeDefaultFilter, makeProject, makeTask } from '@low-level-kanban/core'
 import { taskResources, tasksFromResources } from './resources'
-import { isSnapshot, normalizeSnapshot, SNAPSHOT_FORMAT, SNAPSHOT_VERSION, type Snapshot } from './snapshot'
+import { isSnapshot, normalizeSnapshot, SNAPSHOT_FORMAT, SNAPSHOT_VERSION, type ReadableSnapshot } from './snapshot'
 
 describe('tasksFromResources', () => {
   it('rebuilds the tree in sibling order from flat resources', () => {
@@ -26,9 +26,9 @@ describe('tasksFromResources', () => {
 })
 
 describe('normalizeSnapshot', () => {
-  function legacySnapshot(mode: unknown): Snapshot {
+  function legacySnapshot(mode: unknown): ReadableSnapshot {
     return {
-      format: SNAPSHOT_FORMAT,
+      format: 'dotpm-snapshot',
       version: 1,
       generator: { name: 'dotpm', version: '0' },
       exportedAt: '',
@@ -58,12 +58,16 @@ describe('normalizeSnapshot', () => {
         holidays: ['2030-01-01'],
         kanbanShowSubtasks: true
       }
-    } as unknown as Snapshot
+    } as unknown as ReadableSnapshot
   }
 
   it.each(['table', 'gantt', 'kanban', undefined, 'unknown'])('reads legacy mode %s as Kanban', (mode) => {
     const original = legacySnapshot(mode)
     const page = normalizeSnapshot(original)
+    expect(page.format).toBe('low-level-kanban-snapshot')
+    expect(page.generator).toEqual({ name: 'Low Level Kanban', version: '0' })
+    expect(original.format).toBe('dotpm-snapshot')
+    expect(original.generator.name).toBe('dotpm')
     expect(page.view.mode).toBe('kanban')
     expect(page.view.filter).toEqual({
       conditions: [{ field: 'status', op: 'any', value: ['todo'] }],
@@ -101,7 +105,13 @@ describe('normalizeSnapshot', () => {
 })
 
 describe('isSnapshot', () => {
-  it('accepts the current format and nothing else', () => {
+  it.each(['low-level-kanban-snapshot', 'dotpm-snapshot'])('accepts only versions 1 and 2 of %s', (format) => {
+    expect(isSnapshot({ format, version: 1, projects: [] })).toBe(true)
+    expect(isSnapshot({ format, version: 2, projects: [] })).toBe(true)
+    expect(isSnapshot({ format, version: 99, projects: [] })).toBe(false)
+  })
+
+  it('rejects unrelated formats and malformed inputs', () => {
     expect(isSnapshot({ format: SNAPSHOT_FORMAT, version: SNAPSHOT_VERSION, projects: [] })).toBe(true)
     expect(isSnapshot({ format: SNAPSHOT_FORMAT, version: 1, projects: [] })).toBe(true)
     expect(isSnapshot({ format: SNAPSHOT_FORMAT, version: 99, projects: [] })).toBe(false)

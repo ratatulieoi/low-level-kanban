@@ -1,5 +1,5 @@
 {
-  "name": "project-manager",
+  "name": "low-level-kanban",
   "version": "2.6.0",
   "private": true,
   "description": "Local Kanban boards inside Obsidian, backed by Markdown notes with offline HTML export.",
@@ -32,14 +32,14 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "build:viewer": "node scripts/build-viewer.mjs",
-    "build:packages": "pnpm --filter @dotpm/core --filter @dotpm/snapshot --filter @dotpm/viewer build"
+    "build:packages": "pnpm --filter @low-level-kanban/core --filter @low-level-kanban/snapshot --filter @low-level-kanban/viewer build"
   },
   "devDependencies": {
     "@2bad/axiom": "2.1.0",
     "@2bad/tsconfig": "4.0.0",
-    "@dotpm/core": "workspace:*",
-    "@dotpm/snapshot": "workspace:*",
-    "@dotpm/ui": "workspace:*",
+    "@low-level-kanban/core": "workspace:*",
+    "@low-level-kanban/snapshot": "workspace:*",
+    "@low-level-kanban/ui": "workspace:*",
     "@types/node": "26.4.1",
     "@typescript-eslint/parser": "8.69.0",
     "@vitest/coverage-v8": "5.0.0",

@@ -6,11 +6,11 @@ export function renderPropRow(
   valueBuilder: () => HTMLElement,
   icon?: string
 ): HTMLElement {
-  const row = container.createDiv('pm-prop-row')
-  const labelEl = row.createSpan({ cls: 'pm-prop-label' })
+  const row = container.createDiv('llk-prop-row')
+  const labelEl = row.createSpan({ cls: 'llk-prop-label' })
   if (icon) {
-    labelEl.addClass('pm-prop-label--with-icon')
-    const iconEl = labelEl.createSpan({ cls: 'pm-prop-label-icon' })
+    labelEl.addClass('llk-prop-label--with-icon')
+    const iconEl = labelEl.createSpan({ cls: 'llk-prop-label-icon' })
     setIcon(iconEl, icon)
     labelEl.createSpan({ text: label })
   } else {

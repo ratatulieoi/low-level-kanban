@@ -12,7 +12,7 @@ export interface NoteLinkProps {
 /** A link to a note the plugin draws itself: a task's dependencies, its subtasks. */
 export function renderNoteLink(parent: HTMLElement, props: NoteLinkProps): HTMLAnchorElement {
   const el = parent.createEl('a', {
-    cls: props.cls ? `pm-note-link internal-link ${props.cls}` : 'pm-note-link internal-link',
+    cls: props.cls ? `llk-note-link internal-link ${props.cls}` : 'llk-note-link internal-link',
     text: props.label,
     attr: { 'data-href': props.path }
   })

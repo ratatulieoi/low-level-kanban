@@ -1,10 +1,18 @@
-import '@dotpm/ui/dom-shim'
-import { domPlatform } from '@dotpm/ui/dom-platform'
-import { isSnapshot, normalizeSnapshot, tasksFromResources, type Snapshot } from '@dotpm/snapshot'
-import { locale, setDateFormat, setLocale, t, tn } from '@dotpm/core'
-import { boardTaskCount, renderSnapshotKanban, setPlatform, svgEl, type ViewModel } from '@dotpm/ui'
+import '@low-level-kanban/ui/dom-shim'
+import { domPlatform } from '@low-level-kanban/ui/dom-platform'
+import {
+  isSnapshot,
+  normalizeSnapshot,
+  tasksFromResources,
+  SNAPSHOT_FORMAT,
+  LEGACY_SNAPSHOT_FORMAT,
+  type ReadableSnapshot,
+  type Snapshot
+} from '@low-level-kanban/snapshot'
+import { locale, setDateFormat, setLocale, t, tn } from '@low-level-kanban/core'
+import { boardTaskCount, renderSnapshotKanban, setPlatform, svgEl, type ViewModel } from '@low-level-kanban/ui'
 
-export function viewModelFromSnapshot(raw: Snapshot): ViewModel {
+export function viewModelFromSnapshot(raw: ReadableSnapshot): ViewModel {
   const snapshot = normalizeSnapshot(raw)
   return {
     projects: snapshot.projects.map((project) => ({
@@ -114,21 +122,21 @@ export function mount(root: HTMLElement, snapshot: Snapshot): void {
   installSnapshotPlatform(snapshot)
   const model = viewModelFromSnapshot(snapshot)
   root.empty()
-  root.addClass('pm-root', 'pm-snapshot')
+  root.addClass('llk-root', 'llk-snapshot')
 
-  const header = root.createDiv('pm-snapshot-header')
+  const header = root.createDiv('llk-snapshot-header')
   const primary = model.projects[0]
   if (primary.icon) {
-    const glyph = header.createSpan({ cls: 'pm-snapshot-icon' })
+    const glyph = header.createSpan({ cls: 'llk-snapshot-icon' })
     const markup = snapshot.icons[primary.icon]
     const icon = markup ? iconFromMarkup(markup) : null
     if (icon) glyph.appendChild(icon)
     else glyph.setText(primary.icon)
   }
-  header.createEl('h1', { text: snapshot.title, cls: 'pm-snapshot-title' })
+  header.createEl('h1', { text: snapshot.title, cls: 'llk-snapshot-title' })
   const exported = new Date(snapshot.exportedAt)
   header.createDiv({
-    cls: 'pm-snapshot-meta',
+    cls: 'llk-snapshot-meta',
     text: t('viewer.meta', {
       tasks: tn('count.tasks', boardTaskCount(model)),
       date: exported.toLocaleDateString(locale()),
@@ -136,12 +144,12 @@ export function mount(root: HTMLElement, snapshot: Snapshot): void {
     })
   })
 
-  const body = root.createDiv('pm-snapshot-body')
+  const body = root.createDiv('llk-snapshot-body')
   renderSnapshotKanban(body, model)
 }
 
 export function readEmbeddedSnapshot(doc: Document): Snapshot | null {
-  const el = doc.getElementById('dotpm-snapshot')
+  const el = doc.getElementById(SNAPSHOT_FORMAT) ?? doc.getElementById(LEGACY_SNAPSHOT_FORMAT)
   if (!el) return null
   try {
     const parsed: unknown = JSON.parse(el.textContent ?? '')

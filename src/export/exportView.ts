@@ -1,13 +1,13 @@
 import { Notice, Platform, normalizePath } from 'obsidian'
-import { sanitizeFileName, t } from '@dotpm/core'
-import type PMPlugin from '#main'
+import { sanitizeFileName, t } from '@low-level-kanban/core'
+import type LowLevelKanbanPlugin from '#main'
 import { folderOf } from '#store'
 import type { ProjectView } from '../views/ProjectView'
 import { renderSnapshotHtml } from './html'
 import { buildSnapshot } from './snapshot'
 
 /** Writes the view as one HTML file beside the project note and opens it on desktop. */
-export async function exportViewAsHtml(plugin: PMPlugin, view: ProjectView): Promise<string> {
+export async function exportViewAsHtml(plugin: LowLevelKanbanPlugin, view: ProjectView): Promise<string> {
   const scope = view.projectScope
   const primary = scope?.primary
   if (!scope || !primary) throw new Error('nothing to export: the view holds no project')

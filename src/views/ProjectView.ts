@@ -1,5 +1,5 @@
 import { ItemView, Menu, Platform, Scope, WorkspaceLeaf } from 'obsidian'
-import type PMPlugin from '#main'
+import type LowLevelKanbanPlugin from '#main'
 import { addTabPageItems, refreshTabTitle } from '#ui/tab'
 import {
   type Project,
@@ -25,7 +25,7 @@ import {
   matchesQuery,
   t,
   tn
-} from '@dotpm/core'
+} from '@low-level-kanban/core'
 import {
   folderOf,
   personKeyer,
@@ -77,14 +77,14 @@ import {
   summarizeSort,
   syncSortButton,
   type SortSummary
-} from '@dotpm/ui'
+} from '@low-level-kanban/ui'
 import type { SubView } from './SubView'
 import type { ExportViewState } from '../export/snapshot'
 import { KanbanView } from './KanbanView'
 import { openTaskModal } from '#ui/ModalFactory'
 import { exportViewAsHtml } from '../export/exportView'
 
-export const PM_PROJECT_VIEW_TYPE = 'pm-project'
+import { LLK_PROJECT_VIEW_TYPE } from './viewTypes'
 
 interface ProjectViewState {
   scope?: ScopeSpec
@@ -116,7 +116,7 @@ function specOf(state: ProjectViewState): ScopeSpec | null {
 }
 
 export class ProjectView extends ItemView {
-  plugin: PMPlugin
+  plugin: LowLevelKanbanPlugin
   projectScope: ProjectScope | null = null
   private spec: ScopeSpec | null = null
   /** The project last shown on its own, which "This project" returns to from a wider scope. */
@@ -150,7 +150,7 @@ export class ProjectView extends ItemView {
    */
   private loadedPaths: string[] = []
 
-  constructor(leaf: WorkspaceLeaf, plugin: PMPlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: LowLevelKanbanPlugin) {
     super(leaf)
     this.plugin = plugin
     this.navigation = false
@@ -164,7 +164,7 @@ export class ProjectView extends ItemView {
   }
 
   getViewType(): string {
-    return PM_PROJECT_VIEW_TYPE
+    return LLK_PROJECT_VIEW_TYPE
   }
   getDisplayText(): string {
     return this.projectScope?.label() ?? t('common.project')
@@ -247,13 +247,13 @@ export class ProjectView extends ItemView {
     if (this.initialized) return
     this.initialized = true
 
-    this.containerEl.addClass('pm-view')
+    this.containerEl.addClass('llk-view')
     const root = this.contentEl
     root.empty()
-    root.addClass('pm-root')
-    this.headerEl = root.createDiv('pm-vh-mount')
-    this.bodyEl = root.createDiv('pm-content')
-    this.emptyEl = root.createDiv('pm-filter-empty pm-hidden')
+    root.addClass('llk-root')
+    this.headerEl = root.createDiv('llk-vh-mount')
+    this.bodyEl = root.createDiv('llk-content')
+    this.emptyEl = root.createDiv('llk-filter-empty llk-hidden')
 
     this.register(
       this.plugin.store.onProjectChanged((path) => {
@@ -326,7 +326,7 @@ export class ProjectView extends ItemView {
   private async switchScope(spec: ScopeSpec): Promise<void> {
     this.spec = spec
     await this.loadScope()
-    await this.leaf.setViewState({ type: PM_PROJECT_VIEW_TYPE, state: this.getState() })
+    await this.leaf.setViewState({ type: LLK_PROJECT_VIEW_TYPE, state: this.getState() })
   }
 
   /** Moves this leaf to another scope, or opens it in a new tab. */
@@ -433,9 +433,9 @@ export class ProjectView extends ItemView {
     this.filterBar = null
     this.headerEl.empty()
     this.bodyEl.empty()
-    this.bodyEl.removeClass('pm-hidden')
-    this.emptyEl.addClass('pm-hidden')
-    const msg = this.bodyEl.createDiv('pm-empty-state')
+    this.bodyEl.removeClass('llk-hidden')
+    this.emptyEl.addClass('llk-hidden')
+    const msg = this.bodyEl.createDiv('llk-empty-state')
     msg.createEl('h3', { text: t('projectView.nothingToShow') })
     msg.createEl('p', { text: t('projectView.missing') })
   }
@@ -496,8 +496,8 @@ export class ProjectView extends ItemView {
     const scope = this.projectScope
     const emptied = !!scope && isQueryActive(this.query) && counts.shown === 0 && counts.total > 0
     this.emptyEl.empty()
-    this.emptyEl.toggleClass('pm-hidden', !emptied)
-    this.bodyEl.toggleClass('pm-hidden', emptied)
+    this.emptyEl.toggleClass('llk-hidden', !emptied)
+    this.bodyEl.toggleClass('llk-hidden', emptied)
     if (!scope || !emptied) return
     const state = new EmptyState(this.emptyEl).setIcon('search-x')
     const { conditions } = this.query.filter
@@ -1131,7 +1131,7 @@ export class ProjectView extends ItemView {
       this.fields,
       (anchor) => this.openGroup(anchor)
     )
-    this.bodyEl.addClass('pm-content--kanban')
+    this.bodyEl.addClass('llk-content--kanban')
     this.subview.render()
   }
 
